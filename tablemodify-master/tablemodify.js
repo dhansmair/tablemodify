@@ -54,6 +54,12 @@ var Tablemodify = (function(){
     if (l) return l;
     return false;
   }
+  // iterate over a set of elements and call function for each one
+  function iterate(elems, func) {
+    for (var i=0; i<elems.length; i++) {
+      func.call(elems[i], i);
+    }
+  }
 
   function getValueIn(arr, i) {
     if (!Array.isArray(arr)) return arr;
@@ -65,12 +71,18 @@ var Tablemodify = (function(){
   }
 
   var settings = {
-    fixHeader: true,
-    fixFooter: false,
-    widths: false,
-    scrollbarWidth: '17px',
-    minWidths: '100px'
+          fixHeader:      true,
+          fixFooter:      false,
+          widths:         false,
+          scrollbarWidth: '17px',
+          minWidths:      '100px'
   };
+
+  var hhWatch = 0;
+  // privates
+  var container, head, body, foot, headWrap, bodyWrap, footWrap, origHead, origFoot, topRight, bottomRight;
+  // head = undefined
+  // !!head = false
 
   /*
     - add .tablemodify class to table
@@ -80,21 +92,17 @@ var Tablemodify = (function(){
     - falls fixHeader:true, prepend .tablemodify-head
     - falls fixFooter:true,  append .tablemodify-foot
   */
-  function domStructure(table, settings){
+  function domStructure(settings) {
+     head = false;
+     foot = false;
+     headWrap = false;
+     bodyWrap = wrap(body, document.createElement('div'));
+     footWrap = false;
+     container = wrap(bodyWrap, document.createElement('div'));
 
-     var ret = {
-       head: false,
-       body: table,
-       foot: false,
-       headWrap: false,
-       bodyWrap: wrap(table, document.createElement('div')),
-       footWrap: false
-     };
-     ret.container = wrap(ret.bodyWrap, document.createElement('div'));
-
-     addClass(ret.body,      'tablemodify-body');
-     addClass(ret.bodyWrap,  'tablemodify-body-wrap');
-     addClass(ret.container, 'tablemodify-container');
+     addClass(body,      'tablemodify-body');
+     addClass(bodyWrap,  'tablemodify-body-wrap');
+     addClass(container, 'tablemodify-container');
 
      // cover corners
      var corner = document.createElement('div');
@@ -102,112 +110,104 @@ var Tablemodify = (function(){
 
 
      if (settings.fixHeader) {
-       var origHead = el('table.tablemodify-body > thead');
+       origHead = document.querySelector('table.tablemodify-body > thead');
 
        if (origHead) {
-          ret.originalHead = origHead;
-          ret.head = document.createElement('table');
-          ret.head.appendChild(origHead.cloneNode(true));
-          ret.headWrap = document.createElement('div');
-          ret.headWrap.appendChild(ret.head);
-          ret.container.insertBefore(ret.headWrap, ret.bodyWrap);
+          //ret.originalHead = origHead;
+          head = document.createElement('table');
+          head.appendChild(origHead.cloneNode(true));
+          headWrap = document.createElement('div');
+          headWrap.appendChild(head);
+          container.insertBefore(headWrap, bodyWrap);
 
           // add gray corner
-          var topRightCorner = ret.container.appendChild(corner.cloneNode(true));
-          addClass(topRightCorner, 'top-right');
+          topRight = container.appendChild(corner.cloneNode(true));
 
-          // add missing classes
-          addClass(ret.head,     'tablemodify-head');
-          addClass(ret.headWrap, 'tablemodify-head-wrap');
+          addClass(topRight, 'top-right');
+          addClass(head,     'tablemodify-head');
+          addClass(headWrap, 'tablemodify-head-wrap');
        }
      }
 
      if (settings.fixFooter) {
-       var origFoot = el('table.tablemodify-body > tfoot');
+       origFoot = el('table.tablemodify-body > tfoot');
 
        if (origFoot) {
-          ret.originalFoot = origFoot;
-          ret.foot = document.createElement('table');
-          ret.foot.appendChild(origFoot.cloneNode(true));
-          ret.footWrap = document.createElement('div');
-          ret.footWrap.appendChild(ret.foot);
-          ret.container.appendChild(ret.footWrap);
+          foot = document.createElement('table');
+          foot.appendChild(origFoot.cloneNode(true));
+          footWrap = document.createElement('div');
+          footWrap.appendChild(foot);
+          container.appendChild(footWrap);
 
           // add gray corner
-          var bottomRightCorner = ret.container.appendChild(corner);
-          addClass(bottomRightCorner, 'bottom-right');
-
-          // add missing classes
-          addClass(ret.foot,     'tablemodify-foot');
-          addClass(ret.footWrap, 'tablemodify-foot-wrap');
+          bottomRight = container.appendChild(corner);
+          addClass(bottomRight, 'bottom-right');
+          addClass(foot,     'tablemodify-foot');
+          addClass(footWrap, 'tablemodify-foot-wrap');
        }
      }
-
-     return ret;
   }
 
   /*
 
   */
-  function setStyles (dom, settings) {
-    /*
-      headerhöhe
-      footerhöhe
-      table-layout
-      corners
-      border-collapse
-    */
-    var bc = getCss(dom.body, 'border-collapse');
+  function setStyles (settings) {
+    var borderCollapse = getCss(body, 'border-collapse');
 
-    var colgroup = find('colgroup', dom.body);
+    // set min-widths for the columns
+    var colgroup = find('colgroup', body);
     if (colgroup && colgroup.hasChildNodes()) {
-      var cols = colgroup.children;
-      for (var i=0; i<cols.length; i++) {
-        console.log(i);
-        setCss(cols[i], {
+      iterate(colgroup.children, function(i){
+        setCss(this, {
           'min-width': getValueIn(settings.minWidths, i)
         });
-      }
+      });
     }
 
-    if (dom.head) {
+    if (head) {
       // headerheight
-      var hh = dom.originalHead.getBoundingClientRect().height;
-
+      var hh = origHead.getBoundingClientRect().height;
+      /*
+      var essentials = [
+        'color',
+        'font-size',
+        'font-family',
+        'line-height',
+        'text-align',
+        'vertical-align',
+        'padding',
+        'background-color',
+        'background-image',
+        'background-position',
+        'background-attachment',
+        'background-repeat',
+        'border',
+        'border-radius'
+      ];
+      */
       // style of head table
-      setCss(dom.head, {
+      setCss(head, {
         'height': inPx(hh),
-        'border-collapse': bc
+        'border-collapse': borderCollapse
       });
-
-      setCss(dom.headWrap, {
-        'height': inPx(hh)
-      });
+      // style of the head table wrapper
+      setCss(headWrap, {'height': inPx(hh)});
       // body nach oben rutschen
-      setCss(dom.body, {'margin-top': inPx('-'+hh)});
-
-      setCss(dom.bodyWrap, {
-        'top': inPx(hh)
-      });
-
+      setCss(body, {'margin-top': inPx((-1)*hh)});
+      // Abstand des body von oben
+      setCss(bodyWrap, {'top': inPx(hh)});
       // style corner
       setCss(document.querySelector('.tablemodify-corner.top-right'), {'height':inPx(hh), width:settings.scrollbarWidth});
-
     }
-    if (dom.foot) {
+    if (foot) {
       // footerheight
-      var fh = dom.originalFoot.getBoundingClientRect().height;
-
+      var fh = origFoot.getBoundingClientRect().height;
       // style of foot table
-      setCss(dom.foot, {
+      setCss(foot, {
         'height': inPx(fh),
-        'border-collapse': bc
+        'border-collapse': borderCollapse
       });
-
-      setCss(dom.bodyWrap, {
-        'bottom': inPx(fh)
-      });
-
+      setCss(bodyWrap, {'bottom': inPx(fh)});
       // style corner
       setCss(document.querySelector('.tablemodify-corner.bottom-right'), {'height':inPx(fh), width:settings.scrollbarWidth});
     }
@@ -216,72 +216,80 @@ var Tablemodify = (function(){
   /*
     - resize event
   */
-  function setEvents (dom, settings) {
+  function setEvents (settings) {
       window.addEventListener('resize', function(e){
-
-        renderHead(dom);
-        renderFoot(dom);
+        renderHead();
+        renderFoot();
       });
-      dom.bodyWrap.addEventListener('scroll', function(e){
-        setCss(dom.head, {
-          'margin-left': ((-1)*dom.bodyWrap.scrollLeft + 'px'),
-        });
-        setCss(dom.foot, {
-          'margin-left': ((-1)*dom.bodyWrap.scrollLeft + 'px'),
-        });
+      bodyWrap.addEventListener('scroll', function(e){
+        setCss(head, {'margin-left': ((-1)*bodyWrap.scrollLeft + 'px')});
+        setCss(foot, {'margin-left': ((-1)*bodyWrap.scrollLeft + 'px')});
       });
   }
 
   /*
 
   */
-  function renderHead (dom) {
-    if (dom.head && dom.originalHead) {
-      var allNew = dom.head.firstElementChild.firstElementChild.cells,
-          allOld = dom.originalHead.firstElementChild.cells;
+  function renderHead () {
+    if (head && origHead) {
+      var allNew = head.firstElementChild.firstElementChild.cells,
+          allOld = origHead.firstElementChild.cells;
+      var hh = allOld[0].clientHeight;
 
-      for (var i = 0; i < allNew.length; i++) {
+      // bei zeilenumbruch in th zelle wird die höhe des headers angepasst
+      if (hh !== hhWatch) {
+        setCss(headWrap, {'height':inPx(hh)});
+        setCss(topRight, {'height':inPx(hh)});
+        setCss(bodyWrap, {'top':inPx(hh)});
+        hhWatch = hh;
+      }
+
+      iterate(allNew, function(i){
         var w = inPx(allOld[i].getBoundingClientRect().width);
-        setCss(allNew[i], {
+        setCss(this, {
           'width': w,
           'min-width': w,
           'max-width': w
         });
-      }
+      });
     }
   }
 
   /*
 
   */
-  function renderFoot (dom) {
-    if (dom.foot && dom.originalFoot) {
-      var allNew = dom.foot.firstElementChild.firstElementChild.cells,
-          allOld = dom.originalFoot.firstElementChild.cells;
+  function renderFoot () {
+    if (foot && origFoot) {
+      var allNew = foot.firstElementChild.firstElementChild.cells,
+          allOld = origFoot.firstElementChild.cells;
 
-      for (var i = 0; i < allNew.length; i++) {
+      iterate(allNew, function(i){
         var w = inPx(allOld[i].getBoundingClientRect().width);
-        setCss(allNew[i], {
+        setCss(this, {
           'width': w,
           'min-width': w,
           'max-width': w
         });
-      }
+      });
     }
   }
 
   return function Tablemodify(selector, options){
-    var table = el(selector);
-
     extend(settings, options);
 
-    var structure = domStructure(table, settings);
+    body = document.querySelector(selector);
+    // modify DOM
+    domStructure(settings);
+    // basic styles that are necessary
+    setStyles(settings);
+    // render head and foot if they are existing
+    renderHead();
+    renderFoot();
+    // bind event listeners
+    setEvents(settings);
 
-    setStyles(structure, settings);
-
-    renderHead(structure);
-    renderFoot(structure);
-
-    setEvents(structure, settings);
+    // define public properties
+    this.version   = 'v0.1';
+    this.structure = null;
   };
 }());

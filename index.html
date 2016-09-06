@@ -7,6 +7,9 @@
   <link rel='stylesheet' href='tablemodify-master/tablemodify.css' />
   <link rel='stylesheet' href='css/style.css' />
   <style>
+  #mytable thead tr th:nth-child(2){
+    background-color:lightgreen;
+  }
   </style>
   <script>
     window.addEventListener('DOMContentLoaded', function(){
@@ -14,10 +17,23 @@
         fixFooter:true,
         minWidths:['100px', '200px', '30px', '100px']
       });
+      console.log(table);
     });
       </script>
 </head>
 <body>
+  <table id='test'>
+    <tr>
+      <td>a</td>
+      <td>b</td>
+      <td>d</td>
+    </tr>
+    <tr>
+      <td>d</td>
+      <td>e</td>
+      <td>f</td>
+    </tr>
+  </table>
 <section>
 <table id='mytable'>
   <colgroup>
@@ -30,10 +46,10 @@
   <thead>
     <tr>
       <th>header 1</th>
-      <th>header 2</th>
-      <th>header 3</th>
-      <th>header 4</th>
-      <th>header 5</th>
+      <th style='text-align:left;'>header 2</th>
+      <th style='text-align:right;'>header 3</th>
+      <th class='example'>header 4</th>
+      <th id='problem'>header 5</th>
     </tr>
   </thead>
   <tbody>

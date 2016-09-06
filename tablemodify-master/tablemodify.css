@@ -27,7 +27,7 @@
   bottom:0;
 }
 .tablemodify-body-wrap{
-  overflow: scroll;
+  overflow: auto;
   left:0;
   right:0;
 }
@@ -48,14 +48,16 @@
 .tablemodify-corner{
   position:absolute;
   right:0;
-  box-sizing:content-box;
+  box-sizing:border-box;
 
-  border:1px solid #ccc;
+  border-left:1px solid #ccc;
   background-color: lightblue;
 }
 .top-right{
   top:0px;
+  border-bottom:1px solid #ccc;
 }
 .bottom-right{
   bottom:0px;
+  border-top:1px solid #ccc;
 }
