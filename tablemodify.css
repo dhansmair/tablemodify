@@ -2,10 +2,6 @@ div.tm-container{
   display: flex;
   flex-direction: column;
   flex-wrap:nowrap;
-  /*
-  align-items: stretch;
-  align-self: stretch;
-  align-content: stretch;*/
   border:1px solid #ccc;
   background-color:#F0F0F0;
 
@@ -42,10 +38,47 @@ table.tm-foot{
 
 }
 table.tm-head thead tr > *, table.tm-body thead tr > *, table.tm-foot tfoot tr > *  {
+    position:relative;
 }
 table.tm-head thead tr > * {
   border-top:none;
 }
 table.tm-foot tfoot tr > * {
   border-bottom:none;
+}
+
+/* sorter */
+span.tm-sorter-icon{
+    position:relative;
+    float:right;
+    z-index:100000;
+    overflow:hidden;
+    margin:auto 3px;
+    width:18px;
+    height:18px;
+    font-size:small;
+    color:#333;
+}
+span.tm-sorter-icon > span{
+    position:absolute;
+    right:0;
+    left:0;
+}
+span.tm-sorter-icon > span:first-of-type{
+    top:-1px;
+}
+span.tm-sorter-icon > span:last-of-type{
+    bottom:-1px;
+}
+span.tm-sorter-icon.sort-up > span:first-of-type{
+
+}
+span.tm-sorter-icon.sort-up > span:last-of-type{
+    color:rgba(0,0,0,0.2);
+}
+span.tm-sorter-icon.sort-down > span:first-of-type{
+    color:rgba(0,0,0,0.2);
+}
+span.tm-sorter-icon.sort-down > span:last-of-type{
+
 }

@@ -3,7 +3,11 @@
 <head>
 <title>tablemodify demo page</title>
 <meta charset="iso-8859-1">
-<script src='tablemodify.js'></script>
+<script src='core.js'></script>
+<!--
+<script src='modules.js'></script>
+
+-->
 <link rel='stylesheet' href='tablemodify.css' />
 
 <style>
@@ -22,9 +26,22 @@
 window.addEventListener('DOMContentLoaded', function(){
 
   var tm = new Tablemodify('#mytable', {
-    fixFooter:true,
-    minWidths:['100px', '200px', '30px', '100px']
-  }, 'customContainer');
+      modules: {
+          zebra: {
+              even:'lightskyblue',
+              odd:'white'
+          },
+          fixed: {
+              fixHeader:true,
+              fixFooter:true
+          },
+          sorter: {
+              1:false,
+              2:[false]
+          }
+      }
+  });
+
 
 });
 </script>
@@ -42,131 +59,124 @@ window.addEventListener('DOMContentLoaded', function(){
     <thead>
       <tr>
         <th>header 1</th>
-        <th style='text-align:left;'>header 2</th>
-        <th style='text-align:right;'>header 3</th>
+        <th>header 2</th>
+        <th>header 3</th>
         <th class='example'>header 4</th>
         <th id='problem'>header 5</th>
       </tr>
     </thead>
     <tbody>
       <tr>
+        <td>adam</td>
         <td>content</td>
         <td>content</td>
         <td>content</td>
+        <td>3</td>
+      </tr>
+      <tr>
+        <td>alouis</td>
         <td>content</td>
         <td>content</td>
+        <td>content</td>
+        <td>34</td>
+      </tr>
+      <tr>
+        <td>david</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>45</td>
+      </tr>
+      <tr>
+        <td>franz</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>1111</td>
+      </tr>
+      <tr>
+        <td>herbert</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>777</td>
+      </tr>
+      <tr>
+        <td>zacharias</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>4</td>
+      </tr>
+      <tr>
+        <td>peter</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>14</td>
+      </tr>
+      <tr>
+        <td>quentin</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>20</td>
+      </tr>
+      <tr>
+        <td>martin</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>56</td>
+      </tr>
+      <tr>
+        <td>lotte</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>898</td>
+      </tr>
+      <tr>
+        <td>anna</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>65</td>
+      </tr>
+      <tr>
+        <td>frieda</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>-20</td>
+      </tr>
+      <tr>
+        <td>leon</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>-50</td>
       </tr>
       <tr>
         <td>content</td>
         <td>content</td>
         <td>content</td>
         <td>content</td>
-        <td>content</td>
+        <td>89.6</td>
       </tr>
       <tr>
         <td>content</td>
         <td>content</td>
         <td>content</td>
         <td>content</td>
-        <td>content</td>
+        <td>89.5</td>
       </tr>
       <tr>
         <td>content</td>
         <td>content</td>
         <td>content</td>
         <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
+        <td>-89.5</td>
       </tr>
       <tr>
         <td>content</td>
@@ -305,7 +315,7 @@ window.addEventListener('DOMContentLoaded', function(){
     <tfoot>
       <tr>
         <td>foot 1</td>
-        <td>foot 2</td>
+        <td>this is going to be a very loooooooooooooooooong text</td>
         <td>foot 3</td>
         <td>foot 4</td>
         <td>foot 5</td>
