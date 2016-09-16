@@ -31,9 +31,9 @@ var Tablemodify = (function(window, document) {
         wrapper.appendChild(el);
         return wrapper;
     }
-    function extend(obj, src) {
-        Object.keys(src).forEach(function(key) { obj[key] = src[key]; });
-        return obj;
+    function extend(defaults, settings) {
+        Object.keys(defaults).forEach(function(key) { if (!settings[key]) settings[key] = defaults[key]; });
+        return settings;
     }
     function getScrollbarWidth() {
       var outer = document.createElement("div");
@@ -142,7 +142,7 @@ var Tablemodify = (function(window, document) {
           return null;
         }
         var _this = this;
-        var coreSettings = (coreSettings) ? extend(coreDefaults, coreSettings) : coreDefaults;
+        extend(coreDefaults, coreSettings);
 
         if (coreSettings.containerId.charAt(0) == '#') {
             containerId = coreSettings.containerId.slice(1)
@@ -176,10 +176,10 @@ var Tablemodify = (function(window, document) {
     Tablemodify.modules = {
         zebra: function(settings) {
             var defaults = {even:'#f6f6f6', odd:'white'};
-                defaults = (settings) ? extend(defaults, settings) : defaults;
+            extend(defaults, settings);
 
-            var text = 'table.tm-body tr:nth-of-type(even){background-color:' + defaults.even + '}' +
-                       'table.tm-body tr:nth-of-type(odd) {background-color:' + defaults.odd + '}';
+            var text = 'table.tm-body tr:nth-of-type(even){background-color:' + settings.even + '}' +
+                       'table.tm-body tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
 
             appendStyles(text);
 
@@ -223,7 +223,7 @@ var Tablemodify = (function(window, document) {
                 fixFooter:false,
                 minWidths:'100px'
             };
-            var settings = (settings) ? extend(defaults, settings) : defaults;
+            extend(defaults, settings);
 
             var borderCollapse = getCss(body, 'border-collapse'),
                 headerHeight = getHeaderHeight(),
@@ -382,7 +382,7 @@ var Tablemodify = (function(window, document) {
             var defaults = {
                 default: ['both', 'string']
             };
-            var settings = (settings) ? extend(defaults, settings) : defaults;
+            extend(defaults, settings);
 
             // add Icons
             var icon = '<span class="tm-sorter-icon"><span>&#128897;</span><span>&#128899;</span></span>';
