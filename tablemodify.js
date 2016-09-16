@@ -4,7 +4,7 @@
     written by David Hansmair
 
 */
-var Tablemodify = (function(window, document){
+var Tablemodify = (function(window, document) {
     "use strict";
     // custom console logging functions
     function log (text) {if(settings.debug) console.log(text);}
@@ -57,12 +57,8 @@ var Tablemodify = (function(window, document){
         for (var property in styles) { el.style[property] = styles[property]; }
         return el;
     }
-    function getCss(el, style) {
-        return window.getComputedStyle(el, null)[style];
-    }
-    function inPx(c) {
-      return c + 'px';
-    }
+    function getCss(el, style) { return window.getComputedStyle(el, null)[style];}
+    function inPx(c) { return c + 'px';}
     // iterate over a set of elements and call function for each one
     function iterate(elems, func) {
       for (var i=0; i<elems.length; i++) {
@@ -82,10 +78,7 @@ var Tablemodify = (function(window, document){
     function getFooterHeight() { return origFoot.getBoundingClientRect().height;}
 
     function appendStyles(text) {
-      if (text.trim().length > 0) {
-        var textNode = document.createTextNode(text.trim());
-        stylesheet.appendChild(textNode);
-      }
+      if (text.trim().length > 0) {stylesheet.appendChild(document.createTextNode(text.trim()));}
     }
 
     /*
@@ -97,7 +90,7 @@ var Tablemodify = (function(window, document){
         origHead, origFoot,             // thead, tfoot
         scrollbarWidth,                  // Integer
         containerId,
-        settings;
+        coreSettings;
 
     function getApi () {
         return {
@@ -111,13 +104,14 @@ var Tablemodify = (function(window, document){
             footWrap: footWrap,
             origHead: origHead,
             origFoot: origFoot,
+            coreSettings: coreSettings,
             // methods
             appendStyles: appendStyles,
             getScrollbarWidth: getScrollbarWidth
         };
     }
 
-    var defaults = {
+    var coreDefaults = {
         containerId: 'tm-container'
     };
 
@@ -133,13 +127,14 @@ var Tablemodify = (function(window, document){
         stylesheet = document.createElement('style');
         container.insertBefore(stylesheet, container.firstElementChild);
         container.id = containerId;
+        
         addClass(body,      'tm-body');
         addClass(bodyWrap,  'tm-body-wrap');
         addClass(container, 'tm-container');
         addClass(stylesheet, 'tm-custom-style');
     }
 
-    var Tablemodify = function(selector, settings) {
+    var Tablemodify = function(selector, coreSettings) {
         // must be a table
         body = document.querySelector(selector);
         if (!body || body.nodeName !== 'TABLE'){
@@ -147,30 +142,27 @@ var Tablemodify = (function(window, document){
           return null;
         }
         var _this = this;
-        extend(settings, defaults);
+        var coreSettings = (coreSettings) ? extend(coreDefaults, coreSettings) : coreDefaults;
 
-        if (settings.containerId.charAt(0) == '#') {
-            containerId = settings.containerId.slice(1)
+        if (coreSettings.containerId.charAt(0) == '#') {
+            containerId = coreSettings.containerId.slice(1)
         } else {
-            containerId = settings.containerId;
+            containerId = coreSettings.containerId;
         }
 
         buildDOM();
 
         // call all modules
-        if (settings.modules) {
+        if (coreSettings.modules) {
             // interface for modules
-            var api = getApi();
-
-            Object.keys(settings.modules).forEach(function(moduleName) {
-                // if a module does not exist
-                if (!Tablemodify.modules.hasOwnProperty(moduleName)) {
-                    warn('module ' + moduleName + ' not registered!');
+            iterate(coreSettings.modules, function() {
+                if (!Tablemodify.modules.hasOwnProperty(this)) {
+                    warn('module ' + this + ' not registered!');
                     return;
                 }
-                var moduleSettings = settings.modules[moduleName];
+                var moduleSettings = coreSettings.modules[this];
 
-                Tablemodify.modules[moduleName].call(_this, moduleSettings);
+                Tablemodify.modules[this].call(_this, moduleSettings);
             });
         }
 
@@ -194,8 +186,7 @@ var Tablemodify = (function(window, document){
             return this; // chaining
         },
         fixed: function(settings) {
-            function getHeaderHeight() { return origHead.getBoundingClientRect().height;}
-            function getFooterHeight() { return origFoot.getBoundingClientRect().height;}
+            
             function renderHead () {
                 var allNew = head.firstElementChild.firstElementChild.cells,
                     allOld = origHead.firstElementChild.cells;
@@ -273,8 +264,8 @@ var Tablemodify = (function(window, document){
             // set min-widths for the columns
             var colgroup = body.querySelector('colgroup');
             if (colgroup && colgroup.hasChildNodes()) {
-              iterate(colgroup.children, function(i){
-                this.style['min-width'] = getValueIn(settings.minWidths, i);
+              iterate(colgroup.children, function(i) {
+                this.style.minWidth = getValueIn(settings.minWidths, i);
               });
             }
 
@@ -309,16 +300,16 @@ var Tablemodify = (function(window, document){
                 var parserName = defaults.default[1];
 
                 if (typeof choice == 'string') { // asc || desc || both
-                    var ordering = choice;
+                    ordering = choice;
                 } else if (Array.isArray(choice) && choice.length == 2) {
                     // [ordering, parsername]
-                    var ordering = choice[0];
-                    var parserName = choice[1];
+                    ordering = choice[0];
+                    parserName = choice[1];
                 } else if (Array.isArray(choice) && choice.length == 1) {
                     // [ordering]
-                    var ordering = choice[0];
+                    ordering = choice[0];
                 } else {
-                    var ordering = false;
+                    ordering = false;
                 }
 
                 if (!parsers.hasOwnProperty(parserName)) throw 'parser not defined!';
@@ -346,7 +337,7 @@ var Tablemodify = (function(window, document){
                 }
             }
 
-            function sortAsc (i, parse) {
+            function sortAsc(i, parse) {
                 var arr = bodyRows.sort(function(a, b){
                     return (parse(getValue(a, i)) > parse(getValue(b, i)));
                 });
@@ -356,7 +347,7 @@ var Tablemodify = (function(window, document){
                 sorting = [i, true];
                 return arr;
             }
-            function sortDesc (i, parse) {
+            function sortDesc(i, parse) {
                 var arr = bodyRows.sort(function(a, b){
                     return (parse(getValue(a, i)) > parse(getValue(b, i)));
                 });
@@ -366,7 +357,7 @@ var Tablemodify = (function(window, document){
                 sorting = [i, false];
                 return arr;
             }
-            function reverse () {
+            function reverse() {
                 var arr = bodyRows.reverse();
                 arr.forEach(function(tr){
                     tBody.appendChild(tr);
