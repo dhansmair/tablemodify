@@ -93,6 +93,7 @@ var Tablemodify = (function(window, document) {
     /*
 
     */
+    var coreSettings = {};
     var container, stylesheet,          // div, style
         head, body, foot,               // tables
         headWrap, bodyWrap, footWrap,   // divs
@@ -153,7 +154,7 @@ var Tablemodify = (function(window, document) {
         }
         var _this = this;
 
-        extend(coreDefaults, coreSettings);
+        coreSettings = extend(coreDefaults, coreSettings);
 
         if (coreSettings.containerId.charAt(0) == '#') {
             containerId = coreSettings.containerId.slice(1)
@@ -184,6 +185,9 @@ var Tablemodify = (function(window, document) {
     };
 
     Tablemodify.modules = {
+        /*
+            MODULE zebra: adding zebra style to the table
+        */
         zebra: function(settings) {
             try {
                 var defaults = {even:'#f6f6f6', odd:'white'};
@@ -197,6 +201,9 @@ var Tablemodify = (function(window, document) {
             }
             return this; // chaining
         },
+        /*
+            MODULE fixed: fixed header and/or footer
+        */
         fixed: function(settings) {
             try {
                 function renderHead () {
@@ -407,7 +414,7 @@ var Tablemodify = (function(window, document) {
 
                 // add Icons
                 var icon = '<span class="tm-sorter-icon"><span>&#128897;</span><span>&#128899;</span></span>';
-                var tHead = head.tHead || origHead;
+                var tHead = (head) ? head.tHead : origHead;
                 var tBody = body.tBodies[0];
                 var bodyRows = Array.prototype.slice.call(tBody.querySelectorAll('tr'));
                 var headCells = tHead.firstElementChild.children;
@@ -448,6 +455,7 @@ var Tablemodify = (function(window, document) {
 
                 };
             } catch(e) {
+                console.info(e);
                 error(e);
             }
             return this; // chaining
