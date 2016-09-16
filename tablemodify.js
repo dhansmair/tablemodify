@@ -5,8 +5,6 @@
 
 */
 var Tablemodify = (function(window, document) {
-    var coreSettings = {debug:true};
-
     "use strict";
     // custom console logging functions
     function log (text) {if(coreSettings.debug) console.log(text);}
@@ -19,7 +17,6 @@ var Tablemodify = (function(window, document) {
         return el.classList ? el.classList.contains(className) : new RegExp('\\b'+ className+'\\b').test(el.className);
     }
     function addClass(el, className) {
-        console.log('hello!');
         if (el.classList) el.classList.add(className);
         else if (!hasClass(el, className)) el.className += ' ' + className;
         return el;
@@ -188,119 +185,124 @@ var Tablemodify = (function(window, document) {
 
     Tablemodify.modules = {
         zebra: function(settings) {
-            var defaults = {even:'#f6f6f6', odd:'white'};
-            extend(defaults, settings);
+            try {
+                var defaults = {even:'#f6f6f6', odd:'white'};
+                extend(defaults, settings);
 
-            var text = 'table.tm-body tr:nth-of-type(even){background-color:' + settings.even + '}' +
-                       'table.tm-body tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
-
-            appendStyles(text);
-
+                var text = 'table.tm-body tr:nth-of-type(even){background-color:' + settings.even + '}' +
+                           'table.tm-body tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
+                appendStyles(text);
+            } catch (e) {
+                error(e);
+            }
             return this; // chaining
         },
         fixed: function(settings) {
+            try {
+                function renderHead () {
+                    var allNew = head.firstElementChild.firstElementChild.cells,
+                        allOld = origHead.firstElementChild.cells;
 
-            function renderHead () {
-                var allNew = head.firstElementChild.firstElementChild.cells,
-                    allOld = origHead.firstElementChild.cells;
+                    body.style.marginTop = inPx('-' + getHeaderHeight()) // if header resizes because of a text wrap
 
-                body.style.marginTop = inPx('-' + getHeaderHeight()) // if header resizes because of a text wrap
-
-                iterate(allNew, function(i, neu){
-                    var w = inPx(allOld[i].getBoundingClientRect().width);
-                    setCss(neu, {
-                        'width': w,
-                        'min-width': w,
-                        'max-width': w
+                    iterate(allNew, function(i, neu){
+                        var w = inPx(allOld[i].getBoundingClientRect().width);
+                        setCss(neu, {
+                            'width': w,
+                            'min-width': w,
+                            'max-width': w
+                        });
                     });
-                });
-            }
-            function renderFoot() {
-                var allNew = foot.firstElementChild.firstElementChild.cells,
-                    allOld = origFoot.firstElementChild.cells;
+                }
+                function renderFoot() {
+                    var allNew = foot.firstElementChild.firstElementChild.cells,
+                        allOld = origFoot.firstElementChild.cells;
 
-                bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + getFooterHeight())); // if footer resizes because of a text wrap
+                    bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + getFooterHeight())); // if footer resizes because of a text wrap
 
-                iterate(allNew, function(i, neu){
-                    var w = inPx(allOld[i].getBoundingClientRect().width);
-                    setCss(neu, {
-                        'width': w,
-                        'min-width': w,
-                        'max-width': w
+                    iterate(allNew, function(i, neu){
+                        var w = inPx(allOld[i].getBoundingClientRect().width);
+                        setCss(neu, {
+                            'width': w,
+                            'min-width': w,
+                            'max-width': w
+                        });
                     });
-                });
-            }
+                }
 
-            var defaults = {
-                fixHeader:true,
-                fixFooter:false,
-                minWidths:'100px'
-            };
-            extend(defaults, settings);
+                var defaults = {
+                    fixHeader:true,
+                    fixFooter:false,
+                    minWidths:'100px'
+                };
+                extend(defaults, settings);
 
-            var borderCollapse = getCss(body, 'border-collapse'),
-                headerHeight = getHeaderHeight(),
-                footerHeight = getFooterHeight(),
-                scrollbarWidth = getScrollbarWidth();
+                var borderCollapse = getCss(body, 'border-collapse'),
+                    headerHeight = getHeaderHeight(),
+                    footerHeight = getFooterHeight(),
+                    scrollbarWidth = getScrollbarWidth();
 
-            if (origHead && settings.fixHeader) {
-                head     = document.createElement('table');
-                headWrap = document.createElement('div');
-                head.appendChild(origHead.cloneNode(true));
-                headWrap.appendChild(head);
-                container.insertBefore(headWrap, bodyWrap);
+                if (origHead && settings.fixHeader) {
+                    head     = document.createElement('table');
+                    headWrap = document.createElement('div');
+                    head.appendChild(origHead.cloneNode(true));
+                    headWrap.appendChild(head);
+                    container.insertBefore(headWrap, bodyWrap);
 
-                addClass(head,     'tm-head');
-                addClass(headWrap, 'tm-head-wrap');
+                    addClass(head,     'tm-head');
+                    addClass(headWrap, 'tm-head-wrap');
 
-                head.style.borderCollapse   = borderCollapse;
-                origHead.style.visibility   = 'hidden';
-                body.style.marginTop        = inPx('-' + headerHeight);
-                headWrap.style.marginRight  = inPx(scrollbarWidth);
-            }
-            if (origFoot && settings.fixFooter) {
-                foot     = document.createElement('table');
-                footWrap = document.createElement('div');
-                foot.appendChild(origFoot.cloneNode(true));
-                footWrap.appendChild(foot);
-                container.appendChild(footWrap);
+                    head.style.borderCollapse   = borderCollapse;
+                    origHead.style.visibility   = 'hidden';
+                    body.style.marginTop        = inPx('-' + headerHeight);
+                    headWrap.style.marginRight  = inPx(scrollbarWidth);
+                }
+                if (origFoot && settings.fixFooter) {
+                    foot     = document.createElement('table');
+                    footWrap = document.createElement('div');
+                    foot.appendChild(origFoot.cloneNode(true));
+                    footWrap.appendChild(foot);
+                    container.appendChild(footWrap);
 
-                addClass(foot,     'tm-foot');
-                addClass(footWrap, 'tm-foot-wrap');
+                    addClass(foot,     'tm-foot');
+                    addClass(footWrap, 'tm-foot-wrap');
 
-                foot.style.borderCollapse   = borderCollapse;
-                origFoot.style.visibility   = 'hidden';
-                bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + footerHeight));
-                footWrap.style.marginRight  = inPx(scrollbarWidth);
-            }
+                    foot.style.borderCollapse   = borderCollapse;
+                    origFoot.style.visibility   = 'hidden';
+                    bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + footerHeight));
+                    footWrap.style.marginRight  = inPx(scrollbarWidth);
+                }
 
-            // set min-widths for the columns
-            var colgroup = body.querySelector('colgroup');
-            if (colgroup && colgroup.hasChildNodes()) {
-              iterate(colgroup.children, function(i, col) {
-                col.style.minWidth = getValueIn(settings.minWidths, i);
-              });
-            }
+                // set min-widths for the columns
+                var colgroup = body.querySelector('colgroup');
+                if (colgroup && colgroup.hasChildNodes()) {
+                  iterate(colgroup.children, function(i, col) {
+                    col.style.minWidth = getValueIn(settings.minWidths, i);
+                  });
+                }
 
-            // add event listeners
-            if (head) {
-                window.addEventListener('resize', renderHead);
-                renderHead(); // initial call
-            }
-            if (foot) {
-                window.addEventListener('resize', renderFoot);
-                footWrap.addEventListener('scroll', function(){
-                    // works better than setting scrollLeft property
-                    head.style.marginLeft = inPx((-1)*footWrap.scrollLeft);
-                    bodyWrap.scrollLeft = footWrap.scrollLeft;
-                });
-                renderFoot(); // initial call
-            }
-            if (head || foot) {
-                bodyWrap.addEventListener('scroll', function(){
-                    head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);
-                    footWrap.scrollLeft = bodyWrap.scrollLeft;
-                });
+                // add event listeners
+                if (head) {
+                    window.addEventListener('resize', renderHead);
+                    renderHead(); // initial call
+                }
+                if (foot) {
+                    window.addEventListener('resize', renderFoot);
+                    footWrap.addEventListener('scroll', function(){
+                        // works better than setting scrollLeft property
+                        head.style.marginLeft = inPx((-1)*footWrap.scrollLeft);
+                        bodyWrap.scrollLeft = footWrap.scrollLeft;
+                    });
+                    renderFoot(); // initial call
+                }
+                if (head || foot) {
+                    bodyWrap.addEventListener('scroll', function(){
+                        head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);
+                        footWrap.scrollLeft = bodyWrap.scrollLeft;
+                    });
+                }
+            } catch(e) {
+                error(e);
             }
 
             return this; // chaining
@@ -310,140 +312,144 @@ var Tablemodify = (function(window, document) {
 
         */
         sorter: function(settings) {
-            function getValue (tr, i) {return tr.cells[i].innerHTML;}
-            function choosePath (i) {
-                var choice = (settings[i]) ? settings[i] : settings.default;
-                var ordering = defaults.default[0];
-                var parserName = defaults.default[1];
+            try {
+                function getValue (tr, i) {return tr.cells[i].innerHTML;}
+                function choosePath (i) {
+                    var choice = (settings[i]) ? settings[i] : settings.default;
+                    var ordering = defaults.default[0];
+                    var parserName = defaults.default[1];
 
-                if (typeof choice == 'string') { // asc || desc || both
-                    ordering = choice;
-                } else if (Array.isArray(choice) && choice.length == 2) {
-                    // [ordering, parsername]
-                    ordering = choice[0];
-                    parserName = choice[1];
-                } else if (Array.isArray(choice) && choice.length == 1) {
-                    // [ordering]
-                    ordering = choice[0];
-                } else {
-                    ordering = false;
-                }
+                    if (typeof choice == 'string') { // asc || desc || both
+                        ordering = choice;
+                    } else if (Array.isArray(choice) && choice.length == 2) {
+                        // [ordering, parsername]
+                        ordering = choice[0];
+                        parserName = choice[1];
+                    } else if (Array.isArray(choice) && choice.length == 1) {
+                        // [ordering]
+                        ordering = choice[0];
+                    } else {
+                        ordering = false;
+                    }
 
-                if (!parsers[parserName]) throw 'parser not defined!';
+                    if (!parsers[parserName]) throw 'parser not defined!';
 
-                if (ordering) {
-                    // i, ordering = asc || desc || auto, parserName
-                    if (sorting[0] == i) {
-                        if (sorting[1] && ordering !== 'asc') {
-                            // asc sorted -> reverse if allowed
-                            //if (ordering == 'both' || ordering == 'desc') {
+                    if (ordering) {
+                        // i, ordering = asc || desc || auto, parserName
+                        if (sorting[0] == i) {
+                            if (sorting[1] && ordering !== 'asc') {
+                                // asc sorted -> reverse if allowed
+                                //if (ordering == 'both' || ordering == 'desc') {
+                                    reverse();
+                                    // set sorting to [i, false]
+                                    addClass(tHead.firstElementChild.cells[i].lastElementChild, 'sort-down');
+                                //}
+                            } else if (ordering == 'both' || ordering == 'asc') {
                                 reverse();
-                                // set sorting to [i, false]
-                                addClass(tHead.firstElementChild.cells[i].lastElementChild, 'sort-down');
-                            //}
+                                // set sorting to [i, true]
+                                addClass(tHead.firstElementChild.cells[i].lastElementChild, 'sort-up');
+                            }
                         } else if (ordering == 'both' || ordering == 'asc') {
-                            reverse();
+                            sortAsc(i, parsers[parserName]);
                             // set sorting to [i, true]
                             addClass(tHead.firstElementChild.cells[i].lastElementChild, 'sort-up');
                         }
-                    } else if (ordering == 'both' || ordering == 'asc') {
-                        sortAsc(i, parsers[parserName]);
-                        // set sorting to [i, true]
-                        addClass(tHead.firstElementChild.cells[i].lastElementChild, 'sort-up');
                     }
                 }
-            }
 
-            function sortAsc(i, parse) {
-                // hier liegt irgendwo ein Feher
-                var arr = bodyRows.sort(function(a, b){
-                    return (parse(getValue(a, i)) > parse(getValue(b, i)));
-                });
-                arr.forEach(function(tr){
-                    tBody.appendChild(tr);
-                });
-                sorting = [i, true];
-                return arr;
-            }
-            function sortDesc(i, parse) {
-                var arr = bodyRows.sort(function(a, b){
-                    return (parse(getValue(a, i)) > parse(getValue(b, i)));
-                });
-                arr.forEach(function(tr){
-                    tBody.appendChild(tr);
-                });
-                sorting = [i, false];
-                return arr;
-            }
-            function reverse() {
-                var arr = bodyRows.reverse();
-                arr.forEach(function(tr){
-                    tBody.appendChild(tr);
-                });
-                sorting[1] = !sorting[1];
-                return arr;
-            }
-
-            var parsers = {
-                string: function(val) {
-                    return val.trim();
-                },
-                number: function(val) {
-                    var numeric = parseFloat(val);
-                    if (!isNaN(numeric)){
-                        return numeric;
-                    } else {
-                        return val;
-                    }
-                }
-            };
-            var defaults = {
-                default: ['both', 'string']
-            };
-            extend(defaults, settings);
-
-            // add Icons
-            var icon = '<span class="tm-sorter-icon"><span>&#128897;</span><span>&#128899;</span></span>';
-            var tHead = head.tHead || origHead;
-            var tBody = body.tBodies[0];
-            var bodyRows = Array.prototype.slice.call(tBody.querySelectorAll('tr'));
-            var headCells = tHead.firstElementChild.children;
-            var sorting = [0, true];
-
-            // init structure
-            iterate(headCells, function(i, cell){
-                if (typeof settings[i] != undefined) {
-                    // custom settings for this cell
-                    var customSettings = settings[i];
-                    if (!Array.isArray(customSettings)) { // no array
-                        if (customSettings != false) cell.innerHTML = cell.innerHTML + icon;
-                    } else {
-                        if (customSettings[0] != false) cell.innerHTML = cell.innerHTML + icon;
-                    }
-                } else {
-                    // default settings: sort up/down, parse automatic
-                    cell.innerHTML = cell.innerHTML + icon;
-                }
-            });
-
-            // ADD CLICK EVENTS
-            iterate(tHead.firstElementChild.cells, function(i, cell){
-                cell.addEventListener('click', function(e){
-                    var icons = tHead.firstElementChild.querySelectorAll('span.tm-sorter-icon.sort-up, span.tm-sorter-icon.sort-down');
-                    iterate(icons, function(j, icon){
-                        removeClass(icon, 'sort-up');
-                        removeClass(icon, 'sort-down');
+                function sortAsc(i, parse) {
+                    // hier liegt irgendwo ein Feher
+                    var arr = bodyRows.sort(function(a, b){
+                        return (parse(getValue(a, i)) > parse(getValue(b, i)));
                     });
-                    choosePath(i);
-                })
-            });
+                    arr.forEach(function(tr){
+                        tBody.appendChild(tr);
+                    });
+                    sorting = [i, true];
+                    return arr;
+                }
+                function sortDesc(i, parse) {
+                    var arr = bodyRows.sort(function(a, b){
+                        return (parse(getValue(a, i)) > parse(getValue(b, i)));
+                    });
+                    arr.forEach(function(tr){
+                        tBody.appendChild(tr);
+                    });
+                    sorting = [i, false];
+                    return arr;
+                }
+                function reverse() {
+                    var arr = bodyRows.reverse();
+                    arr.forEach(function(tr){
+                        tBody.appendChild(tr);
+                    });
+                    sorting[1] = !sorting[1];
+                    return arr;
+                }
 
-            sortAsc(0, parsers[defaults.default[1]]);
-            addClass(tHead.firstElementChild.cells[0].lastElementChild, 'sort-up');
+                var parsers = {
+                    string: function(val) {
+                        return val.trim();
+                    },
+                    number: function(val) {
+                        var numeric = parseFloat(val);
+                        if (!isNaN(numeric)){
+                            return numeric;
+                        } else {
+                            return val;
+                        }
+                    }
+                };
+                var defaults = {
+                    default: ['both', 'string']
+                };
+                extend(defaults, settings);
 
-            this.sorter = {
+                // add Icons
+                var icon = '<span class="tm-sorter-icon"><span>&#128897;</span><span>&#128899;</span></span>';
+                var tHead = head.tHead || origHead;
+                var tBody = body.tBodies[0];
+                var bodyRows = Array.prototype.slice.call(tBody.querySelectorAll('tr'));
+                var headCells = tHead.firstElementChild.children;
+                var sorting = [0, true];
 
-            };
+                // init structure
+                iterate(headCells, function(i, cell){
+                    if (typeof settings[i] != undefined) {
+                        // custom settings for this cell
+                        var customSettings = settings[i];
+                        if (!Array.isArray(customSettings)) { // no array
+                            if (customSettings != false) cell.innerHTML = cell.innerHTML + icon;
+                        } else {
+                            if (customSettings[0] != false) cell.innerHTML = cell.innerHTML + icon;
+                        }
+                    } else {
+                        // default settings: sort up/down, parse automatic
+                        cell.innerHTML = cell.innerHTML + icon;
+                    }
+                });
+
+                // ADD CLICK EVENTS
+                iterate(tHead.firstElementChild.cells, function(i, cell){
+                    cell.addEventListener('click', function(e){
+                        var icons = tHead.firstElementChild.querySelectorAll('span.tm-sorter-icon.sort-up, span.tm-sorter-icon.sort-down');
+                        iterate(icons, function(j, icon){
+                            removeClass(icon, 'sort-up');
+                            removeClass(icon, 'sort-down');
+                        });
+                        choosePath(i);
+                    })
+                });
+
+                sortAsc(0, parsers[defaults.default[1]]);
+                addClass(tHead.firstElementChild.cells[0].lastElementChild, 'sort-up');
+
+                this.sorter = {
+
+                };
+            } catch(e) {
+                error(e);
+            }
             return this; // chaining
         }
     };
