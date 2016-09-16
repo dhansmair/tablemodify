@@ -44,6 +44,11 @@ var settings = {
       2: ['desc', 'string'] // only descending sorting
       
       // ...
+    },
+    // if you have defined an own module, you can call it like this:
+    yourCustomModule: {
+      optionA: 'testString',
+      optionB: 'testString2'
     }
 };
 
