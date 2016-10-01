@@ -70,9 +70,7 @@ span.tm-sorter-icon > span:first-of-type{
 span.tm-sorter-icon > span:last-of-type{
     bottom:-1px;
 }
-span.tm-sorter-icon.sort-up > span:first-of-type{
 
-}
 span.tm-sorter-icon.sort-up > span:last-of-type{
     color:rgba(0,0,0,0.2);
 }
@@ -81,4 +79,11 @@ span.tm-sorter-icon.sort-down > span:first-of-type{
 }
 span.tm-sorter-icon.sort-down > span:last-of-type{
 
+}
+/* sort-up */
+div.tm-container.tm-sorter tm-head tr > *.sort-up:after{
+    content:'\1F781';
+}
+div.tm-container.tm-sorter tm-head tr > *.sort-down:after{
+    content:'\1F781';
 }

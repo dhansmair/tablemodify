@@ -7,11 +7,11 @@
 var Tablemodify = (function(window, document) {
     "use strict";
     // custom console logging functions
-    function log (text) {if(coreSettings.debug) console.log(text);}
-    function info (text) {if(coreSettings.debug) console.info(text);}
-    function warn (text) {if(coreSettings.debug) console.warn(text);}
-    function trace (text) {if(coreSettings.debug) console.trace(text);}
-    function error (text) {if(coreSettings.debug) console.error(text);}
+    function log(text) {if(coreSettings.debug) console.log(text);}
+    function info(text) {if(coreSettings.debug) console.info(text);}
+    function warn(text) {if(coreSettings.debug) console.warn(text);}
+    function trace(text) {if(coreSettings.debug) console.trace(text);}
+    function error(text) {if(coreSettings.debug) console.error(text);}
     // utils
     function hasClass(el, className) {
         return el.classList ? el.classList.contains(className) : new RegExp('\\b'+ className+'\\b').test(el.className);
@@ -32,7 +32,14 @@ var Tablemodify = (function(window, document) {
         return wrapper;
     }
     function extend(d, s) {
-        Object.keys(d).forEach(function(key) { if (!s[key]) s[key] = d[key]; });
+        Object.keys(d).forEach(function(key) {
+            if(!s.hasOwnProperty(key)) s[key] = d[key];
+            // deep-extend
+            if (typeof s[key] === 'object') {
+                s[key] = extend(d[key], s[key]);
+            }
+        });
+
         return s;
     }
     function getScrollbarWidth() {
@@ -185,6 +192,22 @@ var Tablemodify = (function(window, document) {
     };
 
     Tablemodify.modules = {
+
+        columnStyles: function(settings) {
+                try {
+                    var defaults = {
+                            all: {
+                                'text-align':'center',
+                                'padding': '3px'
+                            }
+                            // 0: {},
+                            // 1: {}
+                    };
+                } catch(e) {
+                    error(e);
+                }
+        },
+
         /*
             MODULE zebra: adding zebra style to the table
         */
@@ -316,88 +339,61 @@ var Tablemodify = (function(window, document) {
         },
         /*
             MODULE sorter
+            @TODO Sortiersymbole im sorter optimieren, mit pseudoelementen deren background-image ein svg ist.
 
         */
         sorter: function(settings) {
-            try {
-                function getValue (tr, i) {return tr.cells[i].innerHTML;}
-                function choosePath (i) {
-                    var choice = (settings[i]) ? settings[i] : settings.default;
-                    var ordering = defaults.default[0];
-                    var parserName = defaults.default[1];
+            function getValue (tr, i) {return tr.cells[i].innerHTML;}
 
-                    if (typeof choice == 'string') { // asc || desc || both
-                        ordering = choice;
-                    } else if (Array.isArray(choice) && choice.length == 2) {
-                        // [ordering, parsername]
-                        ordering = choice[0];
-                        parserName = choice[1];
-                    } else if (Array.isArray(choice) && choice.length == 1) {
-                        // [ordering]
-                        ordering = choice[0];
-                    } else {
-                        ordering = false;
+            var defaults = {
+                headers: {
+                    all: {
+                        order: 'both',
+                        parser: 'string'
                     }
+                },
+                initial: [0, 'asc']
+            };
 
-                    if (!parsers[parserName]) throw 'parser not defined!';
+            extend(defaults, settings);
 
-                    if (ordering) {
-                        // i, ordering = asc || desc || auto, parserName
-                        if (sorting[0] == i) {
-                            if (sorting[1] && ordering !== 'asc') {
-                                // asc sorted -> reverse if allowed
-                                //if (ordering == 'both' || ordering == 'desc') {
-                                    reverse();
-                                    // set sorting to [i, false]
-                                    addClass(tHead.firstElementChild.cells[i].lastElementChild, 'sort-down');
-                                //}
-                            } else if (ordering == 'both' || ordering == 'asc') {
-                                reverse();
-                                // set sorting to [i, true]
-                                addClass(tHead.firstElementChild.cells[i].lastElementChild, 'sort-up');
-                            }
-                        } else if (ordering == 'both' || ordering == 'asc') {
-                            sortAsc(i, parsers[parserName]);
-                            // set sorting to [i, true]
-                            addClass(tHead.firstElementChild.cells[i].lastElementChild, 'sort-up');
-                        }
-                    }
+            function Sorter() {
+                var i = settings.initial[0],
+                    _this = this;
+                this.body = body.tBodies[0];
+                this.rows = [].slice.call(this.body.rows);
+                this.settings = settings.headers;
+
+                if (settings.initial[1] === 'desc') {
+                    this.sortDesc(i)
+                        .render()
+                        .setIndex(i)
+                        .setOrderAsc(false);
+                } else {
+                    this.sortAsc(i)
+                        .render()
+                        .setIndex(i)
+                        .setOrderAsc(true);
                 }
 
-                function sortAsc(i, parse) {
-                    // hier liegt irgendwo ein Feher
-                    var arr = bodyRows.sort(function(a, b){
-                        return (parse(getValue(a, i)) > parse(getValue(b, i)));
+                iterate(head.firstElementChild.firstElementChild.children, function(i, cell) {
+                    cell.addEventListener('click', function(e) {
+                        _this.manage(i);
                     });
-                    arr.forEach(function(tr){
-                        tBody.appendChild(tr);
-                    });
-                    sorting = [i, true];
-                    return arr;
-                }
-                function sortDesc(i, parse) {
-                    var arr = bodyRows.sort(function(a, b){
-                        return (parse(getValue(a, i)) > parse(getValue(b, i)));
-                    });
-                    arr.forEach(function(tr){
-                        tBody.appendChild(tr);
-                    });
-                    sorting = [i, false];
-                    return arr;
-                }
-                function reverse() {
-                    var arr = bodyRows.reverse();
-                    arr.forEach(function(tr){
-                        tBody.appendChild(tr);
-                    });
-                    sorting[1] = !sorting[1];
-                    return arr;
-                }
+                });
+            }
 
-                var parsers = {
+            Sorter.prototype = {
+                body: null,
+                rows: [],
+                index: 0,
+                orderAsc: true,
+                settings: {},
+                parsers: {
                     string: function(val) {
                         return val.trim();
                     },
+                    // parse numeric values
                     number: function(val) {
                         var numeric = parseFloat(val);
                         if (!isNaN(numeric)){
@@ -405,60 +401,91 @@ var Tablemodify = (function(window, document) {
                         } else {
                             return val;
                         }
-                    }
-                };
-                var defaults = {
-                    default: ['both', 'string']
-                };
-                extend(defaults, settings);
+                    },
+                    // not implemented yet
+                    date: function(val, format) {
+                        try{
 
-                // add Icons
-                var icon = '<span class="tm-sorter-icon"><span>&#128897;</span><span>&#128899;</span></span>';
-                var tHead = (head) ? head.tHead : origHead;
-                var tBody = body.tBodies[0];
-                var bodyRows = Array.prototype.slice.call(tBody.querySelectorAll('tr'));
-                var headCells = tHead.firstElementChild.children;
-                var sorting = [0, true];
-
-                // init structure
-                iterate(headCells, function(i, cell){
-                    if (typeof settings[i] != undefined) {
-                        // custom settings for this cell
-                        var customSettings = settings[i];
-                        if (!Array.isArray(customSettings)) { // no array
-                            if (customSettings != false) cell.innerHTML = cell.innerHTML + icon;
-                        } else {
-                            if (customSettings[0] != false) cell.innerHTML = cell.innerHTML + icon;
+                        } catch(e) {
+                            console.log(e);
                         }
-                    } else {
-                        // default settings: sort up/down, parse automatic
-                        cell.innerHTML = cell.innerHTML + icon;
                     }
-                });
+                },
+                setIndex: function(value) {
+                    this.index = value;
+                    return this;
+                },
+                setOrderAsc: function(bool) {
+                    if (bool === undefined) bool = true;
+                    this.orderAsc = bool;
+                    return this;
+                },
+                getParser: function(i) {
+                    return (this.settings[i] === undefined) ? this.parsers[this.settings.all.parser] : this.parsers[this.settings[i].parser];
+                },
+                getIndex: function() {
+                    return this.index;
+                },
+                getOrderAsc: function() {
+                    return this.orderAsc;
+                },
+                render: function() {
+                    var tBody = this.body;
+                    this.rows.forEach(function(tr) {
+                        tBody.appendChild(tr);
+                    });
+                    return this;
+                },
+                sortAsc: function(i) {
+                    var parse = this.getParser(i); // it's a function!
+                    this.rows.sort(function(a, b) {
+                        return (parse(getValue(a, i)) > parse(getValue(b, i)));
+                    });
+                    return this;
+                },
+                sortDesc: function(i) {
+                    var parse = this.getParser(i); // it's a function!
+                    this.rows.sort(function(a, b) {
+                        return (parse(getValue(a, i)) < parse(getValue(b, i)));
+                    });
+                    return this;
+                },
+                reverse: function() {
+                    this.rows.reverse();
+                    return this;
+                },
+                manage: function(i) {
+                    // Einstellungen für die aktuelle Spalte
+                    var tmpSettings = (this.settings[i] === undefined) ? this.settings.all : this.settings[i];
 
-                // ADD CLICK EVENTS
-                iterate(tHead.firstElementChild.cells, function(i, cell){
-                    cell.addEventListener('click', function(e){
-                        var icons = tHead.firstElementChild.querySelectorAll('span.tm-sorter-icon.sort-up, span.tm-sorter-icon.sort-down');
-                        iterate(icons, function(j, icon){
-                            removeClass(icon, 'sort-up');
-                            removeClass(icon, 'sort-down');
-                        });
-                        choosePath(i);
-                    })
-                });
+                    if (!tmpSettings.hasOwnProperty('order')) tmpSettings.order = this.settings.all.order;
+                    if (!tmpSettings.hasOwnProperty('parser')) tmpSettings.parser = this.settings.all.parser;
 
-                sortAsc(0, parsers[defaults.default[1]]);
-                addClass(tHead.firstElementChild.cells[0].lastElementChild, 'sort-up');
+                    if (this.index == i && (tmpSettings.order === 'both' || (tmpSettings.order === 'asc' && !this.getOrderAsc()) || (tmpSettings.order === 'desc' && this.getOrderAsc()))) {
+                        // invertiere aktuelle Sortierung
+                        this.reverse()
+                            .render()
+                            .setOrderAsc(!this.getOrderAsc());
 
-                this.sorter = {
-
-                };
-            } catch(e) {
-                console.info(e);
-                error(e);
+                    } else if (tmpSettings.order === 'both' || tmpSettings.order === 'asc') {
+                        // sort asc
+                        this.sortAsc(i)
+                            .render()
+                            .setOrderAsc()
+                            .setIndex(i);
+                    } else if (tmpSettings.order === 'desc') {
+                        // sort desc
+                        this.sortDesc(i)
+                            .render()
+                            .setOrderAsc(false)
+                            .setIndex(i);
+                    } else {
+                        // do nothing
+                    }
+                }
             }
-            return this; // chaining
+
+            return new Sorter();
         }
     };
 

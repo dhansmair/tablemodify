@@ -32,8 +32,15 @@ window.addEventListener('DOMContentLoaded', function(){
               fixFooter:true
           },
           sorter: {
-              1:false,
-              2:[false]
+              headers: {
+                  1:{
+                      order:'both',
+                      parser: 'string'
+                  },
+                  2:{
+                      order:false
+                  }
+              }
           }
       },
       debug: true
