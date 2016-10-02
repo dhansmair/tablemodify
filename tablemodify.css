@@ -1,38 +1,40 @@
 div.tm-container{
-  display: flex;
-  flex-direction: column;
-  flex-wrap:nowrap;
-  border:1px solid #ccc;
-  background-color:#F0F0F0;
-
-  overflow:hidden;
+    display: flex;
+    flex-direction: column;
+    flex-wrap:nowrap;
+    display: -ms-flexbox;
+    -ms-flex-direction: column;
+    -ms-flex-wrap:nowrap;
+    border:1px solid #ccc;
+    background-color:#F0F0F0;
+    overflow:hidden;
 }
 div.tm-container *{
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 div.tm-head-wrap{
-  overflow:hidden;
-  background-color:#f0f0f0;
-  z-index:100;
+    overflow:hidden;
+    background-color:#f0f0f0;
+    z-index:100;
 }
 div.tm-body-wrap{
-  flex:1;
-  overflow-x: scroll;
-  overflow-y: auto;
-  background-color:white;
-  z-index:99;
+    flex:1;
+    -ms-flex:1;
+    overflow:auto;
+    background-color:white;
+    z-index:99;
 }
 div.tm-foot-wrap{
-  overflow-x: auto;
-  overflow-y: hidden;
-  background-color:#f0f0f0;
-  z-index:100;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background-color:#f0f0f0;
+    z-index:100;
 }
 table.tm-head{
-
+    margin-top: -1px;
 }
 table.tm-body{
-  min-width: 100%;
+    min-width: 100%;
 }
 table.tm-foot{
 
@@ -40,50 +42,27 @@ table.tm-foot{
 table.tm-head thead tr > *, table.tm-body thead tr > *, table.tm-foot tfoot tr > *  {
     position:relative;
 }
-table.tm-head thead tr > * {
-  border-top:none;
-}
 table.tm-foot tfoot tr > * {
-  border-bottom:none;
+    border-bottom:none;
 }
 
 /* sorter */
-span.tm-sorter-icon{
-    position:relative;
-    float:right;
-    z-index:100000;
-    overflow:hidden;
-    margin:auto 3px;
-    width:18px;
-    height:18px;
-    font-size:small;
-    color:#333;
+div.tm-sorter .sortable{
+    padding-right:15px !important;
+    cursor:pointer;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path d="M12 3.202l3.839 4.798h-7.678l3.839-4.798zm0-3.202l-8 10h16l-8-10zm3.839 16l-3.839 4.798-3.839-4.798h7.678zm4.161-2h-16l8 10 8-10z"/></svg>');
+    background-size:14px 14px;
+    background-repeat:no-repeat;
+    background-position:center right;
 }
-span.tm-sorter-icon > span{
-    position:absolute;
-    right:0;
-    left:0;
+div.tm-sorter .sortable:hover{
+    background-color:#6c9dc6;
 }
-span.tm-sorter-icon > span:first-of-type{
-    top:-1px;
+div.tm-sorter .sortable.sort-up{
+    background-color:#6c9dc6;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path d="M12 0l-8 10h16l-8-10zm3.839 16l-3.839 4.798-3.839-4.798h7.678zm4.161-2h-16l8 10 8-10z"/></svg>');
 }
-span.tm-sorter-icon > span:last-of-type{
-    bottom:-1px;
-}
-
-span.tm-sorter-icon.sort-up > span:last-of-type{
-    color:rgba(0,0,0,0.2);
-}
-span.tm-sorter-icon.sort-down > span:first-of-type{
-    color:rgba(0,0,0,0.2);
-}
-span.tm-sorter-icon.sort-down > span:last-of-type{
-
-}
-/* sort-up */
-div.tm-container.tm-sorter tm-head tr > *.sort-up:after{
-    content:'\1F781';
-}
-div.tm-container.tm-sorter tm-head tr > *.sort-down:after{
-    content:'\1F781';
+div.tm-sorter .sortable.sort-down{
+    background-color:#6c9dc6;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path d="M12 3.202l3.839 4.798h-7.678l3.839-4.798zm0-3.202l-8 10h16l-8-10zm8 14h-16l8 10 8-10z"/></svg>');
 }

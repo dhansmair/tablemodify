@@ -69,8 +69,8 @@ var Tablemodify = (function(window, document) {
     // iterate over a set of elements and call function for each one
     function iterate(elems, func) {
       if (typeof elems === 'object') {
-          var keys = Object.keys(elems);
-          var l = keys.length;
+          var keys = Object.keys(elems),
+              l = keys.length;
           for (var i = 0; i < l; i++) {
               func.call(undefined, keys[i], elems[keys[i]]);
           }
@@ -161,7 +161,7 @@ var Tablemodify = (function(window, document) {
         }
         var _this = this;
 
-        coreSettings = extend(coreDefaults, coreSettings);
+        extend(coreDefaults, coreSettings);
 
         if (coreSettings.containerId.charAt(0) == '#') {
             containerId = coreSettings.containerId.slice(1)
@@ -195,6 +195,8 @@ var Tablemodify = (function(window, document) {
 
         columnStyles: function(settings) {
                 try {
+                    addClass(container, 'tm-column-styles');
+
                     var defaults = {
                             all: {
                                 'text-align':'center',
@@ -203,6 +205,28 @@ var Tablemodify = (function(window, document) {
                             // 0: {},
                             // 1: {}
                     };
+                    extend(defaults, settings);
+
+                    // style general
+                    var text = 'div.tm-column-styles table tr > *{';
+                    iterate(settings.all, function(prop, value) {
+                        text += prop + ':' + value + ';';
+                    });
+                    text += '}';
+
+                    delete settings.all;
+
+                    // add custom styles to the single columns
+                    iterate(settings, function(index, cssStyles) {
+                        var i = parseInt(index) + 1;
+
+                        text += 'div.tm-container table tr > *:nth-of-type(' + i + '){';
+                        iterate(cssStyles, function(prop, value) {
+                            text += prop + ':' + value + ';';
+                        });
+                        text += '}';
+                    });
+                    appendStyles(text);
                 } catch(e) {
                     error(e);
                 }
@@ -213,22 +237,25 @@ var Tablemodify = (function(window, document) {
         */
         zebra: function(settings) {
             try {
+                addClass(container, 'tm-zebra');
+
                 var defaults = {even:'#f6f6f6', odd:'white'};
                 extend(defaults, settings);
 
-                var text = 'table.tm-body tr:nth-of-type(even){background-color:' + settings.even + '}' +
-                           'table.tm-body tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
+                var text = 'table.tm-body tr:nth-of-type(even){background-color:' + settings.even + '}'
+                         + 'table.tm-body tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
                 appendStyles(text);
             } catch (e) {
                 error(e);
             }
-            return this; // chaining
         },
         /*
             MODULE fixed: fixed header and/or footer
         */
         fixed: function(settings) {
             try {
+                addClass(container, 'tm-fixed');
+
                 function renderHead () {
                     var allNew = head.firstElementChild.firstElementChild.cells,
                         allOld = origHead.firstElementChild.cells;
@@ -262,17 +289,16 @@ var Tablemodify = (function(window, document) {
 
                 var defaults = {
                     fixHeader:true,
-                    fixFooter:false,
-                    minWidths:'100px'
+                    fixFooter:false
                 };
                 extend(defaults, settings);
 
+
                 var borderCollapse = getCss(body, 'border-collapse'),
-                    headerHeight = getHeaderHeight(),
-                    footerHeight = getFooterHeight(),
                     scrollbarWidth = getScrollbarWidth();
 
                 if (origHead && settings.fixHeader) {
+                    var headerHeight = getHeaderHeight();
                     head     = document.createElement('table');
                     headWrap = document.createElement('div');
                     head.appendChild(origHead.cloneNode(true));
@@ -288,6 +314,7 @@ var Tablemodify = (function(window, document) {
                     headWrap.style.marginRight  = inPx(scrollbarWidth);
                 }
                 if (origFoot && settings.fixFooter) {
+                    var footerHeight = getFooterHeight();
                     foot     = document.createElement('table');
                     footWrap = document.createElement('div');
                     foot.appendChild(origFoot.cloneNode(true));
@@ -299,116 +326,213 @@ var Tablemodify = (function(window, document) {
 
                     foot.style.borderCollapse   = borderCollapse;
                     origFoot.style.visibility   = 'hidden';
+                    bodyWrap.style.overflowX    = 'scroll';
                     bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + footerHeight));
                     footWrap.style.marginRight  = inPx(scrollbarWidth);
                 }
 
-                // set min-widths for the columns
-                var colgroup = body.querySelector('colgroup');
-                if (colgroup && colgroup.hasChildNodes()) {
-                  iterate(colgroup.children, function(i, col) {
-                    col.style.minWidth = getValueIn(settings.minWidths, i);
-                  });
-                }
-
                 // add event listeners
-                if (head) {
-                    window.addEventListener('resize', renderHead);
-                    renderHead(); // initial call
-                }
-                if (foot) {
-                    window.addEventListener('resize', renderFoot);
+                if (head) {window.addEventListener('resize', renderHead);}
+                if (foot) {window.addEventListener('resize', renderFoot);}
+
+                if (head && foot) {
+
+                    bodyWrap.addEventListener('scroll', function(){
+                        head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);
+                        footWrap.scrollLeft = bodyWrap.scrollLeft;
+                    });
                     footWrap.addEventListener('scroll', function(){
                         // works better than setting scrollLeft property
                         head.style.marginLeft = inPx((-1)*footWrap.scrollLeft);
                         bodyWrap.scrollLeft = footWrap.scrollLeft;
                     });
-                    renderFoot(); // initial call
+
+                } else if (head && !foot) {
+
+                    bodyWrap.addEventListener('scroll', function(){head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);});
+
+                } else if (!head && foot) {
+
+                    footWrap.addEventListener('scroll', function(){bodyWrap.scrollLeft = footWrap.scrollLeft;});
+                    bodyWrap.addEventListener('scroll', function(){footWrap.scrollLeft = bodyWrap.scrollLeft;});
+
+                }  else if (!head && !foot) {
+                    // do nothing
                 }
-                if (head || foot) {
-                    bodyWrap.addEventListener('scroll', function(){
-                        head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);
-                        footWrap.scrollLeft = bodyWrap.scrollLeft;
-                    });
-                }
+
+                setTimeout(function(){
+                    // nötig, weil der Browser zum rendern manchmal eine gewisse Zeit braucht
+                    if (head) renderHead();
+                    if (foot) renderFoot();
+                }, 50);
             } catch(e) {
                 error(e);
             }
-
-            return this; // chaining
         },
         /*
             MODULE sorter
-            @TODO Sortiersymbole im sorter optimieren, mit pseudoelementen deren background-image ein svg ist.
-
+            @TODO parser implementieren
         */
         sorter: function(settings) {
-            function getValue (tr, i) {return tr.cells[i].innerHTML;}
+            addClass(container, 'tm-sorter');
+
+            function getValue(tr, i) {return tr.cells[i].innerHTML.trim();}
+            function removeActiveSorting() {
+                if (container.querySelector('tr > *.sort-up')) {
+                    removeClass(container.querySelector('tr > *.sort-up'), 'sort-up');
+                }
+                if (container.querySelector('tr > *.sort-down')) {
+                    removeClass(container.querySelector('tr > *.sort-down'), 'sort-down');
+                }
+            }
 
             var defaults = {
                 headers: {
                     all: {
-                        order: 'both',
-                        parser: 'string'
+                        enabled: true,
+                        parser: 'intelligent'
                     }
                 },
                 initial: [0, 'asc']
             };
 
             extend(defaults, settings);
-
+            /*
+                constructor
+            */
             function Sorter() {
                 var i = settings.initial[0],
+                    order = settings.initial[1],
+                    headCellsArr = head ? [].slice.call(head.firstElementChild.firstElementChild.cells) : [].slice.call(body.tHead.firstElementChild.cells),
                     _this = this;
+
                 this.body = body.tBodies[0];
                 this.rows = [].slice.call(this.body.rows);
-                this.settings = settings.headers;
+                this.headers = settings.headers;
 
-                if (settings.initial[1] === 'desc') {
+                // iterate over header cells
+                iterate(headCellsArr, function(i, cell) {
+                    if (_this.getIsEnabled(i)) {
+                        addClass(cell, 'sortable');
+                        cell.addEventListener('click', function(e) { _this.manage(i, cell);});
+                    }
+                });
+
+                // try to sort by initial sorting
+                if (!this.getIsEnabled(i)) {
+                    // not enabled
+                    var initialized = false;
+                    i = 0;
+                    while (i < headCellsArr.length && !initialized) {
+                        if (this.getIsEnabled(i)) {
+                            this.manage(i, headCellsArr[i]);
+                            initialized = true;
+                        }
+                        i++;
+                    }
+
+                } else if (order === 'desc') {
+                    // enabled, sort desc
                     this.sortDesc(i)
                         .render()
-                        .setIndex(i)
-                        .setOrderAsc(false);
-                } else {
-                    this.sortAsc(i)
-                        .render()
-                        .setIndex(i)
-                        .setOrderAsc(true);
-                }
+                        .setOrderAsc(false)
+                        .setIndex(i);
 
-                iterate(head.firstElementChild.firstElementChild.children, function(i, cell) {
-                    cell.addEventListener('click', function(e) {
-                        _this.manage(i);
-                    });
-                });
+                    removeActiveSorting();
+                    addClass(cell, 'sort-down');
+                } else {
+                    // enabled, sort asc
+                    this.manage(i, headCellsArr[i]);
+                }
             }
 
             Sorter.prototype = {
                 body: null,
                 rows: [],
-                index: 0,
+                index: Infinity,
                 orderAsc: true,
-                settings: {},
+                headers: {},
                 parsers: {
-                    string: function(val) {
-                        return val.trim();
+                    string: function(a, b) {
+                        return a > b ? 1 : -1;
                     },
-                    // parse numeric values
-                    number: function(val) {
-                        var numeric = parseFloat(val);
-                        if (!isNaN(numeric)){
-                            return numeric;
+                    intelligent: function(a, b) {
+                        var isNumericA = !isNaN(a),
+                            isNumericB = !isNaN(b);
+
+                        if (isNumericA && isNumericB) {
+                            return parseFloat(a) - parseFloat(b);
+                        } else if (isNumericA) {
+                            return -1;
+                        } else if (isNumericB) {
+                            return 1;
                         } else {
-                            return val;
+                            return a > b ? 1 : -1;
                         }
                     },
-                    // not implemented yet
-                    date: function(val, format) {
+                    /*
+                        parses these Date Formats:
+                         d.mm.YYYY
+                          d.m.YYYY
+                         dd.m.YYYY
+                        dd.mm.YYYY
+                    */
+                    germanDate: function(a, b) {
                         try{
+                            var dateA = new Date(),
+                                dateB = new Date(),
+                                partsA = a.split('.'),
+                                partsB = b.split('.');
+
+                            if (partsA.length === 3) {
+                                dateA = new Date(parseInt(partsA[2]), parseInt(partsA[1]), parseInt(partsA[0]));
+                            } else if (partsA.length === 2) {
+                                dateA = new Date(parseInt(partsA[1]), parseInt(partsA[0]));
+                            }
+
+                            if (partsB.length === 3) {
+                                dateB = new Date(parseInt(partsB[2]), parseInt(partsB[1]), parseInt(partsB[0]));
+                            } else if (partsB.length === 2) {
+                                dateB = new Date(parseInt(partsB[1]), parseInt(partsB[0]));
+                            }
+
+                            return dateA > dateB ? 1 : -1;
 
                         } catch(e) {
-                            console.log(e);
+                            console.error(e);
+                            return -1;
                         }
+                    },
+                    /*
+                        NOT IMPLEMENTED YET
+                        @TODO implement
+                    */
+                    americanDate: function(a, b) {
+                        return this.intelligent(a, b);
+                    },
+                    /*
+                        german days of the week
+                    */
+                    daysOfTheWeek: function(a, b) {
+                        function getIndex(str) {
+                            var i = -1, l = days.length - 1;
+                            while (l > -1 && i === -1) {
+                                i = days[l].indexOf(str);
+                                l--;
+                            }
+                            return i;
+                        }
+
+                        var days = [
+                            // german
+                            ['mo', 'di', 'mi', 'do', 'fr', 'sa', 'so'],
+                            ['montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag'],
+                            // english
+                            ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+                            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+                        ];
+
+                        return getIndex(b.toLowerCase()) - getIndex(a.toLowerCase());
                     }
                 },
                 setIndex: function(value) {
@@ -421,13 +545,42 @@ var Tablemodify = (function(window, document) {
                     return this;
                 },
                 getParser: function(i) {
-                    return (this.settings[i] === undefined) ? this.parsers[this.settings.all.parser] : this.parsers[this.settings[i].parser];
+                    return (this.headers.hasOwnProperty(i) && this.headers[i].hasOwnProperty('parser')) ? this.parsers[this.headers[i].parser] : this.parsers[this.headers.all.parser];
+                },
+                getIsEnabled: function(i) {
+                    return (this.headers.hasOwnProperty(i) && this.headers[i].hasOwnProperty('enabled')) ? this.headers[i].enabled : this.headers.all.enabled;
                 },
                 getIndex: function() {
                     return this.index;
                 },
                 getOrderAsc: function() {
                     return this.orderAsc;
+                },
+
+                sortAsc: function(i) {
+                    var parse = this.getParser(i); // it's a function!
+                    this.rows.sort(function(a, b) {
+                        //return parse(getValue(a, i)) > parse(getValue(b, i)) ? 1 : -1;
+                        return parse(getValue(a, i), getValue(b, i));
+                    });
+                    return this;
+                },
+                sortDesc: function(i) {
+                    return this.sortAsc(i).reverse();
+                },
+                reverse: function() {
+                    var array = this.rows,
+                        left = null,
+                        right = null,
+                        length = array.length;
+                    for (left = 0; left < length / 2; left += 1) {
+                        right = length - 1 - left;
+                        var temporary = array[left];
+                        array[left] = array[right];
+                        array[right] = temporary;
+                    }
+                    this.rows = array;
+                    return this;
                 },
                 render: function() {
                     var tBody = this.body;
@@ -436,52 +589,35 @@ var Tablemodify = (function(window, document) {
                     });
                     return this;
                 },
-                sortAsc: function(i) {
-                    var parse = this.getParser(i); // it's a function!
-                    this.rows.sort(function(a, b) {
-                        return (parse(getValue(a, i)) > parse(getValue(b, i)));
-                    });
-                    return this;
-                },
-                sortDesc: function(i) {
-                    var parse = this.getParser(i); // it's a function!
-                    this.rows.sort(function(a, b) {
-                        return (parse(getValue(a, i)) < parse(getValue(b, i)));
-                    });
-                    return this;
-                },
-                reverse: function() {
-                    this.rows.reverse();
-                    return this;
-                },
-                manage: function(i) {
-                    // Einstellungen für die aktuelle Spalte
-                    var tmpSettings = (this.settings[i] === undefined) ? this.settings.all : this.settings[i];
+                manage: function(i, cell) {
 
-                    if (!tmpSettings.hasOwnProperty('order')) tmpSettings.order = this.settings.all.order;
-                    if (!tmpSettings.hasOwnProperty('parser')) tmpSettings.parser = this.settings.all.parser;
-
-                    if (this.index == i && (tmpSettings.order === 'both' || (tmpSettings.order === 'asc' && !this.getOrderAsc()) || (tmpSettings.order === 'desc' && this.getOrderAsc()))) {
+                    if (this.index == i) {
                         // invertiere aktuelle Sortierung
-                        this.reverse()
-                            .render()
-                            .setOrderAsc(!this.getOrderAsc());
+                        this.reverse().render();
 
-                    } else if (tmpSettings.order === 'both' || tmpSettings.order === 'asc') {
-                        // sort asc
+                        if (!this.getOrderAsc()) {
+                            this.setOrderAsc();
+                            removeClass(cell, 'sort-down');
+                            addClass(cell, 'sort-up');
+                        } else {
+                            this.setOrderAsc(false);
+                            removeClass(cell, 'sort-up');
+                            addClass(cell, 'sort-down');
+                        }
+
+                    } else if (this.getIsEnabled(i)) {
+                        // sort ascending
                         this.sortAsc(i)
                             .render()
                             .setOrderAsc()
                             .setIndex(i);
-                    } else if (tmpSettings.order === 'desc') {
-                        // sort desc
-                        this.sortDesc(i)
-                            .render()
-                            .setOrderAsc(false)
-                            .setIndex(i);
+
+                        removeActiveSorting();
+                        addClass(cell, 'sort-up');
                     } else {
                         // do nothing
                     }
+                    return this;
                 }
             }
 

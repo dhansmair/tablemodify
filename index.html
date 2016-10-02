@@ -11,7 +11,7 @@
     height:400px;
   }
   table#mytable{
-    border-collapse: collapse;
+    border-collapse: ;
   }
   .tm-container td, .tm-container th{
     border:1px solid #ccc;
@@ -24,8 +24,19 @@ window.addEventListener('DOMContentLoaded', function(){
   var tm = new Tablemodify('#mytable', {
       modules: {
           zebra: {
-              even:'lightskyblue',
-              odd:'white'
+              even:'#dbe7f0',
+              odd:'#ffffff'
+          },
+          columnStyles: {
+              all: {
+                  'padding':'10px'
+
+              },
+              0: {
+                  'text-align':'right',
+                  'font-weight':'bold',
+                  'min-width':'300px'
+              }
           },
           fixed: {
               fixHeader:true,
@@ -33,12 +44,8 @@ window.addEventListener('DOMContentLoaded', function(){
           },
           sorter: {
               headers: {
-                  1:{
-                      order:'both',
-                      parser: 'string'
-                  },
-                  2:{
-                      order:false
+                  4: {
+                      parser: 'intelligent'
                   }
               }
           }
@@ -62,9 +69,9 @@ window.addEventListener('DOMContentLoaded', function(){
     </colgroup>
     <thead>
       <tr>
-        <th>header 1</th>
+        <th class='sortable'>header 1</th>
         <th>header 2</th>
-        <th>header 3</th>
+        <th>überscrift 3: eine relativ lange überschrift</th>
         <th class='example'>header 4</th>
         <th id='problem'>header 5</th>
       </tr>
@@ -187,7 +194,28 @@ window.addEventListener('DOMContentLoaded', function(){
         <td>content</td>
         <td>content</td>
         <td>content</td>
+        <td>ausstehend</td>
+      </tr>
+      <tr>
         <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>undefiniert</td>
+      </tr>
+      <tr>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>leer</td>
+      </tr>
+      <tr>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>content</td>
+        <td>Ausstehend</td>
       </tr>
       <tr>
         <td>content</td>
@@ -201,56 +229,35 @@ window.addEventListener('DOMContentLoaded', function(){
         <td>content</td>
         <td>content</td>
         <td>content</td>
-        <td>content</td>
+        <td>Ausstehend</td>
       </tr>
       <tr>
         <td>content</td>
         <td>content</td>
         <td>content</td>
         <td>content</td>
-        <td>content</td>
+        <td>Ausstehend</td>
       </tr>
       <tr>
         <td>content</td>
         <td>content</td>
         <td>content</td>
         <td>content</td>
-        <td>content</td>
+        <td>ausstehend</td>
       </tr>
       <tr>
         <td>content</td>
         <td>content</td>
         <td>content</td>
         <td>content</td>
-        <td>content</td>
+        <td>Ausstehend</td>
       </tr>
       <tr>
         <td>content</td>
         <td>content</td>
         <td>content</td>
         <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-      </tr>
-      <tr>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
-        <td>content</td>
+        <td>ausstehend</td>
       </tr>
       <tr>
         <td>content</td>
