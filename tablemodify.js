@@ -5,7 +5,7 @@
 
 */
 var Tablemodify = (function(window, document) {
-    "use strict";
+
     // custom console logging functions
     function log(text) {if(coreSettings.debug) console.log(text);}
     function info(text) {if(coreSettings.debug) console.info(text);}
@@ -113,6 +113,7 @@ var Tablemodify = (function(window, document) {
         origHead, origFoot,             // thead, tfoot
         scrollbarWidth,                  // Integer
         containerId,
+        bodySelector,
         coreSettings;
 
     function getApi () {
@@ -165,6 +166,7 @@ var Tablemodify = (function(window, document) {
           error('there is no <table> with selector ' + selector);
           return null;
         }
+        bodySelector = selector;
         var _this = this;
 
         extend(coreDefaults, coreSettings);
@@ -245,11 +247,11 @@ var Tablemodify = (function(window, document) {
             try {
                 addClass(container, 'tm-zebra');
 
-                var defaults = {even:'#f6f6f6', odd:'white'};
+                var defaults = {even:'#f0f0f0', odd:'white'};
                 extend(defaults, settings);
 
-                var text = 'table.tm-body tr:nth-of-type(even){background-color:' + settings.even + '}'
-                         + 'table.tm-body tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
+                var text = 'table' + bodySelector + ' tr:nth-of-type(even){background-color:' + settings.even + '}'
+                         + 'table' + bodySelector + ' tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
                 appendStyles(text);
             } catch (e) {
                 error(e);
@@ -294,7 +296,7 @@ var Tablemodify = (function(window, document) {
                 }
 
                 var defaults = {
-                    fixHeader:true,
+                    fixHeader:false,
                     fixFooter:false
                 };
                 extend(defaults, settings);
@@ -392,7 +394,8 @@ var Tablemodify = (function(window, document) {
                     }
                 },
                 initial: [0, 'asc'],
-                enableMultisort: true
+                enableMultisort: true,
+                customParsers: {}
             };
 
             extend(defaults, settings);
@@ -408,12 +411,16 @@ var Tablemodify = (function(window, document) {
                 this.rows = [].slice.call(this.body.rows);
                 this.headers = settings.headers;
                 this.headCells = head ? [].slice.call(head.firstElementChild.firstElementChild.cells) : [].slice.call(body.tHead.firstElementChild.cells);
+
+                iterate(settings.customParsers, function(name, func){
+                    _this.parsers[name] = func;
+                });
+
                 // iterate over header cells
                 iterate(this.headCells, function(i, cell) {
                     if (_this.getIsEnabled(i)) {
                         addClass(cell, 'sortable');
                         cell.addEventListener('click', function(e) {
-
                             if (e.shiftKey && settings.enableMultisort) {
                                 // cell is a new sorting argument
                                 _this.manageMulti(parseInt(i), this);
@@ -467,6 +474,11 @@ var Tablemodify = (function(window, document) {
                         if (a > b) return 1;
                         if (a < b) return -1;
                         return 0;
+                    },
+                    numeric: function(a, b) {
+                        a = parseFloat(a);
+                        b = parseFloat(b);
+                        return a - b;
                     },
                     intelligent: function(a, b) {
                         var isNumericA = !isNaN(a),
@@ -723,7 +735,6 @@ var Tablemodify = (function(window, document) {
                         .renderSortingArrows();
 
                     this.ready = true;
-
                     return this;
                 }
             }
