@@ -94,6 +94,7 @@ nav li:hover{
     text-decoration:underline;
 }
 nav li:before{
+
     content:'\2A33';
     font-size:small;
     position:absolute;
@@ -120,7 +121,7 @@ article h3{
     position:relative;
 }
 article h3:before {
-    content:'\2A33';
+    content:'\27BD';
     position:absolute;
     left:0;
     top:-3px;
@@ -158,21 +159,20 @@ footer {
     font-size:0.9em;
 }
 div#demo-div{
-    display: inline-block;
-    width:60%;
+    width:100%;
+    padding:10px;
+    padding-right:0;
 }
 p#demo-information{
-    width:39%;
+
     margin:0;
     vertical-align:top;
-    display:inline-block;
 }
-pre{
+pre {
     width:80%;
 }
-
-table#sorter-parsers{
-    border-collapse:collapse;
+div#demoContainer {
+    height: 400px;
 }
 table#sorter-parsers td,
 table#sorter-parsers th {
@@ -180,22 +180,20 @@ table#sorter-parsers th {
     padding:4px;
     vertical-align: top;
 }
-
-  div.tm-container{
-    height:400px;
-    margin:20px;
-  }
-  table#tm-demo, table#sorter-parsers{
-      border-collapse:collapse;
-  }
-  .tm-container td, .tm-container th{
+table#tm-demo, table#sorter-parsers{
+    border-collapse:collapse;
+}
+.tm-container td, .tm-container th{
     border:1px solid #ccc;
-  }
+}
+/*
+    tablet
+*/
 @media only screen and (max-width : 980px) {
     aside {
         width:200px;
         padding-left:0;
-        overflow-y: scroll;
+        overflow-y: auto;
     }
     main {
         margin-left:200px;
@@ -204,10 +202,13 @@ table#sorter-parsers th {
         width:100%;
     }
 }
+/*
+    smartphone
+*/
 @media only screen
 and (min-width : 320px)
 and (max-width : 580px) {
-  /* Styles */
+
   aside {
       width: 100%;
       height: 50px;
@@ -227,8 +228,8 @@ and (max-width : 580px) {
   }
   aside:hover header {
       -webkit-box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
--moz-box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
-box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
+      -moz-box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
+      box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
   }
   aside header {
       height:50px;
@@ -280,16 +281,14 @@ box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
   }
   article {
       padding-top:60px;
-
   }
-  article:not(:last) {
+  article:not(:last-of-type) {
        margin-bottom:-50px;
   }
   article h3:before {
       content:'\27BD';
   }
-
-  div#tm-container {
+  div.tm-container {
       margin:0;
       margin-top:20px;
   }
@@ -351,6 +350,7 @@ box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
             window.addEventListener('DOMContentLoaded', function(){
 
               var tm = new Tablemodify('#tm-demo', {
+                  containerId: 'demoContainer',
                   modules: {
                       zebra: {
                           even:'#dbe7f0',
@@ -399,16 +399,14 @@ box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
                           }
 
                       }
-                  },
-                  debug: true
+                  }
               });
-              /*
+
               var tm2 = new Tablemodify('#sorter-parsers', {
                  modules: {
                      zebra: {}
                  }
               });
-              */
 
             });
             </script>
@@ -623,6 +621,7 @@ box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
             columnStyles: columnStylesSettings
         }
     };
+
 </code></pre>
         </article>
 
@@ -660,6 +659,7 @@ box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
         }
         // ...
     };
+
 </code></pre>
         </article>
         <article id='module-fixed'>
@@ -688,6 +688,7 @@ box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
         fixHeader: false,
         fixFooter: false
     };
+
 </code></pre>
     <br>
         </article>
@@ -733,6 +734,7 @@ box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
         */
         customParsers: customParsers
     };
+
 </code></pre>
             <p>
 
@@ -807,6 +809,7 @@ box-shadow: 0px 2px 5px 0px rgba(51,51,51,0.5);
             return 0;
         }
     };
+
 </code></pre>
             <p>
                 now we have defined our own parser and we can use it by the string "myParser".

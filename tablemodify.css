@@ -14,7 +14,6 @@ div.tm-head-wrap{
     overflow:hidden;
     background-color:#f0f0f0;
     z-index:1;
-
 }
 div.tm-body-wrap{
     -ms-flex:1;
@@ -22,7 +21,6 @@ div.tm-body-wrap{
     overflow:auto;
     background-color:white;
     z-index:0;
-
 }
 div.tm-foot-wrap{
     overflow-x: auto;
@@ -31,9 +29,16 @@ div.tm-foot-wrap{
     z-index:1;
 }
 table.tm-head{
-
     border-style:hidden;
     border-bottom:1px solid #ccc;
+
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none;   /* Chrome/Safari/Opera */
+    -khtml-user-select: none;    /* Konqueror */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
+    user-select: none;           /* Non-prefixed version, currently
+                                 not supported by any browser */
 }
 table.tm-body{
     min-width: 100%;

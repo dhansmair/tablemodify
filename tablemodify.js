@@ -7,11 +7,11 @@
 var Tablemodify = (function(window, document) {
 
     // custom console logging functions
-    function log(text) {if(coreSettings.debug) console.log(text);}
-    function info(text) {if(coreSettings.debug) console.info(text);}
-    function warn(text) {if(coreSettings.debug) console.warn(text);}
-    function trace(text) {if(coreSettings.debug) console.trace(text);}
-    function error(text) {if(coreSettings.debug) console.error(text);}
+    function log(text) {if(Tablemodify.debug) console.log('tm-log: ' + text);}
+    function info(text) {if(Tablemodify.debug) console.info('tm-info: ' + text);}
+    function warn(text) {if(Tablemodify.debug) console.warn('tm-warn: ' + text);}
+    function trace(text) {if(Tablemodify.debug) console.trace('tm-trace: ' + text);}
+    function error(text) {if(Tablemodify.debug) console.error('tm-error: ' + text);}
     // utils
     function hasClass(el, className) {
         return el.classList ? el.classList.contains(className) : new RegExp('\\b'+ className+'\\b').test(el.className);
@@ -34,7 +34,7 @@ var Tablemodify = (function(window, document) {
     function extend(d, s) {
         Object.keys(d).forEach(function(key) {
             if(!s.hasOwnProperty(key)) s[key] = d[key];
-            // deep-extend
+            // recursive deep-extend
             if (typeof s[key] === 'object') {
                 s[key] = extend(d[key], s[key]);
             }
@@ -93,19 +93,7 @@ var Tablemodify = (function(window, document) {
       }
     }
 
-    function getHeaderHeight() {
-    //    return origHead.getBoundingClientRect().height;
-        return origHead.clientHeight;
-    }
-    function getFooterHeight() { return origFoot.clientHeight;}//return origFoot.getBoundingClientRect().height;}
-
-    function appendStyles(text) {
-      if (text.trim().length > 0) {stylesheet.appendChild(document.createTextNode(text.trim()));}
-    }
-
     /*
-
-    */
     var coreSettings = {};
     var container, stylesheet,          // div, style
         head, body, foot,               // tables
@@ -115,87 +103,143 @@ var Tablemodify = (function(window, document) {
         containerId,
         bodySelector,
         coreSettings;
-
-    function getApi () {
-        return {
-            container: container,
-            stylesheet: stylesheet,
-            head: head,
-            body: body,
-            foot: foot,
-            headWrap: headWrap,
-            bodyWrap: bodyWrap,
-            footWrap: footWrap,
-            origHead: origHead,
-            origFoot: origFoot,
-            coreSettings: coreSettings,
-            // methods
-            appendStyles: appendStyles,
-            getScrollbarWidth: getScrollbarWidth
-        };
-    }
-
-    var coreDefaults = {
-        containerId: 'tm-container',
-        debug: true
-    };
+        */
+        /*
+    */
+    var coreDefaults = {};
 
     /*
-
+        function that gives a unique id on each call.
+        This is necessary because multiple containers are possible.
     */
-    function buildDOM() {
-        bodyWrap  = wrap(body,     document.createElement('div'));
-        container = wrap(bodyWrap, document.createElement('div'));
-        origHead = body.tHead;
-        origFoot = body.tFoot;
-        // add css area
-        stylesheet = document.createElement('style');
-        container.insertBefore(stylesheet, container.firstElementChild);
-        container.id = containerId;
+    var getUniqueId = (function(){
+        var unique = 0;
 
-        addClass(body,      'tm-body');
-        addClass(bodyWrap,  'tm-body-wrap');
-        addClass(container, 'tm-container');
-        addClass(stylesheet, 'tm-custom-style');
-    }
+        return function() {
+            var id = 'tm-unique-' + unique;
+            unique++;
+            return id;
+        };
+    }());
 
+    /*
+        CONSTRUCTOR
+    */
     var Tablemodify = function(selector, coreSettings) {
-        // must be a table
-        body = document.querySelector(selector);
+
+        var containerId,
+            _this = this,
+            body = document.querySelector(selector); // must be a table
         if (!body || body.nodeName !== 'TABLE'){
           error('there is no <table> with selector ' + selector);
           return null;
         }
-        bodySelector = selector;
-        var _this = this;
+        this.body = body;
+        this.bodySelector = selector;
 
         extend(coreDefaults, coreSettings);
 
-        if (coreSettings.containerId.charAt(0) == '#') {
-            containerId = coreSettings.containerId.slice(1)
-        } else {
+        if (coreSettings.containerId && document.getElementById(coreSettings.containerId)) {
+            throw 'the passed id ' + coreSettings.containerId + ' is not unique!';
+        } else if (coreSettings.containerId) {
             containerId = coreSettings.containerId;
+        } else {
+            containerId = getUniqueId();
         }
 
-        buildDOM();
+        this.bodyWrap  = wrap(body, document.createElement('div'));
+        this.container = wrap(this.bodyWrap, document.createElement('div'));
+        this.origHead = body.tHead;
+        this.origFoot = body.tFoot;
+        // add css area
+        this.stylesheet = document.createElement('style');
+        this.container.insertBefore(this.stylesheet, this.container.firstElementChild);
+
+        addClass(body, 'tm-body');
+        addClass(this.bodyWrap,  'tm-body-wrap');
+        addClass(this.container, 'tm-container');
+        addClass(this.stylesheet, 'tm-custom-style');
+
+        // add optional id to container
+        this.container.id = containerId;
+        this.containerId  = containerId;
+
+        // initialize tbody rows as 2D-array
+        this.rows = [].slice.call(this.body.tBodies[0].rows);
 
         // call all modules
         if (coreSettings.modules) {
             // interface for modules
             iterate(coreSettings.modules, function(moduleName, moduleSettings) {
+
                 if (!Tablemodify.modules[moduleName]) {
                     warn('module ' + moduleName + ' not registered!');
                     return;
                 }
-                //var moduleSettings = coreSettings.modules[this];
-                Tablemodify.modules[moduleName].call(_this, moduleSettings);
+
+                var ret = Tablemodify.modules[moduleName].call(_this, moduleSettings);
+
+                if (ret !== undefined) {
+                    if (_this[moduleName] === undefined) {
+                        // define ret as a property of the Tablemodify instance.
+                        // now you can access it later via tm.modulename
+                        _this[moduleName] = ret;
+                    } else {
+                        error('module name ' + moduleName + ' causes a collision and is not allowed, please choose another one!');
+                    }
+                }
             });
         }
 
+        this.coreSettings = coreSettings;
         return this; // chaining
     };
 
     Tablemodify.prototype = {
+        rows: [],
+        head: null,
+        body: null,
+        foot: null,
+
+        headWrap: null,
+        bodyWrap: null,
+        footWrap: null,
+
+        origHead: null,
+        origFoot: null,
+
+        bodySelector: null,
+        containerId: null,
+
+        stylesheet: null,
+        coreSettings: null,
+
+        // adding CSS text to the stylesheet of this instance
+        appendStyles: function(text) {if (text.trim().length > 0) {this.stylesheet.appendChild(document.createTextNode(text.trim()));}},
+
+        // row getters + setters
+        getRows: function() {
+            return this.rows;
+        },
+        setRows: function(rowArray) {
+            this.rows = rowArray;
+            return this;
+        },
+        addRows: function(rowArray) {
+            [].push.apply(this.rows, rowsArray);
+            return this;
+        },
+        render: function() {
+            var tBody = this.body.tBodies[0],
+                rows = this.getRows(),
+                l = rows.length;
+
+            for (var i = 0; i < l; i++) {
+                tBody.appendChild(rows[i]);
+            }
+            return this;
+        },
+
         version: 'v0.5'
     };
 
@@ -203,20 +247,20 @@ var Tablemodify = (function(window, document) {
 
         columnStyles: function(settings) {
                 try {
-                    addClass(container, 'tm-column-styles');
+                    addClass(this.container, 'tm-column-styles');
 
                     var defaults = {
                             all: {
                                 'text-align':'center',
                                 'padding': '3px'
                             }
-                            // 0: {},
-                            // 1: {}
-                    };
+                    },
+                    containerId = this.containerId;
+
                     extend(defaults, settings);
 
                     // style general
-                    var text = 'div.tm-column-styles table tr > *{';
+                    var text = 'div#' + containerId + ' table tr > *{';
                     iterate(settings.all, function(prop, value) {
                         text += prop + ':' + value + ';';
                     });
@@ -228,13 +272,14 @@ var Tablemodify = (function(window, document) {
                     iterate(settings, function(index, cssStyles) {
                         var i = parseInt(index) + 1;
 
-                        text += 'div.tm-container table tr > *:nth-of-type(' + i + '){';
+                        text += 'div#' + containerId + ' table tr > *:nth-of-type(' + i + '){';
                         iterate(cssStyles, function(prop, value) {
                             text += prop + ':' + value + ';';
                         });
                         text += '}';
                     });
-                    appendStyles(text);
+                    this.appendStyles(text);
+                    info('module columnStyles loaded');
                 } catch(e) {
                     error(e);
                 }
@@ -244,17 +289,25 @@ var Tablemodify = (function(window, document) {
             MODULE zebra: adding zebra style to the table
         */
         zebra: function(settings) {
+            // this := Tablemodify-instance
             try {
-                addClass(container, 'tm-zebra');
+                addClass(this.container, 'tm-zebra');
 
                 var defaults = {even:'#f0f0f0', odd:'white'};
                 extend(defaults, settings);
 
-                var text = 'table' + bodySelector + ' tr:nth-of-type(even){background-color:' + settings.even + '}'
-                         + 'table' + bodySelector + ' tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
-                appendStyles(text);
+                var text = 'table' + this.bodySelector + ' tr:nth-of-type(even){background-color:' + settings.even + '}'
+                         + 'table' + this.bodySelector + ' tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
+                this.appendStyles(text);
+
+                info('module zebra loaded');
             } catch (e) {
                 error(e);
+            }
+
+            return function() {
+
+                return this; // chaining
             }
         },
         /*
@@ -262,13 +315,16 @@ var Tablemodify = (function(window, document) {
         */
         fixed: function(settings) {
             try {
-                addClass(container, 'tm-fixed');
+                addClass(this.container, 'tm-fixed');
 
+                function getHeaderHeight() { return origHead.clientHeight;};
+                function getFooterHeight() { return origFoot.clientHeight;};
                 function renderHead () {
+
                     var allNew = [].slice.call(head.firstElementChild.firstElementChild.cells),
                         allOld = [].slice.call(origHead.firstElementChild.cells);
 
-                    body.style.marginTop = inPx('-' + getHeaderHeight()) // if header resizes because of a text wrap
+                    body.style.marginTop = inPx('-' + getHeaderHeight()); // if header resizes because of a text wrap
 
                     iterate(allNew, function(i, neu){
                         var w = inPx(allOld[i].getBoundingClientRect().width);
@@ -283,7 +339,7 @@ var Tablemodify = (function(window, document) {
                     var allNew = [].slice.call(foot.firstElementChild.firstElementChild.cells),
                         allOld = [].slice.call(origFoot.firstElementChild.cells);
 
-                    bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + getFooterHeight())); // if footer resizes because of a text wrap
+                    bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + getFooterHeight() + 1)); // if footer resizes because of a text wrap
 
                     iterate(allNew, function(i, neu){
                         var w = inPx(allOld[i].getBoundingClientRect().width);
@@ -301,6 +357,16 @@ var Tablemodify = (function(window, document) {
                 };
                 extend(defaults, settings);
 
+                // set up
+                var head,
+                    foot,
+                    headWrap,
+                    footWrap,
+                    container = this.container,
+                    body = this.body,
+                    bodyWrap = this.bodyWrap,
+                    origHead = this.origHead,
+                    origFoot = this.origFoot;
 
                 var borderCollapse = getCss(body, 'border-collapse'),
                     scrollbarWidth = getScrollbarWidth();
@@ -340,8 +406,8 @@ var Tablemodify = (function(window, document) {
                 }
 
                 // add event listeners
-                if (head) {window.addEventListener('resize', renderHead);}
-                if (foot) {window.addEventListener('resize', renderFoot);}
+                if (head) window.addEventListener('resize', renderHead);
+                if (foot) window.addEventListener('resize', renderFoot);
 
                 if (head && foot) {
 
@@ -357,15 +423,13 @@ var Tablemodify = (function(window, document) {
 
                 } else if (head && !foot) {
 
-                    bodyWrap.addEventListener('scroll', function(){head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);});
+                    bodyWrap.addEventListener('scroll', function() {head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);});
 
                 } else if (!head && foot) {
 
                     footWrap.addEventListener('scroll', function(){bodyWrap.scrollLeft = footWrap.scrollLeft;});
                     bodyWrap.addEventListener('scroll', function(){footWrap.scrollLeft = bodyWrap.scrollLeft;});
 
-                }  else if (!head && !foot) {
-                    // do nothing
                 }
 
                 setTimeout(function(){
@@ -373,6 +437,23 @@ var Tablemodify = (function(window, document) {
                     if (head) renderHead();
                     if (foot) renderFoot();
                 }, 50);
+                setTimeout(function(){
+                    // nötig, weil der Browser zum rendern manchmal eine gewisse Zeit braucht
+                    if (head) renderHead();
+                    if (foot) renderFoot();
+                }, 500);
+
+                this.head = head;
+                this.foot = foot;
+                this.headWrap = headWrap;
+                this.footWrap = footWrap;
+                info('module fixed loaded');
+
+                return function() {
+
+                    return this; // chaining
+                }
+
             } catch(e) {
                 error(e);
             }
@@ -382,9 +463,22 @@ var Tablemodify = (function(window, document) {
             @TODO parser implementieren
         */
         sorter: function(settings) {
-            addClass(container, 'tm-sorter');
+            addClass(this.container, 'tm-sorter');
 
             function getValue(tr, i) {return tr.cells[i].innerHTML.trim();}
+
+            // set up
+            var core = this,
+                head = this.head,
+                foot = this.foot,
+                //headWrap,
+                //footWrap,
+                container = this.container,
+                body = this.body,
+                bodyWrap = this.bodyWrap,
+                origHead = this.origHead,
+                origFoot = this.origFoot;
+
 
             var defaults = {
                 headers: {
@@ -408,7 +502,7 @@ var Tablemodify = (function(window, document) {
                     order = settings.initial[1];
 
                 this.body = body.tBodies[0];
-                this.rows = [].slice.call(this.body.rows);
+                //this.rows = [].slice.call(this.body.rows);
                 this.headers = settings.headers;
                 this.headCells = head ? [].slice.call(head.firstElementChild.firstElementChild.cells) : [].slice.call(body.tHead.firstElementChild.cells);
 
@@ -418,20 +512,32 @@ var Tablemodify = (function(window, document) {
 
                 // iterate over header cells
                 iterate(this.headCells, function(i, cell) {
+
                     if (_this.getIsEnabled(i)) {
                         addClass(cell, 'sortable');
                         cell.addEventListener('click', function(e) {
+
                             if (e.shiftKey && settings.enableMultisort) {
-                                // cell is a new sorting argument
-                                _this.manageMulti(parseInt(i), this);
+                                _this.manageMulti(i);
                             } else {
-                                _this.manage(parseInt(i), this);
+                                _this.manage(i);
                             }
 
                         });
                     }
                 });
-
+                /*
+                head.addEventListener('click', function(e) {
+                    var cell = e.target;
+                    var index = e.target.cellIndex;
+                    if (e.shiftKey && settings.enableMultisort) {
+                        // cell is a new sorting argument
+                        _this.manageMulti(index, cell);
+                    } else {
+                        _this.manage(index, cell);
+                    }
+                });
+                */
                 // try to sort by initial sorting
                 if (!this.getIsEnabled(i)) {
                     // not enabled, choose another initial sorting
@@ -439,7 +545,7 @@ var Tablemodify = (function(window, document) {
                     i = 0;
                     while (i < this.headCells.length && !initialized) {
                         if (this.getIsEnabled(i)) {
-                            this.manage(i, this.headCells[i]);
+                            this.manage(i);
                             initialized = true;
                         }
                         i++;
@@ -449,13 +555,14 @@ var Tablemodify = (function(window, document) {
                     // enabled, sort desc
                     this.setOrderAsc(false)
                         .setIndex(i)
-                        .sortDesc()
+                        .sort()
                         .render()
                         .renderSortingArrows();
 
                 } else {
                     // enabled, sort asc
-                    this.manage(i, this.headCells[i]);
+                    this.setOrderAsc();
+                    this.manage(i);
                 }
             }
 
@@ -562,6 +669,10 @@ var Tablemodify = (function(window, document) {
                         return getIndex(b.toLowerCase()) - getIndex(a.toLowerCase());
                     }
                 },
+                setRows: function(rowArray) {
+                        core.setRows(rowArray);
+                        return this;
+                },
                 setIndex: function(i) {
                     this.indices = [i];
                     return this;
@@ -572,30 +683,30 @@ var Tablemodify = (function(window, document) {
                     this.orders = [bool];
                     return this;
                 },
+                getRows: function() {
+                    return core.getRows();
+                },
                 getParser: function(i) {
                     return (this.headers.hasOwnProperty(i) && this.headers[i].hasOwnProperty('parser')) ? this.parsers[this.headers[i].parser] : this.parsers[this.headers.all.parser];
                 },
                 getIsEnabled: function(i) {
                     return (this.headers.hasOwnProperty(i) && this.headers[i].hasOwnProperty('enabled')) ? this.headers[i].enabled : this.headers.all.enabled;
                 },
-                getIndex: function() {
-                    return this.indices[0];
-                },
+                getIndex: function() {return this.indices[0];},
+                getOrderAsc: function() {return this.orders[0];},
 
-                getOrderAsc: function() {
-                    return this.orders[0];
-                },
+                sort: function() {
+                    var i = this.getIndex(),
+                        o = this.getOrderAsc(),
+                        p = this.getParser(i);
 
-                sortAsc: function() {
-                    var i = this.getIndex();
-                    var parse = this.getParser(i); // it's a function!
-                    this.rows.sort(function(a, b) {
-                        return parse(getValue(a, i), getValue(b, i));
+                    this.getRows().sort(function(a, b) {
+                        return p(getValue(a, i), getValue(b, i));
                     });
+
+                    if (!o) this.reverse();
+
                     return this;
-                },
-                sortDesc: function() {
-                    return this.sortAsc().reverse();
                 },
                 multiSort: function() {
                     var _this = this,
@@ -604,7 +715,7 @@ var Tablemodify = (function(window, document) {
                         parsers = indices.map(function(i) {return _this.getParser(i);}),
                         maxDeph = indices.length - 1;
 
-                    this.rows.sort(function(a, b) {
+                    this.getRows().sort(function(a, b) {
                         var comparator = 0, deph = 0;
 
                         while (comparator === 0 && deph <= maxDeph) {
@@ -621,7 +732,7 @@ var Tablemodify = (function(window, document) {
                     return this;
                 },
                 reverse: function() {
-                    var array = this.rows,
+                    var array = this.getRows(),
                         left = null,
                         right = null,
                         length = array.length;
@@ -631,26 +742,12 @@ var Tablemodify = (function(window, document) {
                         array[left] = array[right];
                         array[right] = temporary;
                     }
-                    this.rows = array;
+                    this.setRows(array);
                     return this;
                 },
                 render: function() {
-                    var tBody = this.body,
-                        l = this.rows.length;
+                    core.render();
 
-                    for (var i = 0; i < l; i++) {
-                        tBody.appendChild(this.rows[i]);
-                    }
-                    return this;
-                },
-                renderBackwards: function() {
-                    // should be even faster than rendering forwards
-                    var tBody = this.body,
-                        l = this.rows.length - 1;
-
-                    for (; l >= 0; l--) {
-                        tBody.appendChild(this.rows[l]);
-                    }
                     return this;
                 },
                 renderSortingArrows: function() {
@@ -679,45 +776,34 @@ var Tablemodify = (function(window, document) {
                     return this;
                 },
 
-                manage: function(i, cell) {
+                manage: function(i) {
 
                     if (!this.ready) return;
                     this.ready = false;
 
                     if (this.getIndex() === i) {
-                        this.setIndex(i); // in case the previous sorting was multiple
-                        // invertiere aktuelle Sortierung
-                        if (!this.getOrderAsc()) {
-                            this.sortAsc()
-                                .render()
-                                .setOrderAsc();
-                        } else {
-                            this.reverse()
-                                .render()
-                                .setOrderAsc(false);
-                        }
+
+                        this.setOrderAsc(!this.getOrderAsc());  // invertiere aktuelle Sortierung
 
                     } else if (this.getIsEnabled(i)) {
-                        // sort ascending
-                        this.setOrderAsc()
-                            .setIndex(i)
-                            .sortAsc()
-                            .render();
 
-                    } else {
-                        // do nothing
+                        this.setOrderAsc();                     // sort ascending
+
                     }
 
-                    this.renderSortingArrows();
+                    this.setIndex(i)
+                        .sort()
+                        .render()
+                        .renderSortingArrows();
 
                     this.ready = true;
                     return this;
                 },
-                manageMulti: function(i, cell) {
+                manageMulti: function(i) {
                     // add i to the multi indices
-
                     if (!this.ready) return;
                     this.ready = false;
+
                     var indices = this.indices,
                         exists = indices.indexOf(i);
 
@@ -738,10 +824,30 @@ var Tablemodify = (function(window, document) {
                     return this;
                 }
             }
+            var sorterInstance = new Sorter();
 
-            return new Sorter();
+            return {
+                    sortAsc: function(i) {
+                        sorterInstance
+                            .setIndex(i)
+                            .setOrderAsc()
+                            .sort()
+                            .render()
+                            .renderSortingArrows();
+                    },
+                    sortDesc: function(i) {
+                        sorterInstance
+                            .setIndex(i)
+                            .setOrderAsc(false)
+                            .sort()
+                            .render()
+                            .renderSortingArrows();
+                    }
+            };
         }
     };
+
+    Tablemodify.debug = true;
 
     return Tablemodify;
 })(window, document);
