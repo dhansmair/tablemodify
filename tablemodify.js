@@ -93,19 +93,6 @@ var Tablemodify = (function(window, document) {
       }
     }
 
-    /*
-    var coreSettings = {};
-    var container, stylesheet,          // div, style
-        head, body, foot,               // tables
-        headWrap, bodyWrap, footWrap,   // divs
-        origHead, origFoot,             // thead, tfoot
-        scrollbarWidth,                  // Integer
-        containerId,
-        bodySelector,
-        coreSettings;
-        */
-        /*
-    */
     var coreDefaults = {};
 
     /*
@@ -234,6 +221,8 @@ var Tablemodify = (function(window, document) {
                 rows = this.getRows(),
                 l = rows.length;
 
+            tBody.innerHTML = '';
+
             for (var i = 0; i < l; i++) {
                 tBody.appendChild(rows[i]);
             }
@@ -245,69 +234,214 @@ var Tablemodify = (function(window, document) {
 
     Tablemodify.modules = {
 
-        columnStyles: function(settings) {
-                try {
-                    addClass(this.container, 'tm-column-styles');
-
-                    var defaults = {
-                            all: {
-                                'text-align':'center',
-                                'padding': '3px'
-                            }
-                    },
-                    containerId = this.containerId;
-
-                    extend(defaults, settings);
-
-                    // style general
-                    var text = 'div#' + containerId + ' table tr > *{';
-                    iterate(settings.all, function(prop, value) {
-                        text += prop + ':' + value + ';';
-                    });
-                    text += '}';
-
-                    delete settings.all;
-
-                    // add custom styles to the single columns
-                    iterate(settings, function(index, cssStyles) {
-                        var i = parseInt(index) + 1;
-
-                        text += 'div#' + containerId + ' table tr > *:nth-of-type(' + i + '){';
-                        iterate(cssStyles, function(prop, value) {
-                            text += prop + ':' + value + ';';
-                        });
-                        text += '}';
-                    });
-                    this.appendStyles(text);
-                    info('module columnStyles loaded');
-                } catch(e) {
-                    error(e);
-                }
-        },
-
-        /*
-            MODULE zebra: adding zebra style to the table
-        */
-        zebra: function(settings) {
+        filter: function(settings) {
             // this := Tablemodify-instance
             try {
-                addClass(this.container, 'tm-zebra');
+                addClass(this.container, 'tm-filter');
 
-                var defaults = {even:'#f0f0f0', odd:'white'};
+                var newCell = (function() {
+                    var cell = document.createElement('td');
+                    cell.innerHTML = "<div class='tm-filter-text'><input type='text' placeholder='type filter here'/></div>"
+                                   + "<div class='tm-filter-options'><div>"
+                                   + "<span><input type='checkbox' title='case-sensitive' /> case-sensitive</span>"
+                                //   + "<input type='checkbox' title='whole word'/> whole word"
+                                   + "<span>&#9881;</span>"
+                                   + "</div></div></div>";
+
+                    return function() {
+                        return cell.cloneNode(true);
+                    }
+                }());
+
+                function getCell(e) {
+                    var cell = e.target;
+                    while (cell.cellIndex === undefined) {
+                        cell = cell.parentNode;
+                    }
+                    return cell;
+                }
+
+                var defaults = {};
                 extend(defaults, settings);
 
-                var text = 'table' + this.bodySelector + ' tr:nth-of-type(even){background-color:' + settings.even + '}'
-                         + 'table' + this.bodySelector + ' tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
-                this.appendStyles(text);
+                var core = this;
 
-                info('module zebra loaded');
+                // constructor
+                function Filter() {
+                    var _this = this, timeout;
+
+                    // modify DOM
+                    var tHead = core.head ? core.head.tHead : core.origHead,
+                        num = tHead.firstElementChild.cells.length - 1,
+                        row = document.createElement('tr');
+
+                    for (; num >= 0; num--) {
+                        row.appendChild(newCell());
+                    }
+
+                    row.onkeyup = function(e) {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(function() {
+                            var i = getCell(e).cellIndex;
+
+                            _this.manage(i);
+                        }, 500);
+                    }
+                    row.onclick = function(e) {
+                        var i = getCell(e).cellIndex;
+
+                        if (e.target.nodeName == 'SPAN' && e.target.firstElementChild.type == 'checkbox') {
+                            e.target.firstElementChild.checked = !e.target.firstElementChild.checked;
+
+                            _this.manage();
+                        } else {
+                            switch (e.target.type) {
+                                case 'checkbox':
+                                    _this.manage();
+
+                                    break;
+                                case 'text':
+                                    e.target.select();
+
+                                    break;
+                            }
+                        }
+                    }
+
+                    // append new row to tHead
+                    tHead.appendChild(row);
+                    this.tHead = tHead;
+                    this.headCells = row.cells;
+                    this.rows = core.getRows();
+                }
+                Filter.prototype = {
+                    rows: [],
+                    headCells: [],
+                    tHead: null,
+                    indices: [Infinity],
+                    patterns: [],
+                    options: [], // contains || matches || case-sensitive
+                    /*
+                    caseSensitive: [false],
+                    setIndex: function(i) {
+                        this.indices = [i];
+                        return this;
+                    },
+                    setPattern: function(patterns) {
+                        this.patterns = [patterns.trim()];
+                        return this;
+                    },
+                    setOption: function(options) {
+                        this.options = [options];
+
+                        return this;
+                    },
+                    */
+                    // new version setters
+                    setPatterns: function(patterns) {
+                        this.patterns = patterns;
+                        return this;
+                    },
+                    setIndices: function(indices) {
+                        this.indices = indices;
+                        return this;
+                    },
+                    setOptions: function(options) {
+                        this.options = options;
+                        return this;
+                    },
+                    // new version getters
+                    getPatterns: function() {
+                        return this.patterns;
+                    },
+                    getIndices: function() {
+                        return this.indices;
+                    },
+                    getOptions: function() {
+                        return this.options;
+                    },
+                    /*
+                    setCaseSensitive: function(bool) {
+                        if (bool === undefined) bool = true;
+                        this.caseSensitive = [bool];
+                        return this;
+                    },
+                    getIndex: function(i) {
+                        return i ? this.indices[i] : this.indices[0];
+                    },
+                    getPattern: function(i) {
+                        return i ? this.patterns[i] : this.patterns[0];
+                    },
+                    getOption: function(i) {
+                        return i ? this.options[i] : this.options[0];
+                    },
+                    getCaseSensitive: function() {
+                        return this.caseSensitive[0];
+                    },
+                    */
+                    filter: function() {
+                        var indices = this.getIndices(),
+                            patterns = this.getPatterns(),
+                            options = this.getOptions();
+
+                        var maxDeph = indices.length - 1;
+
+                        // filter rows
+                        var arr = this.rows.filter(function(row) {
+                            var deph = 0, matches = true;
+
+                            while (matches && deph <= maxDeph) {
+                                var i = indices[deph];
+
+                                if (options[deph]) {
+                                    // case-sensitive
+                                    var pattern = patterns[deph];
+                                    var tester = row.cells[i].innerHTML;
+                                } else {
+                                    // not case-sensitive
+                                    var pattern = patterns[deph].toLowerCase();
+                                    var tester = row.cells[i].innerHTML.toLowerCase();
+                                }
+
+                                matches = tester.indexOf(pattern) !== -1;
+                                deph++;
+                            }
+                            return matches;
+
+                        });
+
+                        core.setRows(arr).render();
+                        return this;
+                    },
+                    manage: function() {
+                        var inputs = [].slice.call(this.tHead.querySelectorAll('input[type=text]'));
+                        var checkboxes = [].slice.call(this.tHead.querySelectorAll('input[type=checkbox]'));
+
+                        var patterns = [], indices = [], options = [];
+
+                        iterate(inputs, function(i, input) {
+                            if (input.value.trim() !== '') {
+                                indices.push(i);
+                                patterns.push(input.value.trim());
+                                options.push(checkboxes[i].checked);
+                            }
+                        });
+
+                        this.setPatterns(patterns)
+                            .setIndices(indices)
+                            .setOptions(options)
+                            .filter();
+
+                        return this;
+                    }
+                };
+
+                new Filter();
+                info('module filter loaded');
+
+                return {};
             } catch (e) {
                 error(e);
-            }
-
-            return function() {
-
-                return this; // chaining
             }
         },
         /*
@@ -339,7 +473,7 @@ var Tablemodify = (function(window, document) {
                     var allNew = [].slice.call(foot.firstElementChild.firstElementChild.cells),
                         allOld = [].slice.call(origFoot.firstElementChild.cells);
 
-                    bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + getFooterHeight() + 1)); // if footer resizes because of a text wrap
+                    //bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + getFooterHeight() + 1)); // if footer resizes because of a text wrap
 
                     iterate(allNew, function(i, neu){
                         var w = inPx(allOld[i].getBoundingClientRect().width);
@@ -388,7 +522,7 @@ var Tablemodify = (function(window, document) {
                     headWrap.style.marginRight  = inPx(scrollbarWidth);
                 }
                 if (origFoot && settings.fixFooter) {
-                    var footerHeight = getFooterHeight();
+                    //var footerHeight = getFooterHeight();
                     foot     = document.createElement('table');
                     footWrap = document.createElement('div');
                     foot.appendChild(origFoot.cloneNode(true));
@@ -398,10 +532,15 @@ var Tablemodify = (function(window, document) {
                     addClass(foot,     'tm-foot');
                     addClass(footWrap, 'tm-foot-wrap');
 
+                    // add DIVs to origFoot cells so its height can be set to 0px
+                    iterate(origFoot.firstElementChild.cells, function(i, cell) {
+                        cell.innerHTML = '<div>' + cell.innerHTML + '</div>';
+                    });
+
                     foot.style.borderCollapse   = borderCollapse;
                     origFoot.style.visibility   = 'hidden';
                     bodyWrap.style.overflowX    = 'scroll';
-                    bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + footerHeight));
+                    bodyWrap.style.marginBottom = inPx('-' + scrollbarWidth);
                     footWrap.style.marginRight  = inPx(scrollbarWidth);
                 }
 
@@ -633,7 +772,7 @@ var Tablemodify = (function(window, document) {
                             if (dateA < dateB) return -1;
                             return 0;
                         } catch(e) {
-                            console.error(e);
+                            error(e);
                             return -1;
                         }
                     },
@@ -844,7 +983,80 @@ var Tablemodify = (function(window, document) {
                             .renderSortingArrows();
                     }
             };
+        },
+        columnStyles: function(settings) {
+                try {
+                    addClass(this.container, 'tm-column-styles');
+
+                    var defaults = {
+                            all: {
+                                'text-align':'center',
+                                'padding': '3px'
+                            }
+                    },
+                    containerId = this.containerId;
+
+                    extend(defaults, settings);
+
+                    // style general
+                    var text = 'div#' + containerId + ' table tr > *{';
+                    iterate(settings.all, function(prop, value) {
+                        text += prop + ':' + value + ';';
+                    });
+                    text += '}';
+
+                    delete settings.all;
+
+                    // add custom styles to the single columns
+                    iterate(settings, function(index, cssStyles) {
+                        var i = parseInt(index) + 1;
+
+                        text += 'div#' + containerId + ' table tr > *:nth-of-type(' + i + '){';
+                        iterate(cssStyles, function(prop, value) {
+                            text += prop + ':' + value + ';';
+                        });
+                        text += '}';
+                    });
+                    this.appendStyles(text);
+                    info('module columnStyles loaded');
+                } catch(e) {
+                    error(e);
+                }
+        },
+
+        /*
+            MODULE zebra: adding zebra style to the table
+        */
+        zebra: function(settings) {
+            // this := Tablemodify-instance
+            try {
+                addClass(this.container, 'tm-zebra');
+
+                var defaults = {even:'#f0f0f0', odd:'white'};
+                extend(defaults, settings);
+
+                var text = 'table' + this.bodySelector + ' tr:nth-of-type(even){background-color:' + settings.even + '}'
+                         + 'table' + this.bodySelector + ' tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
+                this.appendStyles(text);
+
+                info('module zebra loaded');
+            } catch (e) {
+                error(e);
+            }
         }
+    };
+
+    Tablemodify.addModule = function(moduleName, func) {
+
+        // ceck is moduleName is valid
+        if (this.modules[moduleName] !== undefined ||
+            this.prototype[moduleName] !== undefined ||
+            this[moduleName] !== undefined) {
+            throw 'module name "' + moduleName + '" is not valid!';
+        }
+
+        this.modules[moduleName] = func;
+
     };
 
     Tablemodify.debug = true;
