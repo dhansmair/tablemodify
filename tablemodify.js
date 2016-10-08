@@ -239,19 +239,6 @@ var Tablemodify = (function(window, document) {
             try {
                 addClass(this.container, 'tm-filter');
 
-                var newCell = (function() {
-                    var cell = document.createElement('td');
-                    cell.innerHTML = "<div class='tm-filter-text'><input type='text' placeholder='type filter here'/></div>"
-                                   + "<div class='tm-filter-options'><div>"
-                                   + "<span><input type='checkbox' title='case-sensitive' /> case-sensitive</span>"
-                                //   + "<input type='checkbox' title='whole word'/> whole word"
-                                   + "<span>&#9881;</span>"
-                                   + "</div></div></div>";
-
-                    return function() {
-                        return cell.cloneNode(true);
-                    }
-                }());
 
                 function getCell(e) {
                     var cell = e.target;
@@ -264,79 +251,18 @@ var Tablemodify = (function(window, document) {
                 var defaults = {};
                 extend(defaults, settings);
 
+                // this will be overwritten
                 var core = this;
 
-                // constructor
-                function Filter() {
-                    var _this = this, timeout;
-
-                    // modify DOM
-                    var tHead = core.head ? core.head.tHead : core.origHead,
-                        num = tHead.firstElementChild.cells.length - 1,
-                        row = document.createElement('tr');
-
-                    for (; num >= 0; num--) {
-                        row.appendChild(newCell());
-                    }
-
-                    row.onkeyup = function(e) {
-                        clearTimeout(timeout);
-                        timeout = setTimeout(function() {
-                            var i = getCell(e).cellIndex;
-
-                            _this.manage(i);
-                        }, 500);
-                    }
-                    row.onclick = function(e) {
-                        var i = getCell(e).cellIndex;
-
-                        if (e.target.nodeName == 'SPAN' && e.target.firstElementChild.type == 'checkbox') {
-                            e.target.firstElementChild.checked = !e.target.firstElementChild.checked;
-
-                            _this.manage();
-                        } else {
-                            switch (e.target.type) {
-                                case 'checkbox':
-                                    _this.manage();
-
-                                    break;
-                                case 'text':
-                                    e.target.select();
-
-                                    break;
-                            }
-                        }
-                    }
-
-                    // append new row to tHead
-                    tHead.appendChild(row);
-                    this.tHead = tHead;
-                    this.headCells = row.cells;
-                    this.rows = core.getRows();
-                }
-                Filter.prototype = {
+                // prototype for Filter
+                var filterClass = {
                     rows: [],
                     headCells: [],
                     tHead: null,
                     indices: [Infinity],
                     patterns: [],
                     options: [], // contains || matches || case-sensitive
-                    /*
-                    caseSensitive: [false],
-                    setIndex: function(i) {
-                        this.indices = [i];
-                        return this;
-                    },
-                    setPattern: function(patterns) {
-                        this.patterns = [patterns.trim()];
-                        return this;
-                    },
-                    setOption: function(options) {
-                        this.options = [options];
 
-                        return this;
-                    },
-                    */
                     // new version setters
                     setPatterns: function(patterns) {
                         this.patterns = patterns;
@@ -360,25 +286,7 @@ var Tablemodify = (function(window, document) {
                     getOptions: function() {
                         return this.options;
                     },
-                    /*
-                    setCaseSensitive: function(bool) {
-                        if (bool === undefined) bool = true;
-                        this.caseSensitive = [bool];
-                        return this;
-                    },
-                    getIndex: function(i) {
-                        return i ? this.indices[i] : this.indices[0];
-                    },
-                    getPattern: function(i) {
-                        return i ? this.patterns[i] : this.patterns[0];
-                    },
-                    getOption: function(i) {
-                        return i ? this.options[i] : this.options[0];
-                    },
-                    getCaseSensitive: function() {
-                        return this.caseSensitive[0];
-                    },
-                    */
+
                     filter: function() {
                         var indices = this.getIndices(),
                             patterns = this.getPatterns(),
@@ -413,7 +321,65 @@ var Tablemodify = (function(window, document) {
                         core.setRows(arr).render();
                         return this;
                     },
-                    manage: function() {
+                };
+
+                // constructor for default filter template
+                function FilterA() {
+                    var _this = this, timeout;
+                    var newCell = (function() {
+                        var cell = document.createElement('td');
+                        cell.innerHTML = "<div class='tm-input-div'><input type='text' placeholder='type filter here'/></div>"
+                                        + "<span class='tm-custom-checkbox' title='case-sensitive'>"
+                                        + "<input type='checkbox' value='1' name='checkbox' />"
+                                        + "<label for='checkbox'></label>"
+                                        + "</span>";
+
+
+                        return function() {
+                            return cell.cloneNode(true);
+                        }
+                    }());
+
+                    // modify DOM
+                    var tHead = core.head ? core.head.tHead : core.origHead,
+                        num = tHead.firstElementChild.cells.length - 1,
+                        row = document.createElement('tr');
+                    addClass(row, 'tm-filter-row');
+
+                    for (; num >= 0; num--) {
+                        row.appendChild(newCell());
+                    }
+
+                    row.onkeyup = function(e) {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(function() {
+                            _this.run();
+                        }, 500);
+                    }
+                    row.onclick = function(e) {
+                        var cell = getCell(e);
+                        var target = e.target;
+
+                        if (target.nodeName == 'SPAN' || target.nodeName == 'LABEL') {
+                            // checkbox slider click
+                            var checkbox = cell.querySelector('input[type=checkbox]');
+                            checkbox.checked = !checkbox.checked;
+                            _this.run();
+                        } else if (target.nodeName == 'INPUT') {
+                            target.select();
+                        }
+                    }
+                    row.onchange = function(e) {
+                        _this.run();
+                    }
+
+                    // append new row to tHead
+                    tHead.appendChild(row);
+                    this.tHead = tHead;
+                    this.headCells = row.cells;
+                    this.rows = core.getRows();
+
+                    this.run = function() {
                         var inputs = [].slice.call(this.tHead.querySelectorAll('input[type=text]'));
                         var checkboxes = [].slice.call(this.tHead.querySelectorAll('input[type=checkbox]'));
 
@@ -436,7 +402,131 @@ var Tablemodify = (function(window, document) {
                     }
                 };
 
-                new Filter();
+                // constructor for special filter template
+                function FilterB() {
+                    var _this = this, timeout;
+                    // modify DOM
+                    var wrapper = document.createElement('div');
+                    addClass(wrapper, 'tm-filter-wrap');
+                    core.container.insertBefore(wrapper, core.bodyWrap);
+
+                    wrapper.innerHTML = "<span class='tm-filter-loaded'>&nbsp;</span>"
+                                      + "<span class='tm-filter-add-button'>+</span>";
+                    console.log('hello');
+                    wrapper.onclick = function(e) {
+                        var target = e.target;
+
+                        if (hasClass(target, 'tm-filter-instance')) {
+                            if (hasClass(target, 'tm-open')) {
+                                // close it
+                                removeClass(target, 'tm-open');
+                            } else {
+                                // open it
+                                _this.minAll();
+                                addClass(target, 'tm-open');
+                            }
+                        } else if (hasClass(target, 'tm-filter-add-button')) {
+                            _this.minAll();
+                            _this.addFilter();
+                        } else if (hasClass(target, 'tm-custom-checkbox')) {
+                            target.firstElementChild.checked = !target.firstElementChild.checked;
+                            _this.run();
+                        } else if (hasClass(target.parentNode, 'tm-custom-checkbox')) {
+                            target.previousSibling.checked = !target.previousSibling.checked;
+
+                            _this.run();
+                        } else if (hasClass(target, 'tm-filter-wrap')) {
+                            _this.minAll();
+                        }
+                    };
+                    wrapper.onchange = function(e) {
+                        _this.run();
+                    }
+                    wrapper.onkeyup = function(e) {
+                        if (e.target.nodeName === 'INPUT') {
+                            clearTimeout(timeout);
+                            timeout = setTimeout(function() {
+                                _this.run();
+                            }, 500);
+                        }
+                    }
+
+                    this.activeFilters = wrapper.querySelector('.tm-filter-loaded');
+                    this.filterWrap = wrapper;
+                    this.rows = core.getRows();
+
+                    this.addFilter = function() {
+                        var newFilter = document.createElement('span');
+                        addClass(newFilter, 'tm-filter-instance');
+                        addClass(newFilter, 'tm-open');
+
+                        newFilter.innerHTML = "<select></select>"
+                                            + "<input type='text' placeholder='type filter here' />"
+                                            + "<span class='tm-custom-checkbox' title='case-sensitive'>"
+  		                                    + "<input type='checkbox' value='1' name='checkbox' />"
+	  	                                    + "<label for='checkbox'></label>"
+  	                                        + "</span>";
+
+                        // add options to select field
+                        var select = newFilter.firstElementChild;
+
+                        iterate(core.origHead.firstElementChild.cells, function(i, cell) {
+                            var option = document.createElement('option');
+                            option.text = cell.innerHTML;
+                            option.value = i;
+
+                            select.add(option);
+                        });
+
+                        // define getters
+                        newFilter.getIndex = function() {
+                            var select = this.firstElementChild;
+                            return select.options[select.selectedIndex].value;
+                        }
+                        newFilter.getPattern = function() {
+                            return this.children[1].value.trim();
+                        }
+                        newFilter.getOption = function() {
+                            return this.querySelector('input[type=checkbox]').checked;
+                        }
+
+                        this.activeFilters.appendChild(newFilter);
+                    }
+                    this.minAll = function() {
+                        iterate(this.filterWrap.querySelectorAll('.tm-filter-instance.tm-open'), function(i, instance) {
+                            removeClass(instance, 'tm-open');
+                        });
+                    }
+                    this.run = function() {
+                        // collect all information
+                        var filters = [].slice.call(this.activeFilters.children),
+                            patterns = [], indices = [], options = [];
+
+                        iterate(filters, function(i, filterObj) {
+                            indices.push(filterObj.getIndex());
+                            patterns.push(filterObj.getPattern());
+                            options.push(filterObj.getOption());
+                        });
+
+                        this.setIndices(indices)
+                            .setPatterns(patterns)
+                            .setOptions(options)
+                            .filter();
+                    }
+
+                }
+
+                FilterA.prototype = filterClass;
+                FilterB.prototype = filterClass;
+
+                switch (settings.filterStyle) {
+                    case 'special':
+                        new FilterB();
+                    break;
+                    default:
+                        new FilterA();
+                }
+
                 info('module filter loaded');
 
                 return {};
