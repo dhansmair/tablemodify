@@ -84,14 +84,6 @@ var Tablemodify = (function(window, document) {
           }
       }
     }
-    function getValueIn(arr, i) {
-      if (!Array.isArray(arr)) return arr;
-      if (arr.length > i) {
-        return arr[i];
-      } else {
-        return arr[arr.length-1];
-      }
-    }
 
     var coreDefaults = {};
 
@@ -210,10 +202,12 @@ var Tablemodify = (function(window, document) {
         },
         setRows: function(rowArray) {
             this.rows = rowArray;
+            this.body.dispatchEvent(new Event('tmRowsAdded'));
             return this;
         },
         addRows: function(rowArray) {
             [].push.apply(this.rows, rowsArray);
+            this.body.dispatchEvent(new Event('tmRowsAdded'));
             return this;
         },
         render: function() {
@@ -261,9 +255,9 @@ var Tablemodify = (function(window, document) {
                     tHead: null,
                     indices: [Infinity],
                     patterns: [],
-                    options: [], // contains || matches || case-sensitive
+                    options: [], // case-sensitive
 
-                    // new version setters
+                    // setters
                     setPatterns: function(patterns) {
                         this.patterns = patterns;
                         return this;
@@ -276,7 +270,7 @@ var Tablemodify = (function(window, document) {
                         this.options = options;
                         return this;
                     },
-                    // new version getters
+                    // getters
                     getPatterns: function() {
                         return this.patterns;
                     },
@@ -299,23 +293,20 @@ var Tablemodify = (function(window, document) {
                             var deph = 0, matches = true;
 
                             while (matches && deph <= maxDeph) {
-                                var i = indices[deph];
+                                var i = indices[deph],
+                                    pattern = patterns[deph],
+                                    tester = row.cells[i].innerHTML;
 
-                                if (options[deph]) {
-                                    // case-sensitive
-                                    var pattern = patterns[deph];
-                                    var tester = row.cells[i].innerHTML;
-                                } else {
+                                if (!options[deph]) {
                                     // not case-sensitive
-                                    var pattern = patterns[deph].toLowerCase();
-                                    var tester = row.cells[i].innerHTML.toLowerCase();
+                                    pattern = pattern.toLowerCase();
+                                    tester = tester.toLowerCase();
                                 }
 
                                 matches = tester.indexOf(pattern) !== -1;
                                 deph++;
                             }
                             return matches;
-
                         });
 
                         core.setRows(arr).render();
@@ -410,9 +401,8 @@ var Tablemodify = (function(window, document) {
                     addClass(wrapper, 'tm-filter-wrap');
                     core.container.insertBefore(wrapper, core.bodyWrap);
 
-                    wrapper.innerHTML = "<span class='tm-filter-loaded'>&nbsp;</span>"
-                                      + "<span class='tm-filter-add-button'>+</span>";
-                    console.log('hello');
+                    wrapper.innerHTML = "<span class='tm-filter-loaded'>&nbsp;</span><span class='tm-filter-add-button'>+</span>";
+
                     wrapper.onclick = function(e) {
                         var target = e.target;
 
@@ -450,6 +440,7 @@ var Tablemodify = (function(window, document) {
                             }, 500);
                         }
                     }
+
 
                     this.activeFilters = wrapper.querySelector('.tm-filter-loaded');
                     this.filterWrap = wrapper;
