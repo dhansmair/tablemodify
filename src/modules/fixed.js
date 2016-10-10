@@ -83,6 +83,11 @@ module.exports = new Module({
                 addClass(foot,     'tm-foot');
                 addClass(footWrap, 'tm-foot-wrap');
 
+                // add DIVs to origFoot cells so its height can be set to 0px
+                iterate(origFoot.firstElementChild.cells, function(i, cell) {
+                    cell.innerHTML = '<div>' + cell.innerHTML + '</div>';
+                });
+
                 foot.style.borderCollapse   = borderCollapse;
                 origFoot.style.visibility   = 'hidden';
                 bodyWrap.style.overflowX    = 'scroll';

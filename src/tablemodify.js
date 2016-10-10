@@ -80,10 +80,12 @@ class Tablemodify {
     }
     setRows(rowArray) {
         this.rows = rowArray;
+        //this.body.dispatchEvent(new Event('tmRowsAdded'));
         return this;
     }
     addRows(rowArray) {
         [].push.apply(this.rows, rowsArray);
+        //this.body.dispatchEvent(new Event('tmRowsAdded'));
         return this;
     }
     render() {
@@ -135,7 +137,8 @@ Tablemodify.modules = {
     sorter: require('./modules/sorter.js'),
     fixed: require('./modules/fixed.js'),
     columnStyles: require('./modules/columnStyles.js'),
-    zebra: require('./modules/zebra.js')
+    zebra: require('./modules/zebra.js'),
+    filter: require('./modules/filter.js')
 };
 
 //Store reference to the module class for user-defined modules

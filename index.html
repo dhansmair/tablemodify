@@ -7,11 +7,7 @@
 <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
 
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.7.0/styles/github.min.css">
-<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.7.0/highlight.min.js"></script>
-
-<script src='dist/tablemodify.js'></script>
 <link rel='stylesheet' href='tablemodify.css' />
-<script>hljs.initHighlightingOnLoad();</script>
 <style>
 * {
     box-sizing:border-box;
@@ -51,13 +47,11 @@ aside {
     overflow:hidden;
     padding-left:10px;
     background-color:blanchedalmond;
-
     z-index:100;
     -webkit-box-shadow: inset -5px 0px 5px 0px rgba(204,189,166,1);
     -moz-box-shadow: inset -5px 0px 5px 0px rgba(204,189,166,1);
     box-shadow: inset -5px 0px 5px 0px rgba(204,189,166,1);
 }
-
 header {
     height:100px;
     padding:10px;
@@ -75,7 +69,6 @@ nav {
     text-shadow:0px 1px #ccc;
 }
 nav ul {
-
     overflow:hidden;
     list-style: none;
 }
@@ -94,7 +87,6 @@ nav li:hover{
     text-decoration:underline;
 }
 nav li:before{
-
     content:'\2A33';
     font-size:small;
     position:absolute;
@@ -113,7 +105,6 @@ nav li.progress:after{
 }
 nav li a{
     text-decoration: none;
-
 }
 article h3{
     text-shadow:1px 1px #ccc;
@@ -146,7 +137,6 @@ p {
     margin:10px;
     white-space: pre-line;
     font-family:Open Sans, serif;
-
 }
 footer {
     background-color:#333;
@@ -164,7 +154,6 @@ div#demo-div{
     padding-right:0;
 }
 p#demo-information{
-
     margin:0;
     vertical-align:top;
 }
@@ -208,7 +197,6 @@ table#tm-demo, table#sorter-parsers{
 @media only screen
 and (min-width : 320px)
 and (max-width : 580px) {
-
   aside {
       width: 100%;
       height: 50px;
@@ -261,7 +249,6 @@ and (max-width : 580px) {
   }
   aside nav ul {
       margin:0;
-
   }
   aside li {
       margin:0;
@@ -293,7 +280,6 @@ and (max-width : 580px) {
       margin-top:20px;
   }
 }
-
 </style>
 
 </head>
@@ -335,7 +321,7 @@ and (max-width : 580px) {
 
                 <u>Browser support</u>
                 supported by all browsers which support css flexboxes.
-                It was successfully tested in Chrome, Firefox and IE11.
+                It was successfully tested in Chrome, Opera, Firefox and IE11.
                 see <a href="http://caniuse.com/#feat=flexbox" target="blank" >http://caniuse.com/#feat=flexbox</a>
 
                 Tablemodify is <u>not</u> optimized for mobile browsers yet.
@@ -345,71 +331,7 @@ and (max-width : 580px) {
         <article id='demonstration'>
             <h3>demo</h3>
             <hr>
-            <script>
 
-            window.addEventListener('DOMContentLoaded', function(){
-
-              var tm = new Tablemodify('#tm-demo', {
-                  containerId: 'demoContainer',
-                  modules: {
-                      zebra: {
-                          even:'#dbe7f0',
-                          odd:'#ffffff'
-                      },
-                      columnStyles: {
-                          all: {
-                              'text-align':'left',
-                              'padding':'5px 10px',
-                              'min-width':'100px'
-                          },
-                          0: {
-                              'font-weight':'bold',
-                              'min-width':'300px'
-                          },
-                          1: {
-                              'min-width':'300px'
-                          },
-                          2:{
-                              'width':'150px',
-                              'text-align':'right'
-                          },
-                          3:{
-                              'text-align':'right',
-                              'min-width':'80px',
-                              'width':'80px'
-                          },
-                          4:{
-                              'min-width':'400px'
-                          }
-
-                      },
-                      fixed: {
-                          fixHeader:true,
-                          fixFooter:true
-                      },
-                      sorter: {
-                          headers: {
-                              2: {
-                                  parser: 'germanDate'
-                              },
-                              4: {
-                                  enabled: false
-                              },
-
-                          }
-
-                      }
-                  }
-              });
-
-              var tm2 = new Tablemodify('#sorter-parsers', {
-                 modules: {
-                     zebra: {}
-                 }
-              });
-
-            });
-            </script>
             <div id='demo-div'>
             <table id='tm-demo'>
                 <thead>
@@ -840,8 +762,8 @@ and (max-width : 580px) {
 
             </p>
             <ul>
-                <li>new module searcher</li>
-                <li>allowing multiple Tablemodifiers in one page</li>
+                <li>new module filter</li>
+                <li>allowing multiple Tablemodifiers in one page &#10004;</li>
                 <li>adding interface for users to add own modules</li>
 
             </ul>
@@ -859,5 +781,69 @@ and (max-width : 580px) {
             &copy; 2016 David Hansmair
         </footer>
     </main>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.7.0/highlight.min.js"></script>
+    <script src='dist/tablemodify.js'></script>
+    <script>
+        hljs.initHighlightingOnLoad();
+          var tm = new Tablemodify('#tm-demo', {
+              containerId: 'demoContainer',
+              modules: {
+                  zebra: {
+                      even:'#dbe7f0',
+                      odd:'#ffffff'
+                  },
+                  columnStyles: {
+                      all: {
+                          'text-align':'left',
+                          'padding':'5px 10px',
+                          'min-width':'100px'
+                      },
+                      0: {
+                          'font-weight':'bold',
+                          'min-width':'300px'
+                      },
+                      1: {
+                          'min-width':'300px'
+                      },
+                      2:{
+                          'width':'150px',
+                          'text-align':'right'
+                      },
+                      3:{
+                          'text-align':'right',
+                          'min-width':'80px',
+                          'width':'80px'
+                      },
+                      4:{
+                          'min-width':'400px'
+                      }
+                  },
+                  fixed: {
+                      fixHeader:true,
+                      fixFooter:true
+                  },
+                  sorter: {
+                      headers: {
+                          2: {
+                              parser: 'germanDate'
+                          },
+                          4: {
+                              enabled: false
+                          },
+                      }
+                  },
+                  filter: {
+                      //filterStyle: 'special'
+                  }
+              }
+          });
+
+          var tm2 = new Tablemodify('#sorter-parsers', {
+             modules: {
+                 zebra: {}
+             }
+          });
+
+    </script>
 </body>
 </html>
