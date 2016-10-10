@@ -1,0 +1,21 @@
+{
+    "name": "tablemodify",
+    "license": "MIT",
+    "author": {
+        "name": "David Hansmair"
+    },
+    "contributors": [
+        {
+            "name": "Marinus Enzinger"
+        }
+    ],
+    "devDependencies": {
+        "watchify": ">=3.7.0",
+        "babelify": ">=7.3.0",
+        "uglify-js": ">=2.7.3"
+    },
+    "scripts": {
+        "watch": "watchify src/tablemodify.js -v -d -o dist/tablemodify.js -t [babelify --presets [es2015] ]",
+        "build": "browserify src/tablemodify.js -t [babelify --presets [es2015] ] | uglifyjs -mc > dist/tablemodify.js"
+    }
+}
