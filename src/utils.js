@@ -39,7 +39,8 @@ exports.wrap = function(el, wrapper) {
  * extends deep recursively.
  */
 exports.extend2 = function extend2(destination, ...sources) {
-    for(let source of sources) {
+    for(let i = 0; i < sources.length; i++) {
+        let source = sources[i];
         Object.keys(source).forEach(key => {
             if({}.hasOwnProperty.call(destination, key)) {
                 let tDest = typeof destination[key];
