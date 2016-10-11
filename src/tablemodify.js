@@ -1,7 +1,7 @@
 const config = require('./config.js');
 const Module = require('./modules/module.js');
 const {error, warn, isNonEmptyString,
-       iterate, extend, addClass, getUniqueId, wrap} = require('./utils.js');
+       iterate, extend, addClass, getUniqueId/*, wrap*/} = require('./utils.js');
 
 class Tablemodify {
     constructor(selector, coreSettings) {
@@ -12,8 +12,9 @@ class Tablemodify {
           error('there is no <table> with selector ' + selector);
           return null;
         }
-        this.body = body;
+        //this.body = body;
         this.bodySelector = selector;
+        let oldBodyParent = body.parentElement;
 
         extend(config.coreDefaults, coreSettings);
 
@@ -25,22 +26,32 @@ class Tablemodify {
             containerId = getUniqueId();
         }
 
-        this.bodyWrap  = wrap(body, document.createElement('div'));
-        this.container = wrap(this.bodyWrap, document.createElement('div'));
+        body.outerHTML =
+                    `<div class='tm-container'>
+                        <style class='tm-custom-style'></style>
+                        <div class='tm-body-wrap'>
+                            ${body.outerHTML}
+                        </div>
+                    </div>`;
+
+        this.container = oldBodyParent.querySelector('.tm-container');
+
+        body = this.container.querySelector('table'); // important! reload body variable
+
+        this.body = body;
+        this.bodyWrap = body.parentElement;
+        this.stylesheet = this.bodyWrap.previousElementSibling;
+
         this.origHead = body.tHead;
         this.origFoot = body.tFoot;
-        // add css area
-        this.stylesheet = document.createElement('style');
-        this.container.insertBefore(this.stylesheet, this.container.firstElementChild);
-
-        addClass(body, 'tm-body');
-        addClass(this.bodyWrap,  'tm-body-wrap');
-        addClass(this.container, 'tm-container');
-        addClass(this.stylesheet, 'tm-custom-style');
 
         // add optional id to container
         this.container.id = containerId;
         this.containerId  = containerId;
+
+        // add theme class to container
+        addClass(this.container, ('tm-theme-' + coreSettings.theme));
+        addClass(body, 'tm-body');
 
         // initialize tbody rows as 2D-array
         this.rows = [].slice.call(this.body.tBodies[0].rows);
@@ -89,15 +100,30 @@ class Tablemodify {
         return this;
     }
     render() {
-        var tBody = this.body.tBodies[0],
+        let tBody = this.body.tBodies[0],
             rows = this.getRows(),
-            l = rows.length;
-
-        tBody.innerHTML = '';
-
+            l = rows.length,
+            rowChunkSize = 50,
+            start = 0;
+        tBody.innerHTML = null;
+        /*
         for (var i = 0; i < l; i++) {
             tBody.appendChild(rows[i]);
         }
+        */
+
+        const renderPart = function() {
+            for (var z = 0; z < rowChunkSize; z++) {
+                if(start + z === l) return;
+                tBody.appendChild(rows[start + z]);
+            }
+            start = start + z;
+            //console.log(start);
+            window.setTimeout(renderPart, 0);
+        }
+        window.setTimeout(renderPart, 0);
+
+        // @TODO am ende ausführen: this.body.dispatchEvent(new Event('tmFixedForceRendering'));
         return this;
     }
     /**

@@ -7,7 +7,8 @@
 <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
 
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.7.0/styles/github.min.css">
-<link rel='stylesheet' href='tablemodify.css' />
+<link rel='stylesheet' href='dist/tablemodify.css' />
+<link rel='stylesheet' href='dist/themes/default.css' />
 <style>
 * {
     box-sizing:border-box;
@@ -162,7 +163,7 @@ pre {
 }
 div#demoContainer {
     height: 400px;
-}
+}/*
 table#sorter-parsers td,
 table#sorter-parsers th {
     border: 1px solid #ccc;
@@ -174,7 +175,7 @@ table#tm-demo, table#sorter-parsers{
 }
 .tm-container td, .tm-container th{
     border:1px solid #ccc;
-}
+}*/
 /*
     tablet
 */
@@ -782,12 +783,13 @@ and (max-width : 580px) {
         </footer>
     </main>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.7.0/highlight.min.js"></script>
-    <script src='dist/tablemodify.js'></script>
+    <script src='dist/tablemodify.min.js'></script>
     <script>
         hljs.initHighlightingOnLoad();
           var tm = new Tablemodify('#tm-demo', {
               containerId: 'demoContainer',
               modules: {
+
                   zebra: {
                       even:'#dbe7f0',
                       odd:'#ffffff'
@@ -818,6 +820,7 @@ and (max-width : 580px) {
                           'min-width':'400px'
                       }
                   },
+
                   fixed: {
                       fixHeader:true,
                       fixFooter:true

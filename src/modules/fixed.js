@@ -22,33 +22,32 @@ module.exports = new Module({
 
         var getHeaderHeight = function() { return origHead.clientHeight;};
         var getFooterHeight = function() { return origFoot.clientHeight;};
-        var renderHead = function() {
+
+        function renderHead() {
+            if(!head) return;
             var allNew = [].slice.call(head.firstElementChild.firstElementChild.cells),
                 allOld = [].slice.call(origHead.firstElementChild.cells);
             body.style.marginTop = inPx('-' + getHeaderHeight()); // if header resizes because of a text wrap
 
             iterate(allNew, function(i, neu){
-                var w = inPx(allOld[i].getBoundingClientRect().width);
-                setCss(neu, {
-                    'width': w,
-                    'min-width': w,
-                    'max-width': w
-                });
+                let w = inPx(allOld[i].getBoundingClientRect().width);
+                neu.style.cssText = `width: ${w};
+                                     min-width: ${w};
+                                     max-width: ${w}`;
             });
         }
-        let renderFoot = function() {
+        function renderFoot() {
+            if (!foot) return;
             var allNew = [].slice.call(foot.firstElementChild.firstElementChild.cells),
                 allOld = [].slice.call(origFoot.firstElementChild.cells);
 
             bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + getFooterHeight() + 1)); // if footer resizes because of a text wrap
 
             iterate(allNew, function(i, neu){
-                var w = inPx(allOld[i].getBoundingClientRect().width);
-                setCss(neu, {
-                    'width': w,
-                    'min-width': w,
-                    'max-width': w
-                });
+                let w = inPx(allOld[i].getBoundingClientRect().width);
+                neu.style.cssText = `width: ${w};
+                                     min-width: ${w};
+                                     max-width: ${w}`;
             });
         }
         try {
@@ -96,8 +95,15 @@ module.exports = new Module({
             }
 
             // add event listeners
-            if (head) window.addEventListener('resize', renderHead);
-            if (foot) window.addEventListener('resize', renderFoot);
+            if (head) {
+                window.addEventListener('resize', renderHead);
+                body.addEventListener('tmFixedForceRendering', renderHead);
+            }
+
+            if (foot) {
+                window.addEventListener('resize', renderFoot);
+                body.addEventListener('tmFixedForceRendering', renderHead);
+            }
 
             if (head && foot) {
 
@@ -124,13 +130,13 @@ module.exports = new Module({
 
             setTimeout(function(){
                 // nötig, weil der Browser zum rendern manchmal eine gewisse Zeit braucht
-                if (head) renderHead();
-                if (foot) renderFoot();
+                renderHead();
+                renderFoot();
             }, 50);
             setTimeout(function(){
                 // nötig, weil der Browser zum rendern manchmal eine gewisse Zeit braucht
-                if (head) renderHead();
-                if (foot) renderFoot();
+                renderHead();
+                renderFoot();
             }, 500);
 
             this.head = head;

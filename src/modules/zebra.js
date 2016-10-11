@@ -1,6 +1,10 @@
 const {addClass, extend, info, error} = require('../utils.js');
 const Module = require('./module.js');
+/*
 
+    DEPRECATED, can be realized via CSS, see default theme
+
+*/
 module.exports = new Module({
     name: "zebra",
     defaultSettings: {

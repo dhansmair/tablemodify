@@ -1,0 +1,174 @@
+// "out": "../../dist/default.css"
+
+/* BASIC COLORS */
+@baseColor: #f0f0f0;
+@borderColor: #cccccc;
+@headerColor: #f0f0f0;
+@footerColor: #f0f0f0;
+
+/* colors for sorters sortable head cells */
+@sortablePrimaryColor: #6c9dc6;
+@sortableSecondaryColor: lighten(@sortablePrimaryColor, 15%);
+
+/* colors for zebra stripes for the table */
+@zebraEvenColor: lighten(lightskyblue, 20%);
+@zebraOddColor: white;
+
+.cellBasics {
+    padding:2px 4px;
+    text-align:left;
+    vertical-align: middle;
+    border:1px solid @borderColor;
+}
+.tableBasics {
+    border-collapse:collapse;
+}
+
+div.tm-container.tm-theme-default {
+
+    background-color: @baseColor;
+
+    div.tm-head-wrap {
+        background-color: @headerColor;
+        -webkit-box-shadow: 0px 3px 4px -3px rgba(0,0,0,0.75);
+        -moz-box-shadow: 0px 3px 4px -3px rgba(0,0,0,0.75);
+        box-shadow: 0px 3px 4px -3px rgba(0,0,0,0.75);
+
+        table.tm-head {
+
+            .tableBasics;
+            border-style: hidden;
+            border-bottom: 1px solid @borderColor;
+            /*
+                styles for sorter plugin
+            */
+            tr {
+
+                td, th {
+                    .cellBasics;
+                }
+                .sortable {
+                    padding-right: 15px !important;
+                    cursor: pointer;
+                    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem0zLjgzOSAxNmwtMy44MzkgNC43OTgtMy44MzktNC43OThoNy42Nzh6bTQuMTYxLTJoLTE2bDggMTAgOC0xMHoiLz48L3N2Zz4=");
+                    background-repeat: no-repeat;
+                    background-position: center right;
+                    background-size: 14px;
+
+                    /* Color for hovered sortable cells */
+                    &:hover {
+                        background-color: @sortableSecondaryColor;
+                    }
+                    /* Color for active sortable cells */
+                    &.sort-up {
+                        background-color: @sortablePrimaryColor;
+                        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMGwtOCAxMGgxNmwtOC0xMHptMy44MzkgMTZsLTMuODM5IDQuNzk4LTMuODM5LTQuNzk4aDcuNjc4em00LjE2MS0yaC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
+                    }
+                    &.sort-down {
+                        background-color: @sortablePrimaryColor;
+                        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem04IDE0aC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
+                    }
+                }
+            }
+            /*
+                styles for filter plugin
+            */
+            tr.tm-filter-row {
+                transition:0.2s;
+
+                div.tm-input-div {
+                    input[type=text] {
+                        overflow:hidden;
+                        width: 100%;
+                        height: 100%;
+                        padding-left:10px;
+                        padding-right:25px;
+                        border:none;
+                        background-color:transparent;
+                    }
+                }
+
+                span.tm-custom-checkbox {
+                    position:absolute;
+                    top:0;
+                    right:0;
+                    width:30px;
+                    height:100%;
+                    background-color:transparent;
+                    vertical-align:middle;
+                    text-align: center;
+
+                    input[type=checkbox] {
+                        visibility: hidden;
+
+                        &:checked + label {
+                            background: #666;
+                        }
+                    }
+                    /* styles of the dot hovering the original checkbox */
+                    label {
+                        position:absolute;
+                        border-radius:50px;
+                        width:18px;
+                        height:18px;
+                        top:5px;
+                        right:5px;
+                        background-color: @baseColor;
+                        border:3px solid @borderColor;
+                        transition:0.2s;
+                        cursor:pointer;
+                    }
+                    /* color of checkbox dot */
+                    /*
+                    input[type=checkbox]:checked + label {
+                    	background: #666;
+                    }*/
+                }
+            }
+            // height of the visible filter row
+            tr:hover + tr.tm-filter-row,
+            tr.tm-filter-row:hover {
+                height:30px;
+            }
+        }
+    }
+
+    div.tm-body-wrap {
+        background-color:white;
+
+        table {
+            .tableBasics;
+            tr {
+                td {
+                    .cellBasics;
+                }
+
+                &:nth-of-type(even) {
+                    background-color: @zebraEvenColor;
+                }
+                &:nth-of-type(odd) {
+                    background-color: @zebraOddColor;
+                }
+            }
+        }
+    }
+
+    div.tm-foot-wrap {
+        background-color: @footerColor;
+        -webkit-box-shadow: 0px -3px 4px -3px rgba(0,0,0,0.75);
+        -moz-box-shadow: 0px -3px 4px -3px rgba(0,0,0,0.75);
+        box-shadow: 0px -3px 4px -3px rgba(0,0,0,0.75);
+
+        table.tm-foot {
+            .tableBasics;
+            border-style: hidden;
+            border-top: 1px solid @borderColor;
+
+            tr {
+                td, th {
+                    .cellBasics;
+                }
+            }
+        }
+    }
+}

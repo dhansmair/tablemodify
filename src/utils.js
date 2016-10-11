@@ -57,9 +57,10 @@ exports.extend2 = function extend2(destination, ...sources) {
 }
 exports.extend = function extend(d, s) {
     Object.keys(d).forEach(function(key) {
-        if(!s.hasOwnProperty(key)) s[key] = d[key];
-        // recursive deep-extend
-        if (typeof s[key] === 'object') {
+        if(!s.hasOwnProperty(key)) {
+            s[key] = d[key];
+        } else if (typeof s[key] === 'object') {
+            // recursive deep-extend
             s[key] = extend(d[key], s[key]);
         }
     });
@@ -86,7 +87,9 @@ exports.getScrollbarWidth = function() {
   return widthNoScroll - widthWithScroll;
 }
 exports.setCss = function(el, styles) {
-    for (var property in styles) { el.style[property] = styles[property]; }
+    for (var property in styles) {
+        el.style[property] = styles[property];
+    }
     return el;
 }
 exports.getCss = function(el, style) { return window.getComputedStyle(el, null)[style];}
@@ -97,17 +100,18 @@ exports.iterate = function(elems, func) {
       var keys = Object.keys(elems),
           l = keys.length;
       for (var i = 0; i < l; i++) {
-          //func.call(undefined, keys[i], elems[keys[i]]);
+          // property, value
           func(keys[i], elems[keys[i]]);
       }
   } else {
       var l = elems.length;
       for (var i = 0; i < l; i++) {
-        //func.call(undefined, elems[i], i);
-        func(elems[i], i);
+          // value, index @TODO umdrehen für konsistenz, an allen stellen anpassen -> index, value
+          func(elems[i], i);
       }
   }
 }
+/*
 exports.getValueIn = function(arr, i) {
   if (!Array.isArray(arr)) return arr;
   if (arr.length > i) {
@@ -116,7 +120,7 @@ exports.getValueIn = function(arr, i) {
     return arr[arr.length-1];
   }
 }
-
+*/
 exports.getUniqueId = (function(){
     var unique = 0;
 

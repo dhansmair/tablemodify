@@ -1,2 +1,4 @@
 exports.debug = true;
-exports.coreDefaults = {};
+exports.coreDefaults = {
+    theme: 'default'
+};
