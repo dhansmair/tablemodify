@@ -1,6 +1,6 @@
 const config = require('./config.js');
 const Module = require('./modules/module.js');
-const {error, warn, isNonEmptyString,
+const {error, warn, isNonEmptyString, getCss,
        iterate, extend, addClass, getUniqueId/*, wrap*/} = require('./utils.js');
 
 class Tablemodify {
@@ -56,6 +56,10 @@ class Tablemodify {
         // initialize tbody rows as 2D-array
         this.rows = [].slice.call(this.body.tBodies[0].rows);
 
+        //Default rendering mode: everything at once
+        this.setRenderingMode(Tablemodify.RENDERING_MODE_AT_ONCE);
+        this._chunkedRenderingTimeout = null;
+        this.rowChunkSize = 50;
         // call all modules
         if (coreSettings.modules) {
             // interface for modules
@@ -78,7 +82,6 @@ class Tablemodify {
                 }
             });
         }
-
         this.coreSettings = coreSettings;
     }
     appendStyles(text) {
@@ -90,40 +93,61 @@ class Tablemodify {
         return this.rows;
     }
     setRows(rowArray) {
+        //If chunked rendering is running at the moment, cancel
+        window.clearTimeout(this._chunkedRenderingTimeout);
         this.rows = rowArray;
         //this.body.dispatchEvent(new Event('tmRowsAdded'));
         return this;
     }
     addRows(rowArray) {
+        //If chunked rendering is running at the moment, cancel
+        window.clearTimeout(this._chunkedRenderingTimeout);
         [].push.apply(this.rows, rowsArray);
         //this.body.dispatchEvent(new Event('tmRowsAdded'));
         return this;
     }
+    setRenderingMode(to) {
+        if(to !== Tablemodify.RENDERING_MODE_CHUNKED && to !== Tablemodify.RENDERING_MODE_AT_ONCE) {
+           let msg = "Tried to set unknown rendering mode";
+           warn(msg);
+           throw new Error(msg);
+       }
+       if(to === Tablemodify.RENDERING_MODE_CHUNKED && getCss(this.body, 'table-layout') !== 'fixed') {
+           warn("Using chunked rendering with non-fixed table layout is discouraged!");
+       }
+       this.renderingMode = to;
+       return this;
+    }
     render() {
         let tBody = this.body.tBodies[0],
             rows = this.getRows(),
-            l = rows.length,
-            rowChunkSize = 50,
-            start = 0;
+            l = rows.length;
         tBody.innerHTML = null;
-        /*
-        for (var i = 0; i < l; i++) {
-            tBody.appendChild(rows[i]);
-        }
-        */
 
-        const renderPart = function() {
-            for (var z = 0; z < rowChunkSize; z++) {
-                if(start + z === l) return;
-                tBody.appendChild(rows[start + z]);
-            }
-            start = start + z;
-            //console.log(start);
-            window.setTimeout(renderPart, 0);
+        switch(this.renderingMode) {
+            case Tablemodify.RENDERING_MODE_AT_ONCE:
+                for (var i = 0; i < l; i++) {
+                    tBody.appendChild(rows[i]);
+                }
+                this.body.dispatchEvent(new Event('tmFixedForceRendering'));
+                break;
+            case Tablemodify.RENDERING_MODE_CHUNKED:
+                let chunkSize = this.rowChunkSize,
+                    start = 0;
+                const renderPart = () => {
+                    for (var z = 0; z < chunkSize; z++) {
+                        if(start + z === l) {
+                            this.body.dispatchEvent(new Event('tmFixedForceRendering'));
+                            return;
+                        }
+                        tBody.appendChild(rows[start + z]);
+                    }
+                    start = start + z;
+                    this._chunkedRenderingTimeout = window.setTimeout(renderPart, 0);
+                }
+                this._chunkedRenderingTimeout = window.setTimeout(renderPart, 0);
+                break;
         }
-        window.setTimeout(renderPart, 0);
-
-        // @TODO am ende ausführen: this.body.dispatchEvent(new Event('tmFixedForceRendering'));
         return this;
     }
     /**
@@ -159,6 +183,8 @@ class Tablemodify {
         }
     }
 }
+Tablemodify.RENDERING_MODE_CHUNKED = 1;
+Tablemodify.RENDERING_MODE_AT_ONCE = 2;
 Tablemodify.modules = {
     sorter: require('./modules/sorter.js'),
     fixed: require('./modules/fixed.js'),

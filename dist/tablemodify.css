@@ -38,6 +38,7 @@ table.tm-head {
 table.tm-body {
     width:100%;
     min-width: 100%;
+    table-layout:fixed;
     border-style:hidden;
 }
 
