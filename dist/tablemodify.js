@@ -529,28 +529,36 @@ module.exports = new Module({
             }
 
             if (head && foot) {
-
                 bodyWrap.addEventListener('scroll', function () {
-                    head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);
-                    footWrap.scrollLeft = bodyWrap.scrollLeft;
+                    window.requestAnimationFrame(function () {
+                        head.style.transform = 'translateX(-' + bodyWrap.scrollLeft + 'px)';
+                        footWrap.scrollLeft = bodyWrap.scrollLeft;
+                    }, false);
                 });
                 footWrap.addEventListener('scroll', function () {
-                    // works better than setting scrollLeft property
-                    head.style.marginLeft = inPx(-1 * footWrap.scrollLeft);
-                    bodyWrap.scrollLeft = footWrap.scrollLeft;
-                });
+                    window.requestAnimationFrame(function () {
+                        head.style.transform = 'translateX(-' + footWrap.scrollLeft + 'px)';
+                        bodyWrap.scrollLeft = footWrap.scrollLeft;
+                    });
+                }, false);
             } else if (head && !foot) {
 
                 bodyWrap.addEventListener('scroll', function () {
-                    head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);
+                    window.requestAnimationFrame(function () {
+                        head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);
+                    });
                 });
             } else if (!head && foot) {
 
                 footWrap.addEventListener('scroll', function () {
-                    bodyWrap.scrollLeft = footWrap.scrollLeft;
+                    window.requestAnimationFrame(function () {
+                        bodyWrap.scrollLeft = footWrap.scrollLeft;
+                    });
                 });
                 bodyWrap.addEventListener('scroll', function () {
-                    footWrap.scrollLeft = bodyWrap.scrollLeft;
+                    window.requestAnimationFrame(function () {
+                        footWrap.scrollLeft = bodyWrap.scrollLeft;
+                    });
                 });
             }
 
@@ -1260,14 +1268,12 @@ var Tablemodify = function () {
             var tBody = this.body.tBodies[0],
                 rows = this.getRows(),
                 l = rows.length;
-            tBody.innerHTML = null;
-
-            var i;
+            tBody.innerHTML = '';
 
             (function () {
                 switch (_this2.renderingMode) {
                     case Tablemodify.RENDERING_MODE_AT_ONCE:
-                        for (i = 0; i < l; i++) {
+                        for (var i = 0; i < l; i++) {
                             tBody.appendChild(rows[i]);
                         }
                         _this2.body.dispatchEvent(new Event('tmFixedForceRendering'));

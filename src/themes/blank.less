@@ -9,23 +9,24 @@
 @sortableSecondaryColor: lighten(@sortablePrimaryColor, 15%);
 
 /* colors for zebra stripes for the table */
-@zebraEvenColor: lighten(lightskyblue, 20%);
+@zebraEvenColor: white;
 @zebraOddColor: white;
 
 .cellBasics {
-    padding:2px 4px;
-    text-align:left;
-    vertical-align: middle;
-    border:1px solid @borderColor;
+    //text-align:left;
+    border:none;
 }
 .tableBasics {
     border-collapse:collapse;
+    border-style: hidden;
     background-color:white;
 }
 
-div.tm-container.tm-theme-default {
+div.tm-container.tm-theme-blank {
 
     background-color: @baseColor;
+    border:none;
+
     div.tm-head-wrap {
         background-color: @headerColor;
         -webkit-box-shadow: 0px 6px 10px -10px rgba(102,102,102,1);
@@ -127,7 +128,7 @@ div.tm-container.tm-theme-default {
     }
 
     div.tm-body-wrap {
-        background-color:white;
+        background-color: white;
 
         table {
             .tableBasics;

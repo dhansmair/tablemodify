@@ -122,11 +122,11 @@ class Tablemodify {
         let tBody = this.body.tBodies[0],
             rows = this.getRows(),
             l = rows.length;
-        tBody.innerHTML = null;
+        tBody.innerHTML = '';
 
         switch(this.renderingMode) {
             case Tablemodify.RENDERING_MODE_AT_ONCE:
-                for (var i = 0; i < l; i++) {
+                for (let i = 0; i < l; i++) {
                     tBody.appendChild(rows[i]);
                 }
                 this.body.dispatchEvent(new Event('tmFixedForceRendering'));

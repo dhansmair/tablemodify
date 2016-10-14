@@ -17,11 +17,11 @@ div.tm-head-wrap {
 div.tm-body-wrap {
     -ms-flex:1;
     flex:1;
-    overflow-x:auto;
-    overflow-y:scroll;
+    overflow-x:scroll;
+    overflow-y:auto;
     z-index:0;
 }
-div.tm-foot-wrap{
+div.tm-foot-wrap {
     overflow-x: auto;
     overflow-y: hidden;
     z-index:1;
@@ -38,7 +38,7 @@ table.tm-head {
 table.tm-body {
     width:100%;
     min-width: 100%;
-    table-layout:fixed;
+    /*table-layout:fixed;*/
     border-style:hidden;
 }
 

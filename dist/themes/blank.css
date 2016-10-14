@@ -2,25 +2,24 @@
 /* colors for sorters sortable head cells */
 /* colors for zebra stripes for the table */
 .cellBasics {
-  padding: 2px 4px;
-  text-align: left;
-  vertical-align: middle;
-  border: 1px solid #cccccc;
+  border: none;
 }
 .tableBasics {
   border-collapse: collapse;
+  border-style: hidden;
   background-color: white;
 }
-div.tm-container.tm-theme-default {
+div.tm-container.tm-theme-blank {
   background-color: #f0f0f0;
+  border: none;
 }
-div.tm-container.tm-theme-default div.tm-head-wrap {
+div.tm-container.tm-theme-blank div.tm-head-wrap {
   background-color: white;
   -webkit-box-shadow: 0px 6px 10px -10px #666666;
   -moz-box-shadow: 0px 6px 10px -10px #666666;
   box-shadow: 0px 6px 10px -10px #666666;
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head {
   border-collapse: collapse;
   background-color: white;
   border-style: hidden;
@@ -32,14 +31,11 @@ div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head {
                 styles for filter plugin
             */
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr td,
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr th {
-  padding: 2px 4px;
-  text-align: left;
-  vertical-align: middle;
-  border: 1px solid #cccccc;
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr td,
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr th {
+  border: none;
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr .sortable {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr .sortable {
   padding-right: 15px !important;
   cursor: pointer;
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem0zLjgzOSAxNmwtMy44MzkgNC43OTgtMy44MzktNC43OThoNy42Nzh6bTQuMTYxLTJoLTE2bDggMTAgOC0xMHoiLz48L3N2Zz4=");
@@ -49,21 +45,21 @@ div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr .sortable {
   /* Color for hovered sortable cells */
   /* Color for active sortable cells */
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr .sortable:hover {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr .sortable:hover {
   background-color: #a3c2db;
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr .sortable.sort-up {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr .sortable.sort-up {
   background-color: #6c9dc6;
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMGwtOCAxMGgxNmwtOC0xMHptMy44MzkgMTZsLTMuODM5IDQuNzk4LTMuODM5LTQuNzk4aDcuNjc4em00LjE2MS0yaC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr .sortable.sort-down {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr .sortable.sort-down {
   background-color: #6c9dc6;
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem04IDE0aC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr.tm-filter-row {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr.tm-filter-row {
   transition: 0.2s;
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr.tm-filter-row div.tm-input-div input[type=text] {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr.tm-filter-row div.tm-input-div input[type=text] {
   overflow: hidden;
   width: 100%;
   height: 100%;
@@ -72,7 +68,7 @@ div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr.tm-filter-ro
   border: none;
   background-color: transparent;
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr.tm-filter-row span.tm-custom-checkbox {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr.tm-filter-row span.tm-custom-checkbox {
   position: absolute;
   top: 0;
   right: 0;
@@ -83,13 +79,13 @@ div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr.tm-filter-ro
   text-align: center;
   /* styles of the dot hovering the original checkbox */
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr.tm-filter-row span.tm-custom-checkbox input[type=checkbox] {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr.tm-filter-row span.tm-custom-checkbox input[type=checkbox] {
   visibility: hidden;
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr.tm-filter-row span.tm-custom-checkbox input[type=checkbox]:checked + label {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr.tm-filter-row span.tm-custom-checkbox input[type=checkbox]:checked + label {
   background: #666;
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr.tm-filter-row span.tm-custom-checkbox label {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr.tm-filter-row span.tm-custom-checkbox label {
   position: absolute;
   border-radius: 50px;
   width: 18px;
@@ -101,45 +97,40 @@ div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr.tm-filter-ro
   transition: 0.2s;
   cursor: pointer;
 }
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr:hover + tr.tm-filter-row,
-div.tm-container.tm-theme-default div.tm-head-wrap table.tm-head tr.tm-filter-row:hover {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr:hover + tr.tm-filter-row,
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr.tm-filter-row:hover {
   height: 30px;
 }
-div.tm-container.tm-theme-default div.tm-body-wrap {
+div.tm-container.tm-theme-blank div.tm-body-wrap {
   background-color: white;
 }
-div.tm-container.tm-theme-default div.tm-body-wrap table {
+div.tm-container.tm-theme-blank div.tm-body-wrap table {
   border-collapse: collapse;
+  border-style: hidden;
   background-color: white;
 }
-div.tm-container.tm-theme-default div.tm-body-wrap table tr td {
-  padding: 2px 4px;
-  text-align: left;
-  vertical-align: middle;
-  border: 1px solid #cccccc;
+div.tm-container.tm-theme-blank div.tm-body-wrap table tr td {
+  border: none;
 }
-div.tm-container.tm-theme-default div.tm-body-wrap table tr:nth-of-type(even) {
-  background-color: #e9f6fe;
-}
-div.tm-container.tm-theme-default div.tm-body-wrap table tr:nth-of-type(odd) {
+div.tm-container.tm-theme-blank div.tm-body-wrap table tr:nth-of-type(even) {
   background-color: white;
 }
-div.tm-container.tm-theme-default div.tm-foot-wrap {
+div.tm-container.tm-theme-blank div.tm-body-wrap table tr:nth-of-type(odd) {
+  background-color: white;
+}
+div.tm-container.tm-theme-blank div.tm-foot-wrap {
   background-color: white;
   -webkit-box-shadow: 0px -6px 10px -10px #666666;
   -moz-box-shadow: 0px -6px 10px -10px #666666;
   box-shadow: 0px -6px 10px -10px #666666;
 }
-div.tm-container.tm-theme-default div.tm-foot-wrap table.tm-foot {
+div.tm-container.tm-theme-blank div.tm-foot-wrap table.tm-foot {
   border-collapse: collapse;
   background-color: white;
   border-style: hidden;
   border-top: 1px solid #cccccc;
 }
-div.tm-container.tm-theme-default div.tm-foot-wrap table.tm-foot tr td,
-div.tm-container.tm-theme-default div.tm-foot-wrap table.tm-foot tr th {
-  padding: 2px 4px;
-  text-align: left;
-  vertical-align: middle;
-  border: 1px solid #cccccc;
+div.tm-container.tm-theme-blank div.tm-foot-wrap table.tm-foot tr td,
+div.tm-container.tm-theme-blank div.tm-foot-wrap table.tm-foot tr th {
+  border: none;
 }

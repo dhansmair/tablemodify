@@ -106,26 +106,39 @@ module.exports = new Module({
             }
 
             if (head && foot) {
-
-                bodyWrap.addEventListener('scroll', function(){
-                    head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);
-                    footWrap.scrollLeft = bodyWrap.scrollLeft;
+                bodyWrap.addEventListener('scroll', function() {
+                    window.requestAnimationFrame(function() {
+                        head.style.transform = 'translateX(-'+bodyWrap.scrollLeft+'px)';
+                        footWrap.scrollLeft = bodyWrap.scrollLeft;
+                    }, false);
                 });
-                footWrap.addEventListener('scroll', function(){
-                    // works better than setting scrollLeft property
-                    head.style.marginLeft = inPx((-1)*footWrap.scrollLeft);
-                    bodyWrap.scrollLeft = footWrap.scrollLeft;
-                });
+                footWrap.addEventListener('scroll', function() {
+                    window.requestAnimationFrame(function() {
+                        head.style.transform = 'translateX(-'+footWrap.scrollLeft+'px)';
+                        bodyWrap.scrollLeft = footWrap.scrollLeft;
+                    });
+                }, false);
 
             } else if (head && !foot) {
 
-                bodyWrap.addEventListener('scroll', function() {head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);});
+                bodyWrap.addEventListener('scroll', function() {
+                    window.requestAnimationFrame(function() {
+                        head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);
+                    });
+                });
 
             } else if (!head && foot) {
-
-                footWrap.addEventListener('scroll', function(){bodyWrap.scrollLeft = footWrap.scrollLeft;});
-                bodyWrap.addEventListener('scroll', function(){footWrap.scrollLeft = bodyWrap.scrollLeft;});
-
+                
+                footWrap.addEventListener('scroll', function() {
+                    window.requestAnimationFrame(function() {
+                        bodyWrap.scrollLeft = footWrap.scrollLeft;
+                    });
+                });
+                bodyWrap.addEventListener('scroll', function() {
+                    window.requestAnimationFrame(function() {
+                        footWrap.scrollLeft = bodyWrap.scrollLeft;
+                    });
+                });
             }
 
             setTimeout(function(){
