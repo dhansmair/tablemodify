@@ -35,7 +35,7 @@ class Filter {
         this.options = [];
     }
 
-    // new version setters
+    // setters
     setPatterns(patterns) {
         this.patterns = patterns;
         return this;
@@ -48,7 +48,7 @@ class Filter {
         this.options = options;
         return this;
     }
-    // new version getters
+    // getters
     getPatterns() {
         return this.patterns;
     }
@@ -88,13 +88,13 @@ class Filter {
 
         });
 
-        this.tm.setRows(arr).render();
+        this.tm.setRows(arr);
         return this;
     }
 };
 
 class FilterDefault extends Filter {
-    constructor(tm) {
+    constructor(tm, settings) {
         super(tm);
         this.tHead = tm.head ? tm.head.tHead : tm.origHead;
 
@@ -106,15 +106,19 @@ class FilterDefault extends Filter {
         }
         addClass(row, 'tm-filter-row');
 
+        if (!settings.autoCollapse) {
+                row.style.height = '30px';
+        }
+
         // bind listeners
-        let _this = this, timeout;
-        row.onkeyup = function(e) {
+        let timeout;
+        row.onkeyup = (e) => {
             clearTimeout(timeout);
-            timeout = setTimeout(function() {
-                _this.run();
+            timeout = setTimeout(() => {
+                this.run();
             }, 500);
         }
-        row.onclick = function(e) {
+        row.onclick = (e) => {
             const cell = getCell(e),
                   target = e.target;
 
@@ -122,13 +126,13 @@ class FilterDefault extends Filter {
                 // checkbox click
                 let checkbox = cell.querySelector('input[type=checkbox]');
                 checkbox.checked = !checkbox.checked;
-                _this.run();
+                this.run();
             } else if (target.nodeName == 'INPUT') {
                 target.select();
             }
         }
-        row.onchange = function(e) {
-            _this.run();
+        row.onchange = () => {
+            this.run();
         }
 
         // insert toolbar row into tHead
@@ -154,146 +158,150 @@ class FilterDefault extends Filter {
             .setOptions(options)
             .filter();
 
+        // trigger sorting
+        this.tm.body.dispatchEvent(new Event('tmSorterSortAgain'));
+
+        this.tm.render();
+
         return this;
     }
 }
-
-// constructor for special filter template
 /*
-function FilterB() {
-    var _this = this, timeout;
-    // modify DOM
-    var wrapper = document.createElement('div');
-    addClass(wrapper, 'tm-filter-wrap');
-    core.container.insertBefore(wrapper, core.bodyWrap);
+class FilterSpecial extends Filter {
+    constructor() {
+        var _this = this, timeout;
+        // modify DOM
+        var wrapper = document.createElement('div');
+        addClass(wrapper, 'tm-filter-wrap');
+        core.container.insertBefore(wrapper, core.bodyWrap);
 
-    wrapper.innerHTML = "<span class='tm-filter-loaded'>&nbsp;</span>"
-                      + "<span class='tm-filter-add-button'>+</span>";
+        wrapper.innerHTML = "<span class='tm-filter-loaded'>&nbsp;</span>"
+                          + "<span class='tm-filter-add-button'>+</span>";
 
-    wrapper.onclick = function(e) {
-        var target = e.target;
+        wrapper.onclick = function(e) {
+            var target = e.target;
 
-        if (hasClass(target, 'tm-filter-instance')) {
-            if (hasClass(target, 'tm-open')) {
-                // close it
-                removeClass(target, 'tm-open');
-            } else {
-                // open it
+            if (hasClass(target, 'tm-filter-instance')) {
+                if (hasClass(target, 'tm-open')) {
+                    // close it
+                    removeClass(target, 'tm-open');
+                } else {
+                    // open it
+                    _this.minAll();
+                    addClass(target, 'tm-open');
+                }
+            } else if (hasClass(target, 'tm-filter-add-button')) {
                 _this.minAll();
-                addClass(target, 'tm-open');
-            }
-        } else if (hasClass(target, 'tm-filter-add-button')) {
-            _this.minAll();
-            _this.addFilter();
-        } else if (hasClass(target, 'tm-custom-checkbox')) {
-            target.firstElementChild.checked = !target.firstElementChild.checked;
-            _this.run();
-        } else if (hasClass(target.parentNode, 'tm-custom-checkbox')) {
-            target.previousSibling.checked = !target.previousSibling.checked;
-
-            _this.run();
-        } else if (hasClass(target, 'tm-filter-wrap')) {
-            _this.minAll();
-        }
-    };
-    wrapper.onchange = function(e) {
-        _this.run();
-    }
-    wrapper.onkeyup = function(e) {
-        if (e.target.nodeName === 'INPUT') {
-            clearTimeout(timeout);
-            timeout = setTimeout(function() {
+                _this.addFilter();
+            } else if (hasClass(target, 'tm-custom-checkbox')) {
+                target.firstElementChild.checked = !target.firstElementChild.checked;
                 _this.run();
-            }, 500);
+            } else if (hasClass(target.parentNode, 'tm-custom-checkbox')) {
+                target.previousSibling.checked = !target.previousSibling.checked;
+
+                _this.run();
+            } else if (hasClass(target, 'tm-filter-wrap')) {
+                _this.minAll();
+            }
+        };
+        wrapper.onchange = function(e) {
+            _this.run();
         }
-    }
-
-    this.activeFilters = wrapper.querySelector('.tm-filter-loaded');
-    this.filterWrap = wrapper;
-    this.rows = core.getRows();
-
-    this.addFilter = function() {
-        var newFilter = document.createElement('span');
-        addClass(newFilter, 'tm-filter-instance');
-        addClass(newFilter, 'tm-open');
-
-        newFilter.innerHTML = "<select></select>"
-                            + "<input type='text' placeholder='type filter here' />"
-                            + "<span class='tm-custom-checkbox' title='case-sensitive'>"
-                                + "<input type='checkbox' value='1' name='checkbox' />"
-                                + "<label for='checkbox'></label>"
-                                + "</span>";
-
-        // add options to select field
-        var select = newFilter.firstElementChild;
-
-        iterate(core.origHead.firstElementChild.cells, function(i, cell) {
-            var option = document.createElement('option');
-            option.text = cell.innerHTML;
-            option.value = i;
-
-            select.add(option);
-        });
-
-        // define getters
-        newFilter.getIndex = function() {
-            var select = this.firstElementChild;
-            return select.options[select.selectedIndex].value;
-        }
-        newFilter.getPattern = function() {
-            return this.children[1].value.trim();
-        }
-        newFilter.getOption = function() {
-            return this.querySelector('input[type=checkbox]').checked;
+        wrapper.onkeyup = function(e) {
+            if (e.target.nodeName === 'INPUT') {
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    _this.run();
+                }, 500);
+            }
         }
 
-        this.activeFilters.appendChild(newFilter);
-    }
-    this.minAll = function() {
-        iterate(this.filterWrap.querySelectorAll('.tm-filter-instance.tm-open'), function(i, instance) {
-            removeClass(instance, 'tm-open');
-        });
-    }
-    this.run = function() {
-        // collect all information
-        var filters = [].slice.call(this.activeFilters.children),
-            patterns = [], indices = [], options = [];
+        this.activeFilters = wrapper.querySelector('.tm-filter-loaded');
+        this.filterWrap = wrapper;
+        this.rows = core.getRows();
 
-        iterate(filters, function(i, filterObj) {
-            indices.push(filterObj.getIndex());
-            patterns.push(filterObj.getPattern());
-            options.push(filterObj.getOption());
-        });
+        this.addFilter = function() {
+            var newFilter = document.createElement('span');
+            addClass(newFilter, 'tm-filter-instance');
+            addClass(newFilter, 'tm-open');
 
-        this.setIndices(indices)
-            .setPatterns(patterns)
-            .setOptions(options)
-            .filter();
+            newFilter.innerHTML = "<select></select>"
+                                + "<input type='text' placeholder='type filter here' />"
+                                + "<span class='tm-custom-checkbox' title='case-sensitive'>"
+                                    + "<input type='checkbox' value='1' name='checkbox' />"
+                                    + "<label for='checkbox'></label>"
+                                    + "</span>";
+
+            // add options to select field
+            var select = newFilter.firstElementChild;
+
+            iterate(core.origHead.firstElementChild.cells, function(i, cell) {
+                var option = document.createElement('option');
+                option.text = cell.innerHTML;
+                option.value = i;
+
+                select.add(option);
+            });
+
+            // define getters
+            newFilter.getIndex = function() {
+                var select = this.firstElementChild;
+                return select.options[select.selectedIndex].value;
+            }
+            newFilter.getPattern = function() {
+                return this.children[1].value.trim();
+            }
+            newFilter.getOption = function() {
+                return this.querySelector('input[type=checkbox]').checked;
+            }
+            this.activeFilters.appendChild(newFilter);
+        }
+        this.minAll = function() {
+            iterate(this.filterWrap.querySelectorAll('.tm-filter-instance.tm-open'), function(i, instance) {
+                removeClass(instance, 'tm-open');
+            });
+        }
+        this.run = function() {
+            // collect all information
+            var filters = [].slice.call(this.activeFilters.children),
+                patterns = [], indices = [], options = [];
+
+            iterate(filters, function(i, filterObj) {
+                indices.push(filterObj.getIndex());
+                patterns.push(filterObj.getPattern());
+                options.push(filterObj.getOption());
+            });
+
+            this.setIndices(indices)
+                .setPatterns(patterns)
+                .setOptions(options)
+                .filter();
+        }
     }
-
 }
 */
-
 module.exports = new Module({
     name: "filter",
     defaultSettings: {
-        filterStyle: 'default'
+        //filterStyle: 'default'
+        autoCollapse: true
     },
     initializer: function(settings) {
         // this := Tablemodify-instance
         try {
             addClass(this.container, 'tm-filter');
 
-            switch (settings.filterStyle) {
-                /*
+            /*switch (settings.filterStyle) {
+
                 case 'special':
                     new FilterB();
-                break;*/
-                default:
-                    new FilterDefault(this);
-            }
-
+                break;
+                default:*/
+            let instance = new FilterDefault(this, settings);
+            //}
             info('module filter loaded');
+
+            return instance;
         } catch (e) {
             error(e);
         }

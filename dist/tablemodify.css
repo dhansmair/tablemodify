@@ -17,8 +17,8 @@ div.tm-head-wrap {
 div.tm-body-wrap {
     -ms-flex:1;
     flex:1;
-    overflow-x:scroll;
-    overflow-y:auto;
+    overflow-x:auto;
+    overflow-y:scroll;
     z-index:0;
 }
 div.tm-foot-wrap {

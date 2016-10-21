@@ -12,8 +12,8 @@ class Sorter {
             headCells: [],
             body: null,
             rows: [],
-            indices: [Infinity],
-            orders: [true],
+            indices: [],
+            orders: [],
         });
         //Store a reference to the tablemodify instance
         this.tm = tableModify;
@@ -27,21 +27,22 @@ class Sorter {
         this.headers = settings.headers;
         this.headCells = this.tm.head ? [].slice.call(this.tm.head.firstElementChild.firstElementChild.cells) : [].slice.call(this.tm.body.tHead.firstElementChild.cells);
 
-        iterate(settings.customParsers, function(name, func){
-            _this.parsers[name] = func;
+        iterate(settings.customParsers, (name, func) => {
+            this.parsers[name] = func;
         });
 
         // iterate over header cells
-        iterate(this.headCells, function(i, cell) {
+        iterate(this.headCells, (i, cell) => {
+            i = parseInt(i);
 
-            if (_this.getIsEnabled(i)) {
+            if (this.getIsEnabled(i)) {
                 addClass(cell, 'sortable');
-                cell.addEventListener('click', function(e) {
+                cell.addEventListener('click', (e) => {
 
                     if (e.shiftKey && settings.enableMultisort) {
-                        _this.manageMulti(i);
+                        this.manageMulti(i);
                     } else {
-                        _this.manage(i);
+                        this.manage(i);
                     }
 
                 });
@@ -85,6 +86,12 @@ class Sorter {
             this.setOrderAsc();
             this.manage(i);
         }
+
+        // sort again in case it's needed.
+        this.tm.body.addEventListener('tmSorterSortAgain', () => {
+            this.sort();
+        });
+
     }
     setRows(rowArray) {
             this.tm.setRows(rowArray);
@@ -108,14 +115,32 @@ class Sorter {
     getIsEnabled(i) {
         return (this.headers.hasOwnProperty(i) && this.headers[i].hasOwnProperty('enabled')) ? this.headers[i].enabled : this.headers.all.enabled;
     }
+    /*
+        single values
+    */
     getIndex() {
         return this.indices[0];
     }
     getOrderAsc() {
         return this.orders[0];
     }
+    /*
+        multiple values
+    */
+    getIndices() {
+        return this.indices;
+    }
+    getOrders() {
+        return this.orders;
+    }
+    getParsers() {
+        //var _this = this;
+        return this.getIndices().map((i) => {
+            return this.getParser(i);
+        });
+    }
     sort() {
-        var i = this.getIndex(),
+    /*    var i = this.getIndex(),
             o = this.getOrderAsc(),
             p = this.getParser(i);
 
@@ -125,20 +150,20 @@ class Sorter {
 
         if (!o) this.reverse();
 
-        return this;
-    }
-    multiSort() {
+        return this;*/
+    //}
+    //multiSort() {
         var _this = this,
-            indices = this.indices,
-            orders = this.orders,
-            parsers = indices.map(function(i) {return _this.getParser(i);}),
+            indices = this.getIndices(),
+            orders = this.getOrders(),
+            parsers = this.getParsers(),//indices.map(function(i) {return _this.getParser(i);}),
             maxDeph = indices.length - 1;
 
-        this.getRows().sort(function(a, b) {
-            var comparator = 0, deph = 0;
+        this.tm.getRows().sort(function(a, b) {
+            let comparator = 0, deph = 0;
 
             while (comparator === 0 && deph <= maxDeph) {
-                var tmpIndex = indices[deph];
+                let tmpIndex = indices[deph];
                 comparator = parsers[deph](getValue(a, tmpIndex), getValue(b, tmpIndex));
                 deph++;
             }
@@ -150,8 +175,9 @@ class Sorter {
 
         return this;
     }
+    /*
     reverse() {
-        var array = this.getRows(),
+        var array = this.tm.getRows(),
             left = null,
             right = null,
             length = array.length;
@@ -161,9 +187,11 @@ class Sorter {
             array[left] = array[right];
             array[right] = temporary;
         }
-        this.setRows(array);
+        //this.setRows(array);
+        console.log('reversed');
         return this;
     }
+    */
     render() {
         this.tm.render();
 
@@ -234,7 +262,7 @@ class Sorter {
             this.orders[exists] = !this.orders[exists];
         }
         // now sort
-        this.multiSort()
+        this.sort()
             .render()
             .renderSortingArrows();
 
@@ -368,6 +396,10 @@ module.exports = new Module({
                     .sort()
                     .render()
                     .renderSortingArrows();
+            },
+            info: function() {
+                console.log(sorterInstance.getIndices());
+                console.log(sorterInstance.getOrders());
             }
         };
     }

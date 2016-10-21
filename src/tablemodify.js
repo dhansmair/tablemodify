@@ -8,7 +8,7 @@ class Tablemodify {
         var containerId,
             _this = this,
             body = document.querySelector(selector); // must be a table
-        if (!body || body.nodeName !== 'TABLE'){
+        if (!body || body.nodeName !== 'TABLE') {
           error('there is no <table> with selector ' + selector);
           return null;
         }
@@ -66,7 +66,7 @@ class Tablemodify {
             iterate(coreSettings.modules, function(moduleName, moduleSettings) {
                 var module = Tablemodify.modules[moduleName];
                 var moduleReturn;
-                if(module) {
+                if (module) {
                     moduleReturn = module.getModule(_this, moduleSettings);
                 } else {
                     warn('Module' + moduleName + ' not registered!');
@@ -97,6 +97,7 @@ class Tablemodify {
         window.clearTimeout(this._chunkedRenderingTimeout);
         this.rows = rowArray;
         //this.body.dispatchEvent(new Event('tmRowsAdded'));
+        //this.render();
         return this;
     }
     addRows(rowArray) {
@@ -104,6 +105,7 @@ class Tablemodify {
         window.clearTimeout(this._chunkedRenderingTimeout);
         [].push.apply(this.rows, rowsArray);
         //this.body.dispatchEvent(new Event('tmRowsAdded'));
+        //this.render();
         return this;
     }
     setRenderingMode(to) {
@@ -122,7 +124,7 @@ class Tablemodify {
         let tBody = this.body.tBodies[0],
             rows = this.getRows(),
             l = rows.length;
-        tBody.innerHTML = '';
+        tBody.innerHTML = '';       // clear table body
 
         switch(this.renderingMode) {
             case Tablemodify.RENDERING_MODE_AT_ONCE:
@@ -136,7 +138,7 @@ class Tablemodify {
                     start = 0;
                 const renderPart = () => {
                     for (var z = 0; z < chunkSize; z++) {
-                        if(start + z === l) {
+                        if (start + z === l) {
                             this.body.dispatchEvent(new Event('tmFixedForceRendering'));
                             return;
                         }
@@ -156,15 +158,15 @@ class Tablemodify {
      * Tablemodify)
      */
     static addModule(module, name) {
-        if(typeof module === "function") {
+        if (typeof module === "function") {
             //Create a new module based on the given name and initializer function
             return this.addModule(new Module({
                 name: name,
                 initializer: module
             }));
-        } else if(typeof module === "object") {
+        } else if (typeof module === "object") {
             //Check if it is a Module instance
-            if(module instanceof Module) {
+            if (module instanceof Module) {
                 //if the module already exists, throw
                 if(this.modules[module.name]) {
                     let errorMsg = "Module " + module.name + " does already exist!";
@@ -186,11 +188,11 @@ class Tablemodify {
 Tablemodify.RENDERING_MODE_CHUNKED = 1;
 Tablemodify.RENDERING_MODE_AT_ONCE = 2;
 Tablemodify.modules = {
-    sorter: require('./modules/sorter.js'),
-    fixed: require('./modules/fixed.js'),
     columnStyles: require('./modules/columnStyles.js'),
-    zebra: require('./modules/zebra.js'),
-    filter: require('./modules/filter.js')
+    filter: require('./modules/filter.js'),
+    fixed: require('./modules/fixed.js'),
+    sorter: require('./modules/sorter.js'),
+    zebra: require('./modules/zebra.js')
 };
 
 //Store reference to the module class for user-defined modules

@@ -783,9 +783,9 @@ and (max-width : 580px) {
         </footer>
     </main>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.7.0/highlight.min.js"></script>
-    <script src='dist/tablemodify.min.js'></script>
+    <script src='dist/tablemodify.js'></script>
     <script>
-        hljs.initHighlightingOnLoad();
+        //hljs.initHighlightingOnLoad();
           var tm = new Tablemodify('#tm-demo', {
               containerId: 'demoContainer',
               modules: {
@@ -832,6 +832,7 @@ and (max-width : 580px) {
                   },
                   filter: {
                       //filterStyle: 'special'
+                      autoCollapse: true
                   }
               }
           });
