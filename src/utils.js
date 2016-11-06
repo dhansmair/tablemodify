@@ -13,7 +13,11 @@ exports.trace = function(text) {
     if(config.debug) console.trace('tm-trace: ' + text);
 }
 exports.error = function(text) {
-    if(config.debug) console.error('tm-error: ' + text);
+    console.error('tm-error: ' + text);
+}
+exports.errorThrow = text => {
+    exports.error(text);
+    throw new Error(text);
 }
 // utils
 exports.hasClass = function(el, className) {
@@ -134,3 +138,24 @@ exports.getUniqueId = (function(){
 exports.isNonEmptyString = function(str) {
     return typeof str === "string" && str.trim().length > 0;
 }
+
+let isObj = exports.isObject = o => typeof o === 'object';
+
+exports.isFn = f => typeof f === 'function';
+
+exports.isBool = b => typeof b === 'boolean';
+
+let getProp = exports.getProperty = (obj, ...props) => {
+    if (!isObj(obj) || props.length === 0) return;
+    //console.log("in getprop");
+    let index = 0;
+    while (index < props.length - 1) {
+        obj = obj[props[index]];
+        if (!isObj(obj)) return;
+        ++index;
+    }
+    //console.log(obj, props[index]);
+    if (obj[props[index]] === undefined) return;
+    return obj[props[index]];
+}
+exports.hasProp = (obj, ...props) => getProp(obj, ...props) !== undefined;

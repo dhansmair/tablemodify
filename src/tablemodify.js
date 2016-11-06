@@ -16,6 +16,9 @@ class Tablemodify {
         this.bodySelector = selector;
         let oldBodyParent = body.parentElement;
 
+        this.columnCount = 0;
+        this.calculateColumnCount(body);
+
         extend(config.coreDefaults, coreSettings);
 
         if (coreSettings.containerId && document.getElementById(coreSettings.containerId)) {
@@ -83,6 +86,16 @@ class Tablemodify {
             });
         }
         this.coreSettings = coreSettings;
+    }
+    calculateColumnCount(element) {
+        let maxCols = 0;
+        [].forEach.call(element.rows, row => {
+            if (row.cells.length > maxCols) maxCols = row.cells.length;
+        });
+        this.columnCount = maxCols;
+    }
+    getColumnCount() {
+        return this.columnCount;
     }
     appendStyles(text) {
         if (text.trim().length > 0) {

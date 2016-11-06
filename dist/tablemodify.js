@@ -1,4 +1,339 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function (main) {
+  'use strict';
+
+  /**
+   * Parse or format dates
+   * @class fecha
+   */
+  var fecha = {};
+  var token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
+  var twoDigits = /\d\d?/;
+  var threeDigits = /\d{3}/;
+  var fourDigits = /\d{4}/;
+  var word = /[0-9]*['a-z\u00A0-\u05FF\u0700-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+|[\u0600-\u06FF\/]+(\s*?[\u0600-\u06FF]+){1,2}/i;
+  var literal = /\[([^]*?)\]/gm;
+  var noop = function () {
+  };
+
+  function shorten(arr, sLen) {
+    var newArr = [];
+    for (var i = 0, len = arr.length; i < len; i++) {
+      newArr.push(arr[i].substr(0, sLen));
+    }
+    return newArr;
+  }
+
+  function monthUpdate(arrName) {
+    return function (d, v, i18n) {
+      var index = i18n[arrName].indexOf(v.charAt(0).toUpperCase() + v.substr(1).toLowerCase());
+      if (~index) {
+        d.month = index;
+      }
+    };
+  }
+
+  function pad(val, len) {
+    val = String(val);
+    len = len || 2;
+    while (val.length < len) {
+      val = '0' + val;
+    }
+    return val;
+  }
+
+  var dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var monthNamesShort = shorten(monthNames, 3);
+  var dayNamesShort = shorten(dayNames, 3);
+  fecha.i18n = {
+    dayNamesShort: dayNamesShort,
+    dayNames: dayNames,
+    monthNamesShort: monthNamesShort,
+    monthNames: monthNames,
+    amPm: ['am', 'pm'],
+    DoFn: function DoFn(D) {
+      return D + ['th', 'st', 'nd', 'rd'][D % 10 > 3 ? 0 : (D - D % 10 !== 10) * D % 10];
+    }
+  };
+
+  var formatFlags = {
+    D: function(dateObj) {
+      return dateObj.getDate();
+    },
+    DD: function(dateObj) {
+      return pad(dateObj.getDate());
+    },
+    Do: function(dateObj, i18n) {
+      return i18n.DoFn(dateObj.getDate());
+    },
+    d: function(dateObj) {
+      return dateObj.getDay();
+    },
+    dd: function(dateObj) {
+      return pad(dateObj.getDay());
+    },
+    ddd: function(dateObj, i18n) {
+      return i18n.dayNamesShort[dateObj.getDay()];
+    },
+    dddd: function(dateObj, i18n) {
+      return i18n.dayNames[dateObj.getDay()];
+    },
+    M: function(dateObj) {
+      return dateObj.getMonth() + 1;
+    },
+    MM: function(dateObj) {
+      return pad(dateObj.getMonth() + 1);
+    },
+    MMM: function(dateObj, i18n) {
+      return i18n.monthNamesShort[dateObj.getMonth()];
+    },
+    MMMM: function(dateObj, i18n) {
+      return i18n.monthNames[dateObj.getMonth()];
+    },
+    YY: function(dateObj) {
+      return String(dateObj.getFullYear()).substr(2);
+    },
+    YYYY: function(dateObj) {
+      return dateObj.getFullYear();
+    },
+    h: function(dateObj) {
+      return dateObj.getHours() % 12 || 12;
+    },
+    hh: function(dateObj) {
+      return pad(dateObj.getHours() % 12 || 12);
+    },
+    H: function(dateObj) {
+      return dateObj.getHours();
+    },
+    HH: function(dateObj) {
+      return pad(dateObj.getHours());
+    },
+    m: function(dateObj) {
+      return dateObj.getMinutes();
+    },
+    mm: function(dateObj) {
+      return pad(dateObj.getMinutes());
+    },
+    s: function(dateObj) {
+      return dateObj.getSeconds();
+    },
+    ss: function(dateObj) {
+      return pad(dateObj.getSeconds());
+    },
+    S: function(dateObj) {
+      return Math.round(dateObj.getMilliseconds() / 100);
+    },
+    SS: function(dateObj) {
+      return pad(Math.round(dateObj.getMilliseconds() / 10), 2);
+    },
+    SSS: function(dateObj) {
+      return pad(dateObj.getMilliseconds(), 3);
+    },
+    a: function(dateObj, i18n) {
+      return dateObj.getHours() < 12 ? i18n.amPm[0] : i18n.amPm[1];
+    },
+    A: function(dateObj, i18n) {
+      return dateObj.getHours() < 12 ? i18n.amPm[0].toUpperCase() : i18n.amPm[1].toUpperCase();
+    },
+    ZZ: function(dateObj) {
+      var o = dateObj.getTimezoneOffset();
+      return (o > 0 ? '-' : '+') + pad(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4);
+    }
+  };
+
+  var parseFlags = {
+    D: [twoDigits, function (d, v) {
+      d.day = v;
+    }],
+    Do: [new RegExp(twoDigits.source + word.source), function (d, v) {
+      d.day = parseInt(v, 10);
+    }],
+    M: [twoDigits, function (d, v) {
+      d.month = v - 1;
+    }],
+    YY: [twoDigits, function (d, v) {
+      var da = new Date(), cent = +('' + da.getFullYear()).substr(0, 2);
+      d.year = '' + (v > 68 ? cent - 1 : cent) + v;
+    }],
+    h: [twoDigits, function (d, v) {
+      d.hour = v;
+    }],
+    m: [twoDigits, function (d, v) {
+      d.minute = v;
+    }],
+    s: [twoDigits, function (d, v) {
+      d.second = v;
+    }],
+    YYYY: [fourDigits, function (d, v) {
+      d.year = v;
+    }],
+    S: [/\d/, function (d, v) {
+      d.millisecond = v * 100;
+    }],
+    SS: [/\d{2}/, function (d, v) {
+      d.millisecond = v * 10;
+    }],
+    SSS: [threeDigits, function (d, v) {
+      d.millisecond = v;
+    }],
+    d: [twoDigits, noop],
+    ddd: [word, noop],
+    MMM: [word, monthUpdate('monthNamesShort')],
+    MMMM: [word, monthUpdate('monthNames')],
+    a: [word, function (d, v, i18n) {
+      var val = v.toLowerCase();
+      if (val === i18n.amPm[0]) {
+        d.isPm = false;
+      } else if (val === i18n.amPm[1]) {
+        d.isPm = true;
+      }
+    }],
+    ZZ: [/[\+\-]\d\d:?\d\d/, function (d, v) {
+      var parts = (v + '').match(/([\+\-]|\d\d)/gi), minutes;
+
+      if (parts) {
+        minutes = +(parts[1] * 60) + parseInt(parts[2], 10);
+        d.timezoneOffset = parts[0] === '+' ? minutes : -minutes;
+      }
+    }]
+  };
+  parseFlags.dd = parseFlags.d;
+  parseFlags.dddd = parseFlags.ddd;
+  parseFlags.DD = parseFlags.D;
+  parseFlags.mm = parseFlags.m;
+  parseFlags.hh = parseFlags.H = parseFlags.HH = parseFlags.h;
+  parseFlags.MM = parseFlags.M;
+  parseFlags.ss = parseFlags.s;
+  parseFlags.A = parseFlags.a;
+
+
+  // Some common format strings
+  fecha.masks = {
+    'default': 'ddd MMM DD YYYY HH:mm:ss',
+    shortDate: 'M/D/YY',
+    mediumDate: 'MMM D, YYYY',
+    longDate: 'MMMM D, YYYY',
+    fullDate: 'dddd, MMMM D, YYYY',
+    shortTime: 'HH:mm',
+    mediumTime: 'HH:mm:ss',
+    longTime: 'HH:mm:ss.SSS'
+  };
+
+  /***
+   * Format a date
+   * @method format
+   * @param {Date|number} dateObj
+   * @param {string} mask Format of the date, i.e. 'mm-dd-yy' or 'shortDate'
+   */
+  fecha.format = function (dateObj, mask, i18nSettings) {
+    var i18n = i18nSettings || fecha.i18n;
+
+    if (typeof dateObj === 'number') {
+      dateObj = new Date(dateObj);
+    }
+
+    if (Object.prototype.toString.call(dateObj) !== '[object Date]' || isNaN(dateObj.getTime())) {
+      throw new Error('Invalid Date in fecha.format');
+    }
+
+    mask = fecha.masks[mask] || mask || fecha.masks['default'];
+
+    var literals = [];
+
+    // Make literals inactive by replacing them with ??
+    mask = mask.replace(literal, function($0, $1) {
+      literals.push($1);
+      return '??';
+    });
+    // Apply formatting rules
+    mask = mask.replace(token, function ($0) {
+      return $0 in formatFlags ? formatFlags[$0](dateObj, i18n) : $0.slice(1, $0.length - 1);
+    });
+    // Inline literal values back into the formatted value
+    return mask.replace(/\?\?/g, function() {
+      return literals.shift();
+    });
+  };
+
+  /**
+   * Parse a date string into an object, changes - into /
+   * @method parse
+   * @param {string} dateStr Date string
+   * @param {string} format Date parse format
+   * @returns {Date|boolean}
+   */
+  fecha.parse = function (dateStr, format, i18nSettings) {
+    var i18n = i18nSettings || fecha.i18n;
+
+    if (typeof format !== 'string') {
+      throw new Error('Invalid format in fecha.parse');
+    }
+
+    format = fecha.masks[format] || format;
+
+    // Avoid regular expression denial of service, fail early for really long strings
+    // https://www.owasp.org/index.php/Regular_expression_Denial_of_Service_-_ReDoS
+    if (dateStr.length > 1000) {
+      return false;
+    }
+
+    var isValid = true;
+    var dateInfo = {};
+    format.replace(token, function ($0) {
+      if (parseFlags[$0]) {
+        var info = parseFlags[$0];
+        var index = dateStr.search(info[0]);
+        if (!~index) {
+          isValid = false;
+        } else {
+          dateStr.replace(info[0], function (result) {
+            info[1](dateInfo, result, i18n);
+            dateStr = dateStr.substr(index + result.length);
+            return result;
+          });
+        }
+      }
+
+      return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
+    });
+
+    if (!isValid) {
+      return false;
+    }
+
+    var today = new Date();
+    if (dateInfo.isPm === true && dateInfo.hour != null && +dateInfo.hour !== 12) {
+      dateInfo.hour = +dateInfo.hour + 12;
+    } else if (dateInfo.isPm === false && +dateInfo.hour === 12) {
+      dateInfo.hour = 0;
+    }
+
+    var date;
+    if (dateInfo.timezoneOffset != null) {
+      dateInfo.minute = +(dateInfo.minute || 0) - +dateInfo.timezoneOffset;
+      date = new Date(Date.UTC(dateInfo.year || today.getFullYear(), dateInfo.month || 0, dateInfo.day || 1,
+        dateInfo.hour || 0, dateInfo.minute || 0, dateInfo.second || 0, dateInfo.millisecond || 0));
+    } else {
+      date = new Date(dateInfo.year || today.getFullYear(), dateInfo.month || 0, dateInfo.day || 1,
+        dateInfo.hour || 0, dateInfo.minute || 0, dateInfo.second || 0, dateInfo.millisecond || 0);
+    }
+    return date;
+  };
+
+  /* istanbul ignore next */
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = fecha;
+  } else if (typeof define === 'function' && define.amd) {
+    define(function () {
+      return fecha;
+    });
+  } else {
+    main.fecha = fecha;
+  }
+})(this);
+
+},{}],2:[function(require,module,exports){
 'use strict';
 
 exports.debug = true;
@@ -6,18 +341,58 @@ exports.coreDefaults = {
     theme: 'default'
 };
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
+'use strict';
+
+var _DATE_I18N, _DATE_FORMATS;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var fecha = require('fecha');
+
+var DATE_GERMAN = 'german';
+var DATE_ENGLISH = 'english';
+var DATE_I18N = (_DATE_I18N = {}, _defineProperty(_DATE_I18N, DATE_GERMAN, {
+    dayNamesShort: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+    dayNames: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
+    monthNamesShort: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+    monthNames: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+    amPm: ['am', 'pm'],
+    // D is the day of the month, function returns something like...  3rd or 11th
+    DoFn: function DoFn(D) {
+        return D + '.';
+    }
+}), _defineProperty(_DATE_I18N, DATE_ENGLISH, {
+    dayNamesShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat'],
+    dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    monthNamesShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    amPm: ['am', 'pm'],
+    // D is the day of the month, function returns something like...  3rd or 11th
+    DoFn: function DoFn(D) {
+        return D + ['th', 'st', 'nd', 'rd'][D % 10 > 3 ? 0 : (D - D % 10 !== 10) * D % 10];
+    }
+}), _DATE_I18N);
+var DATE_FORMATS = (_DATE_FORMATS = {}, _defineProperty(_DATE_FORMATS, DATE_GERMAN, ['MM.DD.YYYY', 'MM.DD.YY']), _defineProperty(_DATE_FORMATS, DATE_ENGLISH, ['YYYY-MM-DD', 'MM/DD/YYYY']), _DATE_FORMATS);
+
+module.exports = {
+    fecha: fecha,
+    DATE_GERMAN: DATE_GERMAN,
+    DATE_ENGLISH: DATE_ENGLISH,
+    DATE_I18N: DATE_I18N,
+    DATE_FORMATS: DATE_FORMATS
+};
+
+},{"fecha":1}],4:[function(require,module,exports){
 'use strict';
 
 var Module = require('./module.js');
 
-var _require = require('../utils.js');
-
-var addClass = _require.addClass;
-var iterate = _require.iterate;
-var info = _require.info;
-var error = _require.error;
-
+var _require = require('../utils.js'),
+    addClass = _require.addClass,
+    iterate = _require.iterate,
+    info = _require.info,
+    error = _require.error;
 
 module.exports = new Module({
     name: "columnStyles",
@@ -60,7 +435,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":9,"./module.js":5}],3:[function(require,module,exports){
+},{"../utils.js":11,"./module.js":7}],5:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -71,12 +446,11 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var _require = require('../utils.js');
-
-var addClass = _require.addClass;
-var iterate = _require.iterate;
-var info = _require.info;
-var error = _require.error;
+var _require = require('../utils.js'),
+    addClass = _require.addClass,
+    iterate = _require.iterate,
+    info = _require.info,
+    error = _require.error;
 
 var Module = require('./module.js');
 
@@ -401,7 +775,7 @@ module.exports = new Module({
             addClass(this.container, 'tm-filter');
 
             /*switch (settings.filterStyle) {
-                  case 'special':
+                 case 'special':
                     new FilterB();
                 break;
                 default:*/
@@ -416,22 +790,20 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":9,"./module.js":5}],4:[function(require,module,exports){
+},{"../utils.js":11,"./module.js":7}],6:[function(require,module,exports){
 'use strict';
 
 var Module = require('./module.js');
 
-var _require = require('../utils.js');
-
-var inPx = _require.inPx;
-var iterate = _require.iterate;
-var setCss = _require.setCss;
-var addClass = _require.addClass;
-var getCss = _require.getCss;
-var getScrollbarWidth = _require.getScrollbarWidth;
-var info = _require.info;
-var error = _require.error;
-
+var _require = require('../utils.js'),
+    inPx = _require.inPx,
+    iterate = _require.iterate,
+    setCss = _require.setCss,
+    addClass = _require.addClass,
+    getCss = _require.getCss,
+    getScrollbarWidth = _require.getScrollbarWidth,
+    info = _require.info,
+    error = _require.error;
 
 module.exports = new Module({
     name: "fixed",
@@ -592,18 +964,17 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":9,"./module.js":5}],5:[function(require,module,exports){
+},{"../utils.js":11,"./module.js":7}],7:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var _require = require('../utils.js');
-
-var error = _require.error;
-var extend2 = _require.extend2;
-var isNonEmptyString = _require.isNonEmptyString;
+var _require = require('../utils.js'),
+    error = _require.error,
+    extend2 = _require.extend2,
+    isNonEmptyString = _require.isNonEmptyString;
 
 var defaultParams = { //default-name
     defaultSettings: {}, //"default"-default-settings: empty
@@ -676,31 +1047,107 @@ module.exports = function () {
     return Module;
 }();
 
-},{"../utils.js":9}],6:[function(require,module,exports){
+},{"../utils.js":11}],8:[function(require,module,exports){
 'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Module = require('./module.js');
+var dateUtils = require('../dateUtils.js');
 
-var _require = require('../utils.js');
-
-var addClass = _require.addClass;
-var iterate = _require.iterate;
-var removeClass = _require.removeClass;
-var error = _require.error;
-var extend2 = _require.extend2;
-
+var _require = require('../utils.js'),
+    addClass = _require.addClass,
+    isFn = _require.isFn,
+    errorThrow = _require.errorThrow,
+    hasProp = _require.hasProp,
+    warn = _require.warn,
+    isBool = _require.isBool,
+    isNonEmptyString = _require.isNonEmptyString,
+    iterate = _require.iterate,
+    removeClass = _require.removeClass,
+    error = _require.error,
+    extend2 = _require.extend2,
+    isObject = _require.isObject;
 
 function getValue(tr, i) {
     return tr.cells[i].innerHTML.trim();
 }
 
+var FIRST_ENABLED_CELL = 'firstEnabled';
+var SORT_ORDER_ASC = 'asc';
+var SORT_ORDER_DESC = 'desc';
+
+/**
+ * The Parser class encapsulates compare functions for the sorting functionality
+ * A Parser can either encapsulate two types of compare functions:
+ * a) a simple compare function, taking 2 arguments and returning a value <0, 0 or >0
+ * b) a parametric compare function, taking one argument (the parameters) and returning
+ *    a compare function as described in a)
+ */
+
+var Parser = function () {
+    /**
+     * Create a parser
+     * @param {Function} getFn - Either a simple compare function or a parametric one
+     * @param {Object} defaultSettings - The default settings for a parametric compare
+     *                                   compare function, omit if it is not a parametric one
+     */
+    function Parser(getFn, defaultSettings) {
+        _classCallCheck(this, Parser);
+
+        if (!isFn(getFn)) {
+            errorThrow('First argument given to parser must be a function!');
+        }
+        this.getFn = getFn;
+        this.defaultSettings = isObject(defaultSettings) ? defaultSettings : false;
+    }
+
+    /**
+     * Get the actual compare function from the encapsulated one
+     * @param {Object} providedSettings - Parameters given to a parametric compare function,
+     *                                    omit if it's not a parametric one
+     * @returns {Function} The actual compare function to be used in sorting algorithm
+     * @throws {Error} If parameters are given for a non-parametric compare function
+     */
+
+
+    _createClass(Parser, [{
+        key: 'get',
+        value: function get(providedSettings) {
+            var settingsGiven = isObject(providedSettings);
+
+            if (settingsGiven && !this.defaultSettings) {
+                errorThrow("This parser doesn't accept options!");
+            }
+
+            //The compare function to be returned
+            var retFn = this.getFn;
+            if (this.defaultSettings) {
+                if (!settingsGiven) {
+                    providedSettings = {};
+                }
+                extend2(providedSettings, this.defaultSettings);
+                retFn = this.getFn(providedSettings);
+                if (!isFn(retFn)) {
+                    errorThrow("Parser didn't return a compare function!");
+                }
+            }
+            return retFn;
+        }
+    }]);
+
+    return Parser;
+}();
+
 var Sorter = function () {
     function Sorter(tableModify, settings) {
-        var _this2 = this;
+        var _this = this;
 
         _classCallCheck(this, Sorter);
 
@@ -710,78 +1157,61 @@ var Sorter = function () {
             headers: {},
             headCells: [],
             body: null,
-            rows: [],
-            indices: [],
-            orders: []
+            rows: []
         });
         //Store a reference to the tablemodify instance
         this.tm = tableModify;
         addClass(this.tm.container, 'tm-sorter');
-        var _this = this,
-            i = settings.initial[0],
-            order = settings.initial[1];
-
         this.body = this.tm.body.tBodies[0];
         //this.rows = [].slice.call(this.body.rows);
-        this.headers = settings.headers;
+        this.sortColumns = settings.columns;
+        //Array of structure [[col_index_1, true | false], [col_index_2, true | false], ...]
+        this.currentOrders = [];
         this.headCells = this.tm.head ? [].slice.call(this.tm.head.firstElementChild.firstElementChild.cells) : [].slice.call(this.tm.body.tHead.firstElementChild.cells);
 
         iterate(settings.customParsers, function (name, func) {
-            _this2.parsers[name] = func;
+            _this.parsers[name] = new Parser(func);
         });
 
-        // iterate over header cells
+        // attach sorting event listeners
         iterate(this.headCells, function (i, cell) {
             i = parseInt(i);
 
-            if (_this2.getIsEnabled(i)) {
+            if (_this.getIsEnabled(i)) {
                 addClass(cell, 'sortable');
                 cell.addEventListener('click', function (e) {
-
                     if (e.shiftKey && settings.enableMultisort) {
-                        _this2.manageMulti(i);
+                        _this.manageMulti(i);
                     } else {
-                        _this2.manage(i);
+                        _this.manage(i);
                     }
                 });
             }
         });
-        /*
-        head.addEventListener('click', function(e) {
-            var cell = e.target;
-            var index = e.target.cellIndex;
-            if (e.shiftKey && settings.enableMultisort) {
-                // cell is a new sorting argument
-                _this.manageMulti(index, cell);
-            } else {
-                _this.manage(index, cell);
-            }
-        });
-        */
+
         // try to sort by initial sorting
-        if (!this.getIsEnabled(i)) {
-            // not enabled, choose another initial sorting
-            var initialized = false;
-            i = 0;
-            while (i < this.headCells.length && !initialized) {
-                if (this.getIsEnabled(i)) {
-                    this.manage(i);
-                    initialized = true;
+        if (settings.initialColumn !== false) {
+            var initIndex = settings.initialColumn;
+            var initOrder = settings.initialOrder;
+            initOrder = initOrder === SORT_ORDER_ASC;
+            //if special value first_enabled is provided, search for first searchable column
+            if (initIndex === FIRST_ENABLED_CELL) {
+                var colCount = this.tm.getColumnCount();
+                for (var i = 0; i < colCount; ++i) {
+                    if (this.getIsEnabled(i)) {
+                        initIndex = i;
+                        break;
+                    }
                 }
-                i++;
             }
-        } else if (order === 'desc') {
-            // enabled, sort desc
-            this.setOrderAsc(false).setIndex(i).sort().render().renderSortingArrows();
-        } else {
-            // enabled, sort asc
-            this.setOrderAsc();
-            this.manage(i);
+            if (this.getIsEnabled(initIndex)) {
+                this.manage(initIndex, false, initOrder);
+            }
         }
 
         // sort again in case it's needed.
         this.tm.body.addEventListener('tmSorterSortAgain', function () {
-            _this2.sort();
+            _this.sort();
         });
     }
 
@@ -791,17 +1221,65 @@ var Sorter = function () {
             this.tm.setRows(rowArray);
             return this;
         }
+
+        /**
+         * Sets the current order for a given column or adds a new order if an order
+         * for this column did not exist
+         * @param {Number} columnIndex - The index of the column
+         * @param {Boolean} order - true for ascending, false for descending order
+         * @returns this for method chaining
+         */
+
     }, {
-        key: 'setIndex',
-        value: function setIndex(i) {
-            this.indices = [i];
+        key: 'setOrAddOrder',
+        value: function setOrAddOrder(columnIndex, order) {
+            if (this.hasOrder(columnIndex)) {
+                this.currentOrders.filter(function (e) {
+                    return e[0] === columnIndex;
+                })[0][1] = order;
+            } else {
+                this.currentOrders.push([columnIndex, order]);
+            }
             return this;
         }
+
+        /**
+         * Check if there exists a current order for the column specified by columnIndex
+         * @returns {Boolean}
+        */
+
     }, {
-        key: 'setOrderAsc',
-        value: function setOrderAsc(bool) {
-            if (bool === undefined) bool = true;
-            this.orders = [bool];
+        key: 'hasOrder',
+        value: function hasOrder(columnIndex) {
+            return this.currentOrders.filter(function (e) {
+                return e[0] === columnIndex;
+            }).length > 0;
+        }
+
+        /**
+         * Gets the current order for the column specified by columIndex
+         * @returns {Boolean} true for ascending, false for descending, undefined if no order exists
+         */
+
+    }, {
+        key: 'getOrder',
+        value: function getOrder(columnIndex) {
+            if (!this.hasOrder(columnIndex)) return;
+            var order = this.currentOrders.filter(function (e) {
+                return e[0] === columnIndex;
+            })[0];
+            return order[1];
+        }
+
+        /**
+         * Removes all current orders
+         * @returns this for method chaining
+         */
+
+    }, {
+        key: 'removeAllOrders',
+        value: function removeAllOrders() {
+            this.currentOrders = [];
             return this;
         }
     }, {
@@ -809,116 +1287,99 @@ var Sorter = function () {
         value: function getRows() {
             return this.tm.getRows();
         }
+
+        /**
+         * Gets the compare function for a given column
+         * @param {Number} i - The column index
+         * @returns {Function} The compare function
+         * @throws {Error} If the parser for the given column cannot be found
+         */
+
     }, {
         key: 'getParser',
         value: function getParser(i) {
-            return this.headers.hasOwnProperty(i) && this.headers[i].hasOwnProperty('parser') ? this.parsers[this.headers[i].parser] : this.parsers[this.headers.all.parser];
+            var parserObj = void 0;
+            //Find out if we have to use the parser given for all columns or there is an individual parser
+            if (hasProp(this.sortColumns, i, 'parser')) {
+                parserObj = this.sortColumns[i];
+            } else {
+                parserObj = this.sortColumns.all;
+            }
+
+            if (!this.parsers.hasOwnProperty(parserObj.parser)) {
+                errorThrow('The given parser ' + parserObj.parser + ' does not exist!');
+            }
+
+            return this.parsers[parserObj.parser].get(parserObj.parserOptions);
         }
+
+        /**
+         * Checks whether sorting by a given column is enabled
+         * @param {Number} i - The column index
+         * @returns {Boolean}
+         */
+
     }, {
         key: 'getIsEnabled',
         value: function getIsEnabled(i) {
-            return this.headers.hasOwnProperty(i) && this.headers[i].hasOwnProperty('enabled') ? this.headers[i].enabled : this.headers.all.enabled;
+            return hasProp(this.sortColumns, i, 'enabled') ? this.sortColumns[i].enabled : this.sortColumns.all.enabled;
         }
-        /*
-            single values
-        */
 
-    }, {
-        key: 'getIndex',
-        value: function getIndex() {
-            return this.indices[0];
-        }
-    }, {
-        key: 'getOrderAsc',
-        value: function getOrderAsc() {
-            return this.orders[0];
-        }
-        /*
-            multiple values
-        */
+        /**
+         * Gets all compare functions needed to sort by the currently active sort columns
+         * @returns {Array} Array of compare functions
+         * @throws {Error} If the parser for one of the current columns cannot be found
+         */
 
-    }, {
-        key: 'getIndices',
-        value: function getIndices() {
-            return this.indices;
-        }
-    }, {
-        key: 'getOrders',
-        value: function getOrders() {
-            return this.orders;
-        }
     }, {
         key: 'getParsers',
         value: function getParsers() {
-            var _this3 = this;
+            var _this2 = this;
 
-            //var _this = this;
-            return this.getIndices().map(function (i) {
-                return _this3.getParser(i);
+            return this.currentOrders.map(function (order) {
+                return _this2.getParser(order[0]);
             });
         }
+
+        /**
+         * Does the actual sorting work by all given sort orders, does no DOM manipulation
+         * @returns this for method chaining
+         */
+
     }, {
         key: 'sort',
         value: function sort() {
-            /*    var i = this.getIndex(),
-                    o = this.getOrderAsc(),
-                    p = this.getParser(i);
-                  this.getRows().sort(function(a, b) {
-                    return p(getValue(a, i), getValue(b, i));
-                });
-                  if (!o) this.reverse();
-                  return this;*/
-            //}
-            //multiSort() {
-            var _this = this,
-                indices = this.getIndices(),
-                orders = this.getOrders(),
-                parsers = this.getParsers(),
-                //indices.map(function(i) {return _this.getParser(i);}),
-            maxDeph = indices.length - 1;
+            var orders = this.currentOrders;
+            var maxDepth = orders.length - 1;
+            var parsers = this.getParsers();
 
             this.tm.getRows().sort(function (a, b) {
-                var comparator = 0,
-                    deph = 0;
-
-                while (comparator === 0 && deph <= maxDeph) {
-                    var tmpIndex = indices[deph];
-                    comparator = parsers[deph](getValue(a, tmpIndex), getValue(b, tmpIndex));
-                    deph++;
+                var compareResult = 0,
+                    curDepth = 0;
+                while (compareResult === 0 && curDepth <= maxDepth) {
+                    var index = orders[curDepth][0];
+                    compareResult = parsers[curDepth](getValue(a, index), getValue(b, index));
+                    ++curDepth;
                 }
-
-                deph--; // decrement again
-                // invert result in case order of this columns is descending
-                return orders[deph] || deph > maxDeph ? comparator : -1 * comparator;
+                --curDepth;
+                return orders[curDepth][1] ? compareResult : -compareResult;
             });
 
             return this;
         }
-        /*
-        reverse() {
-            var array = this.tm.getRows(),
-                left = null,
-                right = null,
-                length = array.length;
-            for (left = 0; left < length / 2; left += 1) {
-                right = length - 1 - left;
-                var temporary = array[left];
-                array[left] = array[right];
-                array[right] = temporary;
-            }
-            //this.setRows(array);
-            console.log('reversed');
-            return this;
-        }
-        */
-
     }, {
         key: 'render',
         value: function render() {
             this.tm.render();
-
             return this;
         }
+
+        /**
+         * Adds the corresponding css classes for ascending/descending sort order to the headers
+         * of currently active sort columns to provide a visual feedback to the user
+         * @returns this for method chaining
+         */
+
     }, {
         key: 'renderSortingArrows',
         value: function renderSortingArrows() {
@@ -928,68 +1389,59 @@ var Sorter = function () {
                 removeClass(cell, 'sort-down');
             });
 
-            var length = this.indices.length;
+            for (var i = this.currentOrders.length - 1; i >= 0; --i) {
+                var _currentOrders$i = _slicedToArray(this.currentOrders[i], 2),
+                    index = _currentOrders$i[0],
+                    order = _currentOrders$i[1];
 
-            if (length > 0) {
-                var l = length - 1;
-                for (; l >= 0; l--) {
-                    var index = this.indices[l];
-                    var asc = this.orders[l];
-                    var cell = this.headCells[index];
-
-                    if (asc) {
-                        // ascending
-                        addClass(cell, 'sort-up');
-                    } else {
-                        // descending
-                        addClass(cell, 'sort-down');
-                    }
-                }
+                var cell = this.headCells[index];
+                addClass(cell, order ? 'sort-up' : 'sort-down');
             }
             return this;
         }
+
+        /**
+         * Handles a sorting action for a specific column
+         * @param {Number} colIndex - The column index
+         * @param {Boolean} multiSort - if true and sorting by given column was already enabled, just
+         *                              change the sorting order, otherwise append to the sorting orders
+         *                              if false, all current sorting orders are removed and sorting by
+         *                              the given column will be enabled
+         * @param {Boolean} order - true for ascending, false for descending, omit for inverting of the
+         *                          current order (if none existed, ascending is used)
+         * @returns this for method chaining
+         */
+
     }, {
         key: 'manage',
-        value: function manage(i) {
-
-            if (!this.ready) return;
-            this.ready = false;
-
-            if (this.getIndex() === i) {
-
-                this.setOrderAsc(!this.getOrderAsc()); // invertiere aktuelle Sortierung
-            } else if (this.getIsEnabled(i)) {
-
-                this.setOrderAsc(); // sort ascending
+        value: function manage(colIndex, multiSort, order) {
+            if (!this.getIsEnabled(colIndex)) {
+                warn('Tried to sort by non-sortable column index ' + colIndex);
+                return this;
             }
-
-            this.setIndex(i).sort().render().renderSortingArrows();
-
-            this.ready = true;
-            return this;
-        }
-    }, {
-        key: 'manageMulti',
-        value: function manageMulti(i) {
-            // add i to the multi indices
-            if (!this.ready) return;
-            this.ready = false;
-
-            var indices = this.indices,
-                exists = indices.indexOf(i);
-
-            if (exists === -1) {
-                // add new multisort index
-                this.indices.push(i);
-                this.orders.push(true);
-            } else {
-                // invert
-                this.orders[exists] = !this.orders[exists];
+            if (!isBool(order)) {
+                if (this.hasOrder(colIndex)) {
+                    order = !this.getOrder(colIndex);
+                } else {
+                    order = true;
+                }
             }
-            // now sort
+            if (multiSort !== true) this.removeAllOrders();
+            this.setOrAddOrder(colIndex, order);
+
             this.sort().render().renderSortingArrows();
 
-            this.ready = true;
+            return this;
+        }
+        /**
+         * Shortcut for the manage method with multiSort set to true
+         * @returns this for method chaining
+         */
+
+    }, {
+        key: 'manageMulti',
+        value: function manageMulti(colIndex, order) {
+            this.manage(colIndex, true, order);
             return this;
         }
     }]);
@@ -998,17 +1450,17 @@ var Sorter = function () {
 }();
 
 Sorter.prototype.parsers = {
-    string: function string(a, b) {
+    string: new Parser(function (a, b) {
         if (a > b) return 1;
         if (a < b) return -1;
         return 0;
-    },
-    numeric: function numeric(a, b) {
+    }),
+    numeric: new Parser(function (a, b) {
         a = parseFloat(a);
         b = parseFloat(b);
         return a - b;
-    },
-    intelligent: function intelligent(a, b) {
+    }),
+    intelligent: new Parser(function (a, b) {
         var isNumericA = !isNaN(a),
             isNumericB = !isNaN(b);
 
@@ -1023,48 +1475,66 @@ Sorter.prototype.parsers = {
             if (a < b) return -1;
             return 0;
         }
-    },
-    /*
-        parses these Date Formats:
-         d.mm.YYYY
-          d.m.YYYY
-         dd.m.YYYY
-        dd.mm.YYYY
-    */
-    germanDate: function germanDate(a, b) {
-        try {
-            var dateA = new Date(),
-                dateB = new Date(),
-                partsA = a.split('.'),
-                partsB = b.split('.');
+    }),
+    /**
+     * A parametric parser which takes two arguments, 'preset' and 'format'.
+     * If format is given, it overrides a potential preset, format should be a
+     * format string (tokens described in https://github.com/taylorhakes/fecha#formatting-tokens)
+     * preset is either 'english' or 'german' and will parse the common forms of english/german
+     * date formats
+     */
+    date: new Parser(function (settings) {
+        var fecha = dateUtils.fecha,
+            DATE_I18N = dateUtils.DATE_I18N,
+            DATE_FORMATS = dateUtils.DATE_FORMATS;
 
-            if (partsA.length === 3) {
-                dateA = new Date(parseInt(partsA[2]), parseInt(partsA[1]), parseInt(partsA[0]));
-            } else if (partsA.length === 2) {
-                dateA = new Date(parseInt(partsA[1]), parseInt(partsA[0]));
+
+        if (settings.format) {
+            if (!isNonEmptyString(settings.format)) {
+                errorThrow('Invalid date parsing format ' + settings.format + ' given');
             }
+            return function (a, b) {
+                try {
+                    var aDate = fecha.parse(a, settings.format);
+                    var bDate = fecha.parse(b, settings.format);
+                    if (!aDate || !bDate) throw new Error("couldn't parse date!");
+                    return aDate - bDate;
+                } catch (e) {
+                    errorThrow('Error while comparing dates: ' + e);
+                }
+            };
+        } else if (settings.preset) {
+            var _ret = function () {
+                var i18n = DATE_I18N[settings.preset];
+                if (!i18n) errorThrow('Invalid preset name ' + settings.preset + ' given!');
+                var formats = DATE_FORMATS[settings.preset];
+                return {
+                    v: function v(a, b) {
+                        try {
+                            var aDate = false,
+                                bDate = void 0;
+                            var index = 0;
+                            while (!aDate && index < formats.length) {
+                                aDate = fecha.parse(a, formats[index]);
+                                bDate = fecha.parse(b, formats[index]);
+                                ++index;
+                            }
+                            if (!aDate) throw new Error("None of the given parsers matched!");
+                            return aDate - bDate;
+                        } catch (e) {
+                            errorThrow('Couldn\'t compare dates: ' + e);
+                        }
+                    }
+                };
+            }();
 
-            if (partsB.length === 3) {
-                dateB = new Date(parseInt(partsB[2]), parseInt(partsB[1]), parseInt(partsB[0]));
-            } else if (partsB.length === 2) {
-                dateB = new Date(parseInt(partsB[1]), parseInt(partsB[0]));
-            }
-
-            if (dateA > dateB) return 1;
-            if (dateA < dateB) return -1;
-            return 0;
-        } catch (e) {
-            error(e);
-            return -1;
+            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+        } else {
+            errorThrow("Neither a preset nor a date format has been given!");
         }
-    },
-    /*
-        NOT IMPLEMENTED YET
-        @TODO implement
-    */
-    americanDate: function americanDate(a, b) {
-        return this.intelligent(a, b);
-    },
+    }, {
+        preset: dateUtils.DATE_GERMAN
+    }),
     /*
         german days of the week
     */
@@ -1092,42 +1562,41 @@ Sorter.prototype.parsers = {
 module.exports = new Module({
     name: "sorter",
     defaultSettings: {
-        headers: {
+        columns: {
             all: {
                 enabled: true,
                 parser: 'intelligent'
             }
         },
-        initial: [0, 'asc'],
+        initialColumn: FIRST_ENABLED_CELL,
+        initialOrder: SORT_ORDER_ASC,
         enableMultisort: true,
         customParsers: {}
     },
     initializer: function initializer(settings) {
         var sorterInstance = new Sorter(this, settings);
         return {
-            sortAsc: function sortAsc(i) {
-                sorterInstance.setIndex(i).setOrderAsc().sort().render().renderSortingArrows();
+            sortAsc: function sortAsc(index) {
+                return sorterInstance.manage(index, false, true);
             },
-            sortDesc: function sortDesc(i) {
-                sorterInstance.setIndex(i).setOrderAsc(false).sort().render().renderSortingArrows();
+            sortDesc: function sortDesc(index) {
+                return sorterInstance.manage(index, false, false);
             },
             info: function info() {
-                console.log(sorterInstance.getIndices());
-                console.log(sorterInstance.getOrders());
+                console.log(sorterInstance.currentOrders);
             }
         };
     }
 });
 
-},{"../utils.js":9,"./module.js":5}],7:[function(require,module,exports){
+},{"../dateUtils.js":3,"../utils.js":11,"./module.js":7}],9:[function(require,module,exports){
 'use strict';
 
-var _require = require('../utils.js');
-
-var addClass = _require.addClass;
-var extend = _require.extend;
-var info = _require.info;
-var error = _require.error;
+var _require = require('../utils.js'),
+    addClass = _require.addClass,
+    extend = _require.extend,
+    info = _require.info,
+    error = _require.error;
 
 var Module = require('./module.js');
 /*
@@ -1159,7 +1628,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":9,"./module.js":5}],8:[function(require,module,exports){
+},{"../utils.js":11,"./module.js":7}],10:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -1171,16 +1640,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var config = require('./config.js');
 var Module = require('./modules/module.js');
 
-var _require = require('./utils.js');
-
-var error = _require.error;
-var warn = _require.warn;
-var isNonEmptyString = _require.isNonEmptyString;
-var getCss = _require.getCss;
-var iterate = _require.iterate;
-var extend = _require.extend;
-var addClass = _require.addClass;
-var getUniqueId = _require.getUniqueId;
+var _require = require('./utils.js'),
+    error = _require.error,
+    warn = _require.warn,
+    isNonEmptyString = _require.isNonEmptyString,
+    getCss = _require.getCss,
+    iterate = _require.iterate,
+    extend = _require.extend,
+    addClass = _require.addClass,
+    getUniqueId = _require.getUniqueId;
 
 var Tablemodify = function () {
     function Tablemodify(selector, coreSettings) {
@@ -1196,6 +1664,9 @@ var Tablemodify = function () {
         //this.body = body;
         this.bodySelector = selector;
         var oldBodyParent = body.parentElement;
+
+        this.columnCount = 0;
+        this.calculateColumnCount(body);
 
         extend(config.coreDefaults, coreSettings);
 
@@ -1261,6 +1732,20 @@ var Tablemodify = function () {
     }
 
     _createClass(Tablemodify, [{
+        key: 'calculateColumnCount',
+        value: function calculateColumnCount(element) {
+            var maxCols = 0;
+            [].forEach.call(element.rows, function (row) {
+                if (row.cells.length > maxCols) maxCols = row.cells.length;
+            });
+            this.columnCount = maxCols;
+        }
+    }, {
+        key: 'getColumnCount',
+        value: function getColumnCount() {
+            return this.columnCount;
+        }
+    }, {
         key: 'appendStyles',
         value: function appendStyles(text) {
             if (text.trim().length > 0) {
@@ -1401,7 +1886,7 @@ Tablemodify.Module = Module;
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
 
-},{"./config.js":1,"./modules/columnStyles.js":2,"./modules/filter.js":3,"./modules/fixed.js":4,"./modules/module.js":5,"./modules/sorter.js":6,"./modules/zebra.js":7,"./utils.js":9}],9:[function(require,module,exports){
+},{"./config.js":2,"./modules/columnStyles.js":4,"./modules/filter.js":5,"./modules/fixed.js":6,"./modules/module.js":7,"./modules/sorter.js":8,"./modules/zebra.js":9,"./utils.js":11}],11:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -1421,7 +1906,11 @@ exports.trace = function (text) {
     if (config.debug) console.trace('tm-trace: ' + text);
 };
 exports.error = function (text) {
-    if (config.debug) console.error('tm-error: ' + text);
+    console.error('tm-error: ' + text);
+};
+exports.errorThrow = function (text) {
+    exports.error(text);
+    throw new Error(text);
 };
 // utils
 exports.hasClass = function (el, className) {
@@ -1553,4 +2042,41 @@ exports.isNonEmptyString = function (str) {
     return typeof str === "string" && str.trim().length > 0;
 };
 
-},{"./config.js":1}]},{},[8]);
+var isObj = exports.isObject = function (o) {
+    return (typeof o === 'undefined' ? 'undefined' : _typeof(o)) === 'object';
+};
+
+exports.isFn = function (f) {
+    return typeof f === 'function';
+};
+
+exports.isBool = function (b) {
+    return typeof b === 'boolean';
+};
+
+var getProp = exports.getProperty = function (obj) {
+    for (var _len2 = arguments.length, props = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+        props[_key2 - 1] = arguments[_key2];
+    }
+
+    if (!isObj(obj) || props.length === 0) return;
+    //console.log("in getprop");
+    var index = 0;
+    while (index < props.length - 1) {
+        obj = obj[props[index]];
+        if (!isObj(obj)) return;
+        ++index;
+    }
+    //console.log(obj, props[index]);
+    if (obj[props[index]] === undefined) return;
+    return obj[props[index]];
+};
+exports.hasProp = function (obj) {
+    for (var _len3 = arguments.length, props = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+        props[_key3 - 1] = arguments[_key3];
+    }
+
+    return getProp.apply(undefined, [obj].concat(props)) !== undefined;
+};
+
+},{"./config.js":2}]},{},[10]);

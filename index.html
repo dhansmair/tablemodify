@@ -634,11 +634,12 @@ and (max-width : 580px) {
         /*
             these are the defaults:
         */
-        initial:[0, 'asc'],         // initial sorting. Array with this structure: [index, 'asc' || 'desc']
-        enableMultisort: true,      // enable/disable multisort functionality
-        headers: {
+        initialColumn: 'firstEnabled',   // initial sorting column, either a column index or the special value 'firstEnabled'
+        initialOrder: 'asc',             // initial sorting order, either 'asc', or 'desc'
+        enableMultisort: true,           // enable/disable multisort functionality
+        columns: {
             all: {
-                enable: true,
+                enabled: true,
                 parser: 'intelligent'
             },
 
@@ -646,10 +647,13 @@ and (max-width : 580px) {
                 custom settings for single columns:
             */
             0: {
-                enable: false           // disable sorting
+                enabled: false           // disable sorting
             },
             1: {
-                parser: 'germanDate'    // use another parser for this column
+                parser: 'date',    // use another parser for this column
+                parserOptions: {   // provide parameters to the parser
+                    preset: 'english'
+                }
             }
         },
         /*
@@ -669,6 +673,7 @@ and (max-width : 580px) {
                         <th>parsername</th>
                         <th>notice</th>
                         <th>description</th>
+                        <th>parameters</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -679,6 +684,9 @@ and (max-width : 580px) {
                             differentiates automatically between strings and numbers.
                             recommended for mixed types.
                         </td>
+                        <td>
+                            none
+                        </td>
                     </tr>
                     <tr>
                         <td>"string"</td>
@@ -686,6 +694,9 @@ and (max-width : 580px) {
                         <td>
                             sorts in alphabetic order.
                             efficient, recommended for pure strings
+                        </td>
+                        <td>
+                            none
                         </td>
                     </tr>
                     <tr>
@@ -695,18 +706,22 @@ and (max-width : 580px) {
                             sorts numbers (also floats).
                             efficient, recommended for numbers
                         </td>
+                        <td>
+                            none
+                        </td>
                     </tr>
                     <tr>
-                        <td>"germanDate"</td>
-                        <td>dd.mm.yyyy<br>
-                             d.mm.yyyy<br>
-                              d.m.yyyy
-
+                        <td>"date"</td>
+                        <td>
                         </td>
                         <td>
-                            sorts by german date format.
-                            days between 1 and 9 can be written as "1" od "01",<br>
-                            so do months.
+                            sorts by a given date format
+                        </td>
+                        <td>
+                            format: A date/time format string which will be used to parse the dates<br>
+                            preset: either 'english' or 'german', 'german' will match 'TT.MM.YYYY' and 'TT.MM.YY',
+                            'english' will match 'YYYY-MM-DD' or 'MM/DD/YYYY'. It is recommended not to rely on the
+                            presets but rather provide your own date format string (<a href="https://github.com/taylorhakes/fecha#formatting-tokens" target="_blank">Here</a> you can find an overview of the tokens which can be used) 
                         </td>
                     </tr>
                 </tbody>
@@ -783,62 +798,64 @@ and (max-width : 580px) {
         </footer>
     </main>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.7.0/highlight.min.js"></script>
-    <script src='dist/tablemodify.js'></script>
+    <script src='dist/tablemodify.min.js'></script>
     <script>
-          hljs.initHighlightingOnLoad();
-          var tm = new Tablemodify('#tm-demo', {
-              containerId: 'demoContainer',
-              modules: {
-                  columnStyles: {
-                      all: {
-                          'text-align':'left',
-                          'padding':'5px 10px',
-                          'min-width':'100px'
-                      },
-                      0: {
-                          'font-weight':'bold',
-                          'min-width':'300px'
-                      },
-                      1: {
-                          'min-width':'300px'
-                      },
-                      2:{
-                          'width':'150px',
-                          'text-align':'right'
-                      },
-                      3:{
-                          'text-align':'right',
-                          'min-width':'80px',
-                          'width':'80px'
-                      },
-                      4:{
-                          'min-width':'400px'
-                      }
-                  },
+        hljs.initHighlightingOnLoad();
+        var tm = new Tablemodify('#tm-demo', {
+            containerId: 'demoContainer',
+            modules: {
+                columnStyles: {
+                    all: {
+                        'text-align':'left',
+                        'padding':'5px 10px',
+                        'min-width':'100px'
+                    },
+                    0: {
+                        'font-weight':'bold',
+                        'min-width':'300px'
+                    },
+                    1: {
+                        'min-width':'300px'
+                    },
+                    2:{
+                        'width':'150px',
+                        'text-align':'right'
+                    },
+                    3:{
+                        'text-align':'right',
+                        'min-width':'80px',
+                        'width':'80px'
+                    },
+                    4:{
+                        'min-width':'400px'
+                    }
+                },
 
-                  fixed: {
-                      fixHeader:true,
-                      fixFooter:true
-                  },
-                  sorter: {
-                      headers: {
-                          2: {
-                              parser: 'germanDate'
-                          },
-                          4: {
-                              enabled: false
-                          },
-                      }
-                  },
-                  filter: {
-                      autoCollapse: true
-                  }
-              }
-          });
+                fixed: {
+                    fixHeader:true,
+                    fixFooter:true
+                },
+                sorter: {
+                    initialColumn: 'firstEnabled',
+                    initialOrder: 'desc',
+                    columns: {
+                        2: {
+                            parser: 'date'
+                        },
+                        4: {
+                            enabled: false
+                        },
+                    }
+                },
+                filter: {
+                    autoCollapse: true
+                }
+            }
+        });
 
-          var tm2 = new Tablemodify('#sorter-parsers', {
-             modules: {}
-          });
+        var tm2 = new Tablemodify('#sorter-parsers', {
+           modules: {}
+        });
 
     </script>
 </body>
