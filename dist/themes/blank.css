@@ -59,13 +59,10 @@ div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr .sortable.sort
 div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr.tm-filter-row {
   transition: 0.2s;
 }
-div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr.tm-filter-row div.tm-input-div input[type=text] {
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr.tm-filter-row input[type=text] {
   overflow: hidden;
-  width: 100%;
-  height: 100%;
   padding-left: 10px;
   padding-right: 25px;
-  border: none;
   background-color: transparent;
 }
 div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head tr.tm-filter-row span.tm-custom-checkbox {
