@@ -1,8 +1,8 @@
 const Module = require('./module.js');
 const dateUtils = require('../dateUtils.js');
-const {addClass, isFn, errorThrow, hasProp, warn,
+const {addClass, isFn, errorThrow, hasProp, log, warn, error,
        isBool, isNonEmptyString,
-       iterate, removeClass, error, extend2, isObject} = require('../utils.js');
+       iterate, removeClass, extend2, isObject} = require('../utils.js');
 
 function getValue(tr, i) {return tr.cells[i].innerHTML.trim();}
 
@@ -31,7 +31,7 @@ class Parser {
         this.getFn = getFn;
         this.defaultSettings = isObject(defaultSettings) ? defaultSettings : false;
     }
-    
+
     /**
      * Get the actual compare function from the encapsulated one
      * @param {Object} providedSettings - Parameters given to a parametric compare function,
@@ -61,7 +61,7 @@ class Parser {
         return retFn;
     }
 }
-        
+
 class Sorter {
     constructor(tableModify, settings) {
         //Set initial values
@@ -76,10 +76,10 @@ class Sorter {
         this.tm = tableModify;
         addClass(this.tm.container, 'tm-sorter');
         this.body = this.tm.body.tBodies[0];
-        //this.rows = [].slice.call(this.body.rows);
+
         this.sortColumns = settings.columns;
 	//Array of structure [[col_index_1, true | false], [col_index_2, true | false], ...]
-	this.currentOrders = [];
+        this.currentOrders = [];
         this.headCells = this.tm.head ? [].slice.call(this.tm.head.firstElementChild.firstElementChild.cells) : [].slice.call(this.tm.body.tHead.firstElementChild.cells);
 
         iterate(settings.customParsers, (name, func) => {
@@ -122,17 +122,22 @@ class Sorter {
                 this.manage(initIndex, false, initOrder);
             }
         }
-            
+
         // sort again in case it's needed.
         this.tm.body.addEventListener('tmSorterSortAgain', () => {
+            log("forced sorter to sort again");
             this.sort();
         });
 
     }
 
     setRows(rowArray) {
-            this.tm.setRows(rowArray);
-            return this;
+        this.tm.setRows(rowArray);
+        return this;
+    }
+
+    getRows() {
+        return this.tm.getRows();
     }
 
     /**
@@ -166,7 +171,7 @@ class Sorter {
     getOrder(columnIndex) {
         if (!this.hasOrder(columnIndex)) return;
         let order = this.currentOrders.filter(e => e[0] === columnIndex)[0];
-        return order[1]; 
+        return order[1];
     }
 
     /**
@@ -178,10 +183,6 @@ class Sorter {
         return this;
     }
 
-    getRows() {
-        return this.tm.getRows();
-    }
-    
     /**
      * Gets the compare function for a given column
      * @param {Number} i - The column index
@@ -200,10 +201,10 @@ class Sorter {
         if(!this.parsers.hasOwnProperty(parserObj.parser)) {
             errorThrow(`The given parser ${parserObj.parser} does not exist!`);
         }
-        
+
         return this.parsers[parserObj.parser].get(parserObj.parserOptions);
     }
-    
+
     /**
      * Checks whether sorting by a given column is enabled
      * @param {Number} i - The column index
@@ -232,7 +233,7 @@ class Sorter {
         let orders = this.currentOrders;
         let maxDepth = orders.length - 1;
         let parsers = this.getParsers();
-        
+
         this.tm.getRows().sort((a, b) => {
             let compareResult = 0, curDepth = 0;
             while (compareResult === 0 && curDepth <= maxDepth) {
@@ -263,7 +264,7 @@ class Sorter {
             removeClass(cell, 'sort-up');
             removeClass(cell, 'sort-down');
         });
-        
+
         for(let i = this.currentOrders.length - 1; i >= 0; --i) {
             let [index, order] = this.currentOrders[i];
             let cell = this.headCells[index];
@@ -357,7 +358,7 @@ Sorter.prototype.parsers = {
             }
             return (a, b) => {
                 try {
-                    let aDate = fecha.parse(a, settings.format);    
+                    let aDate = fecha.parse(a, settings.format);
                     let bDate = fecha.parse(b, settings.format);
                     if (!aDate || !bDate) throw new Error("couldn't parse date!");
                     return aDate - bDate;

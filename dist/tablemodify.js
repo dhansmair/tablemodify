@@ -450,13 +450,15 @@ var _require = require('../utils.js'),
     addClass = _require.addClass,
     iterate = _require.iterate,
     info = _require.info,
-    error = _require.error;
+    error = _require.error,
+    trigger = _require.trigger;
 
 var Module = require('./module.js');
 
 var newCell = function () {
     var cell = document.createElement('td');
-    cell.innerHTML = '<div class=\'tm-input-div\'><input type=\'text\' placeholder=\'type filter here\'/></div>\n                        <span class=\'tm-custom-checkbox\' title=\'case-sensitive\'>\n                        <input type=\'checkbox\' value=\'1\' name=\'checkbox\' />\n                        <label for=\'checkbox\'></label>\n                        </span>';
+    // &nbsp; is needed because otherwise the input is not visible in IE11, i have no idea why
+    cell.innerHTML = '&nbsp;<div class=\'tm-input-div\'><input type=\'text\' placeholder=\'type filter here\'/></div>\n                        <span class=\'tm-custom-checkbox\' title=\'case-sensitive\'>\n                        <input type=\'checkbox\' value=\'1\' name=\'checkbox\' />\n                        <label for=\'checkbox\'></label>\n                        </span>';
 
     return function () {
         return cell.cloneNode(true);
@@ -553,7 +555,6 @@ var Filter = function () {
                 }
                 return matches;
             });
-
             this.tm.setRows(arr);
             return this;
         }
@@ -607,6 +608,7 @@ var FilterDefault = function (_Filter) {
                 target.select();
             }
         };
+
         row.onchange = function () {
             _this.run();
         };
@@ -637,136 +639,19 @@ var FilterDefault = function (_Filter) {
             this.setPatterns(patterns).setIndices(indices).setOptions(options).filter();
 
             // trigger sorting
-            this.tm.body.dispatchEvent(new Event('tmSorterSortAgain'));
+            trigger(this.tm.body, 'tmSorterSortAgain');
 
             this.tm.render();
-
             return this;
         }
     }]);
 
     return FilterDefault;
 }(Filter);
-/*
-class FilterSpecial extends Filter {
-    constructor() {
-        var _this = this, timeout;
-        // modify DOM
-        var wrapper = document.createElement('div');
-        addClass(wrapper, 'tm-filter-wrap');
-        core.container.insertBefore(wrapper, core.bodyWrap);
-
-        wrapper.innerHTML = "<span class='tm-filter-loaded'>&nbsp;</span>"
-                          + "<span class='tm-filter-add-button'>+</span>";
-
-        wrapper.onclick = function(e) {
-            var target = e.target;
-
-            if (hasClass(target, 'tm-filter-instance')) {
-                if (hasClass(target, 'tm-open')) {
-                    // close it
-                    removeClass(target, 'tm-open');
-                } else {
-                    // open it
-                    _this.minAll();
-                    addClass(target, 'tm-open');
-                }
-            } else if (hasClass(target, 'tm-filter-add-button')) {
-                _this.minAll();
-                _this.addFilter();
-            } else if (hasClass(target, 'tm-custom-checkbox')) {
-                target.firstElementChild.checked = !target.firstElementChild.checked;
-                _this.run();
-            } else if (hasClass(target.parentNode, 'tm-custom-checkbox')) {
-                target.previousSibling.checked = !target.previousSibling.checked;
-
-                _this.run();
-            } else if (hasClass(target, 'tm-filter-wrap')) {
-                _this.minAll();
-            }
-        };
-        wrapper.onchange = function(e) {
-            _this.run();
-        }
-        wrapper.onkeyup = function(e) {
-            if (e.target.nodeName === 'INPUT') {
-                clearTimeout(timeout);
-                timeout = setTimeout(function() {
-                    _this.run();
-                }, 500);
-            }
-        }
-
-        this.activeFilters = wrapper.querySelector('.tm-filter-loaded');
-        this.filterWrap = wrapper;
-        this.rows = core.getRows();
-
-        this.addFilter = function() {
-            var newFilter = document.createElement('span');
-            addClass(newFilter, 'tm-filter-instance');
-            addClass(newFilter, 'tm-open');
-
-            newFilter.innerHTML = "<select></select>"
-                                + "<input type='text' placeholder='type filter here' />"
-                                + "<span class='tm-custom-checkbox' title='case-sensitive'>"
-                                    + "<input type='checkbox' value='1' name='checkbox' />"
-                                    + "<label for='checkbox'></label>"
-                                    + "</span>";
-
-            // add options to select field
-            var select = newFilter.firstElementChild;
-
-            iterate(core.origHead.firstElementChild.cells, function(i, cell) {
-                var option = document.createElement('option');
-                option.text = cell.innerHTML;
-                option.value = i;
-
-                select.add(option);
-            });
-
-            // define getters
-            newFilter.getIndex = function() {
-                var select = this.firstElementChild;
-                return select.options[select.selectedIndex].value;
-            }
-            newFilter.getPattern = function() {
-                return this.children[1].value.trim();
-            }
-            newFilter.getOption = function() {
-                return this.querySelector('input[type=checkbox]').checked;
-            }
-            this.activeFilters.appendChild(newFilter);
-        }
-        this.minAll = function() {
-            iterate(this.filterWrap.querySelectorAll('.tm-filter-instance.tm-open'), function(i, instance) {
-                removeClass(instance, 'tm-open');
-            });
-        }
-        this.run = function() {
-            // collect all information
-            var filters = [].slice.call(this.activeFilters.children),
-                patterns = [], indices = [], options = [];
-
-            iterate(filters, function(i, filterObj) {
-                indices.push(filterObj.getIndex());
-                patterns.push(filterObj.getPattern());
-                options.push(filterObj.getOption());
-            });
-
-            this.setIndices(indices)
-                .setPatterns(patterns)
-                .setOptions(options)
-                .filter();
-        }
-    }
-}
-*/
-
 
 module.exports = new Module({
     name: "filter",
     defaultSettings: {
-        //filterStyle: 'default'
         autoCollapse: true
     },
     initializer: function initializer(settings) {
@@ -774,13 +659,8 @@ module.exports = new Module({
         try {
             addClass(this.container, 'tm-filter');
 
-            /*switch (settings.filterStyle) {
-                 case 'special':
-                    new FilterB();
-                break;
-                default:*/
             var instance = new FilterDefault(this, settings);
-            //}
+
             info('module filter loaded');
 
             return instance;
@@ -900,7 +780,9 @@ module.exports = new Module({
             // add event listeners
             if (head) {
                 window.addEventListener('resize', renderHead);
-                body.addEventListener('tmFixedForceRendering', renderHead);
+                body.addEventListener('tmFixedForceRendering', function (e) {
+                    renderHead();
+                });
             }
 
             if (foot) {
@@ -1066,12 +948,13 @@ var _require = require('../utils.js'),
     isFn = _require.isFn,
     errorThrow = _require.errorThrow,
     hasProp = _require.hasProp,
+    log = _require.log,
     warn = _require.warn,
+    error = _require.error,
     isBool = _require.isBool,
     isNonEmptyString = _require.isNonEmptyString,
     iterate = _require.iterate,
     removeClass = _require.removeClass,
-    error = _require.error,
     extend2 = _require.extend2,
     isObject = _require.isObject;
 
@@ -1163,7 +1046,7 @@ var Sorter = function () {
         this.tm = tableModify;
         addClass(this.tm.container, 'tm-sorter');
         this.body = this.tm.body.tBodies[0];
-        //this.rows = [].slice.call(this.body.rows);
+
         this.sortColumns = settings.columns;
         //Array of structure [[col_index_1, true | false], [col_index_2, true | false], ...]
         this.currentOrders = [];
@@ -1211,6 +1094,7 @@ var Sorter = function () {
 
         // sort again in case it's needed.
         this.tm.body.addEventListener('tmSorterSortAgain', function () {
+            log("forced sorter to sort again");
             _this.sort();
         });
     }
@@ -1220,6 +1104,11 @@ var Sorter = function () {
         value: function setRows(rowArray) {
             this.tm.setRows(rowArray);
             return this;
+        }
+    }, {
+        key: 'getRows',
+        value: function getRows() {
+            return this.tm.getRows();
         }
 
         /**
@@ -1281,11 +1170,6 @@ var Sorter = function () {
         value: function removeAllOrders() {
             this.currentOrders = [];
             return this;
-        }
-    }, {
-        key: 'getRows',
-        value: function getRows() {
-            return this.tm.getRows();
         }
 
         /**
@@ -1629,7 +1513,7 @@ module.exports = new Module({
 });
 
 },{"../utils.js":11,"./module.js":7}],10:[function(require,module,exports){
-'use strict';
+"use strict";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
@@ -1648,7 +1532,8 @@ var _require = require('./utils.js'),
     iterate = _require.iterate,
     extend = _require.extend,
     addClass = _require.addClass,
-    getUniqueId = _require.getUniqueId;
+    getUniqueId = _require.getUniqueId,
+    trigger = _require.trigger;
 
 var Tablemodify = function () {
     function Tablemodify(selector, coreSettings) {
@@ -1657,18 +1542,19 @@ var Tablemodify = function () {
         var containerId,
             _this = this,
             body = document.querySelector(selector); // must be a table
+
+        extend(config.coreDefaults, coreSettings);
+
         if (!body || body.nodeName !== 'TABLE') {
             error('there is no <table> with selector ' + selector);
             return null;
         }
-        //this.body = body;
+
         this.bodySelector = selector;
         var oldBodyParent = body.parentElement;
 
         this.columnCount = 0;
         this.calculateColumnCount(body);
-
-        extend(config.coreDefaults, coreSettings);
 
         if (coreSettings.containerId && document.getElementById(coreSettings.containerId)) {
             throw 'the passed id ' + coreSettings.containerId + ' is not unique!';
@@ -1701,6 +1587,9 @@ var Tablemodify = function () {
 
         // initialize tbody rows as 2D-array
         this.rows = [].slice.call(this.body.tBodies[0].rows);
+
+        // contains all tr-nodes that are not displayed at the moment
+        this.fragment = document.createDocumentFragment();
 
         //Default rendering mode: everything at once
         this.setRenderingMode(Tablemodify.RENDERING_MODE_AT_ONCE);
@@ -1763,8 +1652,6 @@ var Tablemodify = function () {
             //If chunked rendering is running at the moment, cancel
             window.clearTimeout(this._chunkedRenderingTimeout);
             this.rows = rowArray;
-            //this.body.dispatchEvent(new Event('tmRowsAdded'));
-            //this.render();
             return this;
         }
     }, {
@@ -1773,8 +1660,7 @@ var Tablemodify = function () {
             //If chunked rendering is running at the moment, cancel
             window.clearTimeout(this._chunkedRenderingTimeout);
             [].push.apply(this.rows, rowsArray);
-            //this.body.dispatchEvent(new Event('tmRowsAdded'));
-            //this.render();
+
             return this;
         }
     }, {
@@ -1793,13 +1679,15 @@ var Tablemodify = function () {
         }
     }, {
         key: 'render',
-        value: function render() {
+        value: function render(r) {
             var _this2 = this;
 
             var tBody = this.body.tBodies[0],
                 rows = this.getRows(),
                 l = rows.length;
-            tBody.innerHTML = ''; // clear table body
+
+            // clear tBody
+            this.moveAllRowsToFragment();
 
             (function () {
                 switch (_this2.renderingMode) {
@@ -1807,7 +1695,8 @@ var Tablemodify = function () {
                         for (var i = 0; i < l; i++) {
                             tBody.appendChild(rows[i]);
                         }
-                        _this2.body.dispatchEvent(new Event('tmFixedForceRendering'));
+
+                        trigger(_this2.body, 'tmFixedForceRendering');
                         break;
                     case Tablemodify.RENDERING_MODE_CHUNKED:
                         var chunkSize = _this2.rowChunkSize,
@@ -1815,7 +1704,7 @@ var Tablemodify = function () {
                         var renderPart = function renderPart() {
                             for (var z = 0; z < chunkSize; z++) {
                                 if (start + z === l) {
-                                    _this2.body.dispatchEvent(new Event('tmFixedForceRendering'));
+                                    trigger(_this2.body, 'tmFixedForceRendering');
                                     return;
                                 }
                                 tBody.appendChild(rows[start + z]);
@@ -1830,6 +1719,27 @@ var Tablemodify = function () {
 
             return this;
         }
+
+        /**
+         * this method cleares the tablebody, without the table rows being lost. Instead, they are stored in the DocumentFragment.
+         * References to the table rows (laying in the array this.rows) now point on the elements in the fragment.
+         * The References can be used to insert the rows in the original DOM again.
+         * This is necessary because IE11 had several issues with references to deleted table rows
+         */
+
+    }, {
+        key: 'moveAllRowsToFragment',
+        value: function moveAllRowsToFragment() {
+            var rows = this.body.tBodies[0].rows,
+                l = rows.length,
+                next = void 0;
+
+            while (next = rows[0]) {
+                this.fragment.appendChild(next);
+            }
+            return this;
+        }
+
         /**
          * Static method for adding user-defined modules
          * this-value in a static method is the constructor function itself (here
@@ -2018,16 +1928,7 @@ exports.iterate = function (elems, func) {
         }
     }
 };
-/*
-exports.getValueIn = function(arr, i) {
-  if (!Array.isArray(arr)) return arr;
-  if (arr.length > i) {
-    return arr[i];
-  } else {
-    return arr[arr.length-1];
-  }
-}
-*/
+
 exports.getUniqueId = function () {
     var unique = 0;
 
@@ -2077,6 +1978,58 @@ exports.hasProp = function (obj) {
     }
 
     return getProp.apply(undefined, [obj].concat(props)) !== undefined;
+};
+
+// Polyfill for creating CustomEvents on IE9/10/11
+
+// code pulled from:
+// https://github.com/d4tocchini/customevent-polyfill
+// https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent#Polyfill
+
+try {
+    var ce = new window.CustomEvent('test');
+    ce.preventDefault();
+    if (ce.defaultPrevented !== true) {
+        // IE has problems with .preventDefault() on custom events
+        // http://stackoverflow.com/questions/23349191
+        throw new Error('Could not prevent default');
+    }
+} catch (e) {
+    var CustomEvent = function CustomEvent(event, params) {
+        var evt, origPrevent;
+        params = params || {
+            bubbles: false,
+            cancelable: false,
+            detail: undefined
+        };
+
+        evt = document.createEvent("CustomEvent");
+        evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+        origPrevent = evt.preventDefault;
+        evt.preventDefault = function () {
+            origPrevent.call(this);
+            try {
+                Object.defineProperty(this, 'defaultPrevented', {
+                    get: function get() {
+                        return true;
+                    }
+                });
+            } catch (e) {
+                this.defaultPrevented = true;
+            }
+        };
+        return evt;
+    };
+
+    CustomEvent.prototype = window.Event.prototype;
+    window.CustomEvent = CustomEvent; // expose definition to window
+}
+
+/**
+    trigger custom events supported by all browsers
+*/
+exports.trigger = function (target, eventName, props) {
+    target.dispatchEvent(new CustomEvent(eventName, props));
 };
 
 },{"./config.js":2}]},{},[10]);

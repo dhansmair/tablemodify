@@ -1,25 +1,27 @@
+"use strict";
 const config = require('./config.js');
 const Module = require('./modules/module.js');
 const {error, warn, isNonEmptyString, getCss,
-       iterate, extend, addClass, getUniqueId/*, wrap*/} = require('./utils.js');
+       iterate, extend, addClass, getUniqueId, trigger} = require('./utils.js');
 
 class Tablemodify {
     constructor(selector, coreSettings) {
         var containerId,
             _this = this,
             body = document.querySelector(selector); // must be a table
+
+        extend(config.coreDefaults, coreSettings);
+
         if (!body || body.nodeName !== 'TABLE') {
           error('there is no <table> with selector ' + selector);
           return null;
         }
-        //this.body = body;
+
         this.bodySelector = selector;
         let oldBodyParent = body.parentElement;
 
         this.columnCount = 0;
         this.calculateColumnCount(body);
-
-        extend(config.coreDefaults, coreSettings);
 
         if (coreSettings.containerId && document.getElementById(coreSettings.containerId)) {
             throw 'the passed id ' + coreSettings.containerId + ' is not unique!';
@@ -58,6 +60,9 @@ class Tablemodify {
 
         // initialize tbody rows as 2D-array
         this.rows = [].slice.call(this.body.tBodies[0].rows);
+
+        // contains all tr-nodes that are not displayed at the moment
+        this.fragment = document.createDocumentFragment();
 
         //Default rendering mode: everything at once
         this.setRenderingMode(Tablemodify.RENDERING_MODE_AT_ONCE);
@@ -109,16 +114,13 @@ class Tablemodify {
         //If chunked rendering is running at the moment, cancel
         window.clearTimeout(this._chunkedRenderingTimeout);
         this.rows = rowArray;
-        //this.body.dispatchEvent(new Event('tmRowsAdded'));
-        //this.render();
         return this;
     }
     addRows(rowArray) {
         //If chunked rendering is running at the moment, cancel
         window.clearTimeout(this._chunkedRenderingTimeout);
         [].push.apply(this.rows, rowsArray);
-        //this.body.dispatchEvent(new Event('tmRowsAdded'));
-        //this.render();
+
         return this;
     }
     setRenderingMode(to) {
@@ -133,18 +135,21 @@ class Tablemodify {
        this.renderingMode = to;
        return this;
     }
-    render() {
+    render(r) {
         let tBody = this.body.tBodies[0],
             rows = this.getRows(),
             l = rows.length;
-        tBody.innerHTML = '';       // clear table body
+
+        // clear tBody
+        this.moveAllRowsToFragment();
 
         switch(this.renderingMode) {
             case Tablemodify.RENDERING_MODE_AT_ONCE:
                 for (let i = 0; i < l; i++) {
                     tBody.appendChild(rows[i]);
                 }
-                this.body.dispatchEvent(new Event('tmFixedForceRendering'));
+
+                trigger(this.body, 'tmFixedForceRendering');
                 break;
             case Tablemodify.RENDERING_MODE_CHUNKED:
                 let chunkSize = this.rowChunkSize,
@@ -152,7 +157,7 @@ class Tablemodify {
                 const renderPart = () => {
                     for (var z = 0; z < chunkSize; z++) {
                         if (start + z === l) {
-                            this.body.dispatchEvent(new Event('tmFixedForceRendering'));
+                            trigger(this.body, 'tmFixedForceRendering');
                             return;
                         }
                         tBody.appendChild(rows[start + z]);
@@ -165,6 +170,24 @@ class Tablemodify {
         }
         return this;
     }
+
+    /**
+     * this method cleares the tablebody, without the table rows being lost. Instead, they are stored in the DocumentFragment.
+     * References to the table rows (laying in the array this.rows) now point on the elements in the fragment.
+     * The References can be used to insert the rows in the original DOM again.
+     * This is necessary because IE11 had several issues with references to deleted table rows
+     */
+    moveAllRowsToFragment() {
+        let rows = this.body.tBodies[0].rows,
+            l = rows.length,
+            next;
+
+        while (next = rows[0]) {
+            this.fragment.appendChild(next);
+        }
+        return this;
+    }
+
     /**
      * Static method for adding user-defined modules
      * this-value in a static method is the constructor function itself (here

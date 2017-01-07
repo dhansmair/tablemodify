@@ -97,7 +97,9 @@ module.exports = new Module({
             // add event listeners
             if (head) {
                 window.addEventListener('resize', renderHead);
-                body.addEventListener('tmFixedForceRendering', renderHead);
+                body.addEventListener('tmFixedForceRendering', (e) => {
+                    renderHead();
+                });
             }
 
             if (foot) {
@@ -128,7 +130,7 @@ module.exports = new Module({
                 });
 
             } else if (!head && foot) {
-                
+
                 footWrap.addEventListener('scroll', function() {
                     window.requestAnimationFrame(function() {
                         bodyWrap.scrollLeft = footWrap.scrollLeft;
