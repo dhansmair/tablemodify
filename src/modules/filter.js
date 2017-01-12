@@ -3,11 +3,10 @@ const Module = require('./module.js');
 
 const newCell = (function() {
     let cell = document.createElement('td');
-    // &nbsp; is needed because otherwise the input is not visible in IE11, i have no idea why
-    cell.innerHTML = `&nbsp;<div class='tm-input-div'><input type='text' placeholder='type filter here'/></div>
+    cell.innerHTML =   `<div class='tm-input-div'><input type='text' placeholder='type filter here' /></div>
                         <span class='tm-custom-checkbox' title='case-sensitive'>
-                        <input type='checkbox' value='1' name='checkbox' />
-                        <label for='checkbox'></label>
+                            <input type='checkbox' value='1' name='checkbox' />
+                            <label for='checkbox'></label>
                         </span>`;
 
 

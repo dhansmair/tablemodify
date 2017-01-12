@@ -1,4 +1,50 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+// Polyfill for creating CustomEvents on IE9/10/11
+
+// code pulled from:
+// https://github.com/d4tocchini/customevent-polyfill
+// https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent#Polyfill
+
+try {
+    var ce = new window.CustomEvent('test');
+    ce.preventDefault();
+    if (ce.defaultPrevented !== true) {
+        // IE has problems with .preventDefault() on custom events
+        // http://stackoverflow.com/questions/23349191
+        throw new Error('Could not prevent default');
+    }
+} catch(e) {
+  var CustomEvent = function(event, params) {
+    var evt, origPrevent;
+    params = params || {
+      bubbles: false,
+      cancelable: false,
+      detail: undefined
+    };
+
+    evt = document.createEvent("CustomEvent");
+    evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+    origPrevent = evt.preventDefault;
+    evt.preventDefault = function () {
+      origPrevent.call(this);
+      try {
+        Object.defineProperty(this, 'defaultPrevented', {
+          get: function () {
+            return true;
+          }
+        });
+      } catch(e) {
+        this.defaultPrevented = true;
+      }
+    };
+    return evt;
+  };
+
+  CustomEvent.prototype = window.Event.prototype;
+  window.CustomEvent = CustomEvent; // expose definition to window
+}
+
+},{}],2:[function(require,module,exports){
 (function (main) {
   'use strict';
 
@@ -333,7 +379,7 @@
   }
 })(this);
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 'use strict';
 
 exports.debug = false;
@@ -341,7 +387,7 @@ exports.coreDefaults = {
     theme: 'default'
 };
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var _DATE_I18N, _DATE_FORMATS;
@@ -383,7 +429,7 @@ module.exports = {
     DATE_FORMATS: DATE_FORMATS
 };
 
-},{"fecha":1}],4:[function(require,module,exports){
+},{"fecha":2}],5:[function(require,module,exports){
 'use strict';
 
 var Module = require('./module.js');
@@ -435,7 +481,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":11,"./module.js":7}],5:[function(require,module,exports){
+},{"../utils.js":12,"./module.js":8}],6:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -669,7 +715,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":11,"./module.js":7}],6:[function(require,module,exports){
+},{"../utils.js":12,"./module.js":8}],7:[function(require,module,exports){
 'use strict';
 
 var Module = require('./module.js');
@@ -845,7 +891,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":11,"./module.js":7}],7:[function(require,module,exports){
+},{"../utils.js":12,"./module.js":8}],8:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -928,7 +974,7 @@ module.exports = function () {
     return Module;
 }();
 
-},{"../utils.js":11}],8:[function(require,module,exports){
+},{"../utils.js":12}],9:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -1472,7 +1518,7 @@ module.exports = new Module({
     }
 });
 
-},{"../dateUtils.js":3,"../utils.js":11,"./module.js":7}],9:[function(require,module,exports){
+},{"../dateUtils.js":4,"../utils.js":12,"./module.js":8}],10:[function(require,module,exports){
 'use strict';
 
 var _require = require('../utils.js'),
@@ -1511,7 +1557,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":11,"./module.js":7}],10:[function(require,module,exports){
+},{"../utils.js":12,"./module.js":8}],11:[function(require,module,exports){
 "use strict";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -1795,12 +1841,13 @@ Tablemodify.Module = Module;
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
 
-},{"./config.js":2,"./modules/columnStyles.js":4,"./modules/filter.js":5,"./modules/fixed.js":6,"./modules/module.js":7,"./modules/sorter.js":8,"./modules/zebra.js":9,"./utils.js":11}],11:[function(require,module,exports){
+},{"./config.js":3,"./modules/columnStyles.js":5,"./modules/filter.js":6,"./modules/fixed.js":7,"./modules/module.js":8,"./modules/sorter.js":9,"./modules/zebra.js":10,"./utils.js":12}],12:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var config = require('./config.js');
+require('custom-event-polyfill');
 // custom console logging functions
 exports.log = function (text) {
     if (config.debug) console.log('tm-log: ' + text);
@@ -1979,51 +2026,6 @@ exports.hasProp = function (obj) {
     return getProp.apply(undefined, [obj].concat(props)) !== undefined;
 };
 
-// Polyfill for creating CustomEvents on IE9/10/11
-
-// code pulled from:
-// https://github.com/d4tocchini/customevent-polyfill
-// https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent#Polyfill
-
-try {
-    var ce = new window.CustomEvent('test');
-    ce.preventDefault();
-    if (ce.defaultPrevented !== true) {
-        // IE has problems with .preventDefault() on custom events
-        // http://stackoverflow.com/questions/23349191
-        throw new Error('Could not prevent default');
-    }
-} catch (e) {
-    var CustomEvent = function CustomEvent(event, params) {
-        var evt, origPrevent;
-        params = params || {
-            bubbles: false,
-            cancelable: false,
-            detail: undefined
-        };
-
-        evt = document.createEvent("CustomEvent");
-        evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-        origPrevent = evt.preventDefault;
-        evt.preventDefault = function () {
-            origPrevent.call(this);
-            try {
-                Object.defineProperty(this, 'defaultPrevented', {
-                    get: function get() {
-                        return true;
-                    }
-                });
-            } catch (e) {
-                this.defaultPrevented = true;
-            }
-        };
-        return evt;
-    };
-
-    CustomEvent.prototype = window.Event.prototype;
-    window.CustomEvent = CustomEvent; // expose definition to window
-}
-
 /**
     trigger custom events supported by all browsers
 */
@@ -2031,4 +2033,4 @@ exports.trigger = function (target, eventName, props) {
     target.dispatchEvent(new CustomEvent(eventName, props));
 };
 
-},{"./config.js":2}]},{},[10]);
+},{"./config.js":3,"custom-event-polyfill":1}]},{},[11]);
