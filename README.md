@@ -14,6 +14,7 @@ Include these files:
 ```html
 <script src='path/to/tablemodify.js'></script> // or the .min version
 <link rel='stylesheet' href='path/to/tablemodify.css' />
+<link rel='stylesheet' href='path/to/theme/default.css' />
 ```
 
 after your document has loaded completely, create a new object:
