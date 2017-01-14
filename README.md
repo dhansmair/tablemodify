@@ -6,14 +6,14 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 
 First of all, get the dist-folder from Github. 
 Include these files:
-´´´html
+```html
 <script src='path/to/tablemodify.js'></script> // or the .min version
 <link rel='stylesheet' href='path/to/tablemodify.css' />
-´´´
+```
 
 after your document has loaded completely, create a new object:
 
-´´´javascript
+```javascript
 window.addEventListener('DOMContentLoaded', function() {
     
     var settings = {
@@ -22,10 +22,10 @@ window.addEventListener('DOMContentLoaded', function() {
         
     var tm = new Tablemodify('#tm-example', settings); // pass unique selector of your table and the settings
 });
-´´´
+```
 now we'll have a closer look on the settings-object. It may have the following structure:
 
-´´´javascript
+```javascript
 var settings = {
     // the table is going to be wrapped in a div. It may be useful to add an Id to it
     containerId: 'myCustomContainer', 
@@ -48,7 +48,7 @@ var settings = {
         sorter: sorterSettings     
     }
 };
-´´´
+```
 
 # Modules
 
@@ -57,7 +57,7 @@ now here is a detailed tutorial about the configuration of each module:
 ## columnStyles
 
 Use columnStyles to set the CSS for the cells in each column.
-´´´javascript
+```javascript
  var columnStylesSettings = {
         /*
             this styles all cells.
@@ -84,29 +84,29 @@ Use columnStyles to set the CSS for the cells in each column.
             // ...
         }
         // ...
-´´´
+```
 
 ## zebra
 
 A small module to add stripes to your table.
-´´´javascript
+```javascript
    var zebraSettings = {
         // these are the default settings:
         even: '#dbe7f0',
         odd: '#ffffff'
     };
-´´´
+```
 
 ## filter
 
 Adds a row to the thead so you can filter the table by columns.
 
-´´´javascript
+```javascript
    var filterSettings = {
         // default value
         autoCollapse: true // only show the row when thead is hovered        
     };
-´´´
+```
 
 ## fixed
 
@@ -120,7 +120,7 @@ In my opinion there is no good solution for fixed table headers on the internet,
 
 it is possible to fix both thead and tfoot elements.
 The settings are simple:
-´´´javascript
+```javascript
     var columnStylesSettings = {
         /*
             these are the defaults.
@@ -129,13 +129,13 @@ The settings are simple:
         fixHeader: false,
         fixFooter: false
     };            
-´´´
+```
 
 ## sorter
 
 This module sorts the rows of your tbody, ascending or descending, sorted by a single column or even by multiple columns. For multisort, press shift and click another head cell. Still press shift and click a selected cell again to invert the order. Please keep in mind that js is generally rather slow and not made for handling big data amounts. Handling about 3000 rows works fine. 5000 still work, but it will take some time to sort and re-render, so bigger tables should be sorted on the backend, for example via php.
 
-´´´javascript
+```javascript
   var sorterSettings = {
         /*
             these are the defaults:
@@ -167,7 +167,7 @@ This module sorts the rows of your tbody, ascending or descending, sorted by a s
         */
         customParsers: customParsers
     };
-´´´
+```
 
 so what about the parsers? There are some available by default:
 
@@ -179,7 +179,7 @@ so what about the parsers? There are some available by default:
 
 A parser is simply a compare function which is passed to the Array.sort() method. here you can read more about compare functions If you want to define your own parsers, add them like this:
 
-´´´javascript
+```javascript
     var customParsers = {
         myParser: function(a, b) {
             /*
@@ -195,7 +195,7 @@ A parser is simply a compare function which is passed to the Array.sort() method
             return 0;
         }
     };
-´´´
+```
 
 # Theming
 
