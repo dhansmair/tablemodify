@@ -1,5 +1,4 @@
 # tablemodify
-
 tablemodify is a javascript-plugin which boosts your html tables with awesome style and functionalities.
 It is written in plain js, so no jQuery is required. Tm is based on a core Tablemodify-object which can be extended by several modules. There are some modules defined by default or you could even write your own if you wish to. 
 
@@ -171,17 +170,12 @@ This module sorts the rows of your tbody, ascending or descending, sorted by a s
 ´´´
 
 so what about the parsers? There are some available by default:
-| parsername | notice | description | parameters |
-| ---------- | ------ | ----------- | ---------- |
-| "intelligent" | default | differentiates automatically between strings and numbers. recommended for mixed types. | none | 
-| ---------- | ------ | ----------- | ---------- |
-| "string" | | sorts in alphabetic order. efficient, recommended for pure strings | none |
-| ---------- | ------ | ----------- | ---------- |
-| "numeric" || sorts numbers (also floats). efficient, recommended for numbers  | none |
-| ---------- | ------ | ----------- | ---------- |
-| "date" | | sorts by a given date format | format: A date/time format string which will be used to parse the dates
-preset: either 'english' or 'german', 'german' will match 'TT.MM.YYYY' and 'TT.MM.YY', 'english' will match 'YYYY-MM-DD' or 'MM/DD/YYYY'. It is recommended not to rely on the presets but rather provide your own date format string (Here you can find an overview of the tokens which can be used) |
-| ---------- | ------ | ----------- | ---------- |
+
+| parsername    | notice  | description                                         | parameters |
+| ---           | ---     | ---                                                 | ---        |
+| "intelligent" | default | differentiates automatically between strings and numbers. recommended for mixed types. | none |                          
+| "numeric"     || sorts numbers (also floats). efficient, recommended for numbers | none | 
+| "date"        || sorts by a given date format | format: A date/time format string which will be used to parse the dates preset: either 'english' or 'german', 'german' will match 'TT.MM.YYYY' and 'TT.MM.YY', 'english' will match 'YYYY-MM-DD' or 'MM/DD/YYYY'. It is recommended not to rely on the presets but rather provide your own date format string (Here you can find an overview of the tokens which can be used) |
 
 A parser is simply a compare function which is passed to the Array.sort() method. here you can read more about compare functions If you want to define your own parsers, add them like this:
 
