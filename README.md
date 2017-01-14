@@ -1,6 +1,11 @@
 # tablemodify
+
 tablemodify is a javascript-plugin which boosts your html tables with awesome style and functionalities! :boom:
 It is written in plain js, so no jQuery is required. Tm is based on a core Tablemodify-object which can be extended by several modules. There are some modules defined by default or you could even write your own if you wish to. 
+
+# demo
+
+coming soon ...
 
 # basic setup
 
