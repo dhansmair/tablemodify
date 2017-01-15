@@ -29,6 +29,10 @@ div.tm-container.tm-theme-bootstrap thead,
 div.tm-container.tm-theme-bootstrap div.tm-head-wrap {
   border-bottom: 1px solid #ddd;
 }
+div.tm-container.tm-theme-bootstrap tfoot,
+div.tm-container.tm-theme-bootstrap div.tm-foot-wrap {
+  border-top: 1px solid #ddd;
+}
 div.tm-container.tm-theme-bootstrap div.tm-head-wrap table.tm-head {
   border-collapse: collapse;
   border-style: hidden;
@@ -54,9 +58,6 @@ div.tm-container.tm-theme-bootstrap div.tm-body-wrap table tr:nth-of-type(odd) {
 }
 div.tm-container.tm-theme-bootstrap div.tm-foot-wrap {
   background-color: white;
-  -webkit-box-shadow: 0px -6px 10px -10px #666666;
-  -moz-box-shadow: 0px -6px 10px -10px #666666;
-  box-shadow: 0px -6px 10px -10px #666666;
 }
 div.tm-container.tm-theme-bootstrap div.tm-foot-wrap table.tm-foot {
   border-collapse: collapse;

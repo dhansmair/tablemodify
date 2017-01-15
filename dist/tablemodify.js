@@ -442,39 +442,36 @@ var _require = require('../utils.js'),
 
 module.exports = new Module({
     name: "columnStyles",
-    defaultSettings: {
-        all: {
-            'text-align': 'center',
-            'padding': '3px'
-        }
-    },
     initializer: function initializer(settings) {
+        var _this = this;
+
         try {
-            addClass(this.container, 'tm-column-styles');
+            (function () {
+                addClass(_this.container, 'tm-column-styles');
 
-            var containerId = this.containerId;
+                var containerId = _this.containerId;
 
-            // style general
-            var text = 'div#' + containerId + ' table tr > *{';
-            iterate(settings.all, function (prop, value) {
-                text += prop + ':' + value + ';';
-            });
-            text += '}';
-
-            delete settings.all;
-
-            // add custom styles to the single columns
-            iterate(settings, function (index, cssStyles) {
-                var i = parseInt(index) + 1;
-
-                text += 'div#' + containerId + ' table tr > *:nth-of-type(' + i + '){';
-                iterate(cssStyles, function (prop, value) {
-                    text += prop + ':' + value + ';';
+                // style general
+                var text = 'div #' + containerId + ' table tr > * {';
+                iterate(settings.all, function (prop, value) {
+                    text += prop + ': ' + value + ';';
                 });
                 text += '}';
-            });
-            this.appendStyles(text);
-            info('module columnStyles loaded');
+
+                // add custom styles to the single columns
+                iterate(settings, function (index, cssStyles) {
+                    if (index === 'all') return;
+                    var i = parseInt(index) + 1;
+
+                    text += 'div #' + containerId + ' table tr > *:nth-of-type(' + i + ') {';
+                    iterate(cssStyles, function (prop, value) {
+                        text += prop + ': ' + value + ';';
+                    });
+                    text += '}';
+                });
+                _this.appendStyles(text);
+                info('module columnStyles loaded');
+            })();
         } catch (e) {
             error(e);
         }
@@ -1543,9 +1540,6 @@ module.exports = new Module({
         // this := Tablemodify-instance
         try {
             addClass(this.container, 'tm-zebra');
-
-            var defaults = { even: '#f0f0f0', odd: 'white' };
-            extend(defaults, settings);
 
             var text = 'table' + this.bodySelector + ' tr:nth-of-type(even){background-color:' + settings.even + '}' + 'table' + this.bodySelector + ' tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
             this.appendStyles(text);
