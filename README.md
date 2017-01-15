@@ -209,34 +209,34 @@ to define a new module, create a new instance of `Tablemodify.Module` and pass i
 
 ```javascript
 
-        // writing custom module
-        var myModule = new Tablemodify.Module({
-            // required
-            name: 'zebra', 
-            // optional
-            defaultSettings: { 
-                even: '#F9F9F9',
-                odd: '#FFFFFF'
-            },
-            // optional
-            settingsValidator: function(settings) {
-                // you may throw an error if the passed settings are not valid
-            },
-            // required
-            initializer: function(settings) {
-                try {
-                    // ... your code goes here ... 
-                
-                    var text = 'table' + this.bodySelector + ' tr:nth-of-type(even){background-color:' + settings.even + '}'
-                             + 'table' + this.bodySelector + ' tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
-                    this.appendStyles(text);
-                } catch (e) {
-                    console.log(e);
-                }
-            }
-        });
+    // writing custom module
+    var myModule = new Tablemodify.Module({
+        // required
+        name: 'zebra', 
+        // optional
+        defaultSettings: { 
+            even: '#F9F9F9',
+            odd: '#FFFFFF'
+        },
+        // optional
+        settingsValidator: function(settings) {
+            // you may throw an error if the passed settings are not valid
+        },
+        // required
+        initializer: function(settings) {
+            try {
+                // ... your code goes here ... 
 
-        Tablemodify.addModule(myModule);
+                var text = 'table' + this.bodySelector + ' tr:nth-of-type(even){background-color:' + settings.even + '}'
+                         + 'table' + this.bodySelector + ' tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
+                this.appendStyles(text);
+            } catch (e) {
+                console.log(e);
+            }
+        }
+    });
+
+    Tablemodify.addModule(myModule);
 
 ```
 
