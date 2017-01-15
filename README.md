@@ -212,7 +212,7 @@ to define a new module, create a new instance of `Tablemodify.Module` and pass i
     // writing custom module
     var myModule = new Tablemodify.Module({
         // required
-        name: 'zebra', 
+        name: 'zebra2', 
         // optional
         defaultSettings: { 
             even: '#F9F9F9',
@@ -244,6 +244,7 @@ to define a new module, create a new instance of `Tablemodify.Module` and pass i
   pass during the creation of the Tablemodify-instance
 - inside the initializer-method you can access the current instance via `this` and use all internal methods
   like `this.appendStyles()`
+- each module name is unique and can not be overwritten
 - The `name` and `initializer` properties have to be defined, otherwise it will throw an error. 
 - `defaultSettings` and `settingsValidator` are optional.
 
@@ -254,7 +255,7 @@ to activate the module:
     var tm = new Tablemodify('#selector', {
         // ...
         modules: {
-            zebra: {
+            'zebra2': {
                 even: '#428BCA'
             }
             // ... other modules
