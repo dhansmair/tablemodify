@@ -203,6 +203,74 @@ A parser is simply a compare function which is passed to the Array.sort() method
         }
     };
 ```
+# Modules - writing your own
+
+to define a new module, create a new instance of `Tablemodify.Module` and pass it to `Tablemodify.addModule()`.
+
+```javascript
+
+        // writing custom module
+        var myModule = new Tablemodify.Module({
+            // required
+            name: 'zebra', 
+            // optional
+            defaultSettings: { 
+                even: '#F9F9F9',
+                odd: '#FFFFFF'
+            },
+            // optional
+            settingsValidator: function(settings) {
+                // you may throw an error if the passed settings are not valid
+            },
+            // required
+            initializer: function(settings) {
+                try {
+                    // ... your code goes here ... 
+                
+                    var text = 'table' + this.bodySelector + ' tr:nth-of-type(even){background-color:' + settings.even + '}'
+                             + 'table' + this.bodySelector + ' tr:nth-of-type(odd) {background-color:' + settings.odd + '}';
+                    this.appendStyles(text);
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+        });
+
+        Tablemodify.addModule(myModule);
+
+```
+
+- your initializer will get the settings as a parameter-object: these are the defaultSettings merged with the ones you 
+  pass during the creation of the Tablemodify-instance
+- inside the initializer-method you can access the current instance via `this` and use all internal methods
+  like `this.appendStyles()`
+- The `name` and `initializer` properties have to be defined, otherwise it will throw an error. 
+- `defaultSettings` and `settingsValidator` are optional.
+
+to activate the module:
+
+```javascript
+
+    var tm = new Tablemodify('#selector', {
+        // ...
+        modules: {
+            zebra: {
+                even: '#428BCA'
+            }
+            // ... other modules
+        }
+    });
+
+```
+in this example, the initializer parameter settings will be: 
+
+```javascript
+{
+    even: '#428BCA', // what you passed
+    odd: '#FFFFFF'   // from the defaultSettings
+}
+``` 
 
 # Theming
 
+coming soon...
