@@ -432,6 +432,8 @@ module.exports = {
 },{"fecha":2}],5:[function(require,module,exports){
 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var Module = require('./module.js');
 
 var _require = require('../utils.js'),
@@ -446,7 +448,7 @@ module.exports = new Module({
         var _this = this;
 
         try {
-            (function () {
+            var _ret = function () {
                 addClass(_this.container, 'tm-column-styles');
 
                 var containerId = _this.containerId;
@@ -471,7 +473,18 @@ module.exports = new Module({
                 });
                 _this.appendStyles(text);
                 info('module columnStyles loaded');
-            })();
+
+                return {
+                    v: {
+                        unset: function unset() {
+                            // no implementation needed
+                            info('unsetting columnStyles');
+                        }
+                    }
+                };
+            }();
+
+            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
         } catch (e) {
             error(e);
         }
@@ -480,6 +493,8 @@ module.exports = new Module({
 
 },{"../utils.js":12,"./module.js":8}],6:[function(require,module,exports){
 'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -697,15 +712,31 @@ module.exports = new Module({
         autoCollapse: true
     },
     initializer: function initializer(settings) {
+        var _this2 = this;
+
         // this := Tablemodify-instance
         try {
-            addClass(this.container, 'tm-filter');
+            var _ret = function () {
+                addClass(_this2.container, 'tm-filter');
 
-            var instance = new FilterDefault(this, settings);
+                var instance = new FilterDefault(_this2, settings);
 
-            info('module filter loaded');
+                info('module filter loaded');
 
-            return instance;
+                return {
+                    v: {
+                        instance: instance,
+                        unset: function unset() {
+                            info('unsetting filter');
+
+                            // remove all filters;
+                            _this2.setRows(instance.rows).render();
+                        }
+                    }
+                };
+            }();
+
+            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
         } catch (e) {
             error(e);
         }
@@ -722,6 +753,7 @@ var _require = require('../utils.js'),
     iterate = _require.iterate,
     setCss = _require.setCss,
     addClass = _require.addClass,
+    removeClass = _require.removeClass,
     getCss = _require.getCss,
     getScrollbarWidth = _require.getScrollbarWidth,
     info = _require.info,
@@ -809,7 +841,7 @@ module.exports = new Module({
 
                 // add DIVs to origFoot cells so its height can be set to 0px
                 iterate(origFoot.firstElementChild.cells, function (i, cell) {
-                    cell.innerHTML = '<div>' + cell.innerHTML + '</div>';
+                    cell.innerHTML = '<div class="tm-fixed-helper-wrapper">' + cell.innerHTML + '</div>';
                 });
 
                 foot.style.borderCollapse = borderCollapse;
@@ -822,9 +854,7 @@ module.exports = new Module({
             // add event listeners
             if (head) {
                 window.addEventListener('resize', renderHead);
-                body.addEventListener('tmFixedForceRendering', function (e) {
-                    renderHead();
-                });
+                body.addEventListener('tmFixedForceRendering', renderHead);
             }
 
             if (foot) {
@@ -882,6 +912,43 @@ module.exports = new Module({
             this.headWrap = headWrap;
             this.footWrap = footWrap;
             info('module fixed loaded');
+
+            return {
+                /**
+                 * revert all changes performed by this module
+                 * implementation might not be 100% correct yet
+                 */
+                unset: function unset() {
+                    var INITIAL = 'initial';
+                    try {
+                        removeClass(container, 'tm-fixed');
+                        if (headWrap) {
+                            container.removeChild(headWrap);
+                            origHead.style.visibility = INITIAL;
+                            body.style.marginTop = 0;
+                        }
+                        if (footWrap) {
+                            container.removeChild(footWrap);
+                            origFoot.style.visibility = INITIAL;
+                            bodyWrap.style.overflowX = INITIAL;
+                            bodyWrap.style.marginBottom = INITIAL;
+
+                            // remove footer helper wrappers
+                            var wrappers = origFoot.querySelectorAll('div.tm-fixed-helper-wrapper');
+
+                            [].slice.call(wrappers).forEach(function (wrapper) {
+                                wrapper.outerHTML = wrapper.innerHTML;
+                            });
+                        }
+
+                        window.removeEventListener('resize', renderHead);
+                        window.removeEventListener('resize', renderFoot);
+                        body.removeEventListener('tmFixedForceRendering', renderHead);
+                    } catch (e) {
+                        error(e);
+                    }
+                }
+            };
         } catch (e) {
             error(e);
         }
@@ -1510,6 +1577,12 @@ module.exports = new Module({
             },
             info: function info() {
                 console.log(sorterInstance.currentOrders);
+            },
+            unset: function unset() {
+                log('unsetting sorter... not implemented yet');
+                /*
+                    @Todo set order to initial ... don't know how to do it yet
+                */
             }
         };
     }
@@ -1545,6 +1618,13 @@ module.exports = new Module({
             this.appendStyles(text);
 
             info('module zebra loaded');
+
+            return {
+                unset: function unset() {
+                    // no implementation needed
+                    info('unsetting zebra');
+                }
+            };
         } catch (e) {
             error(e);
         }
@@ -1608,6 +1688,8 @@ var Tablemodify = function () {
             containerId = getUniqueId();
         }
 
+        this.activeModules = {};
+
         this.bodySelector = selector;
         oldBodyParent = body.parentElement;
 
@@ -1657,10 +1739,10 @@ var Tablemodify = function () {
                     warn('Module' + moduleName + ' not registered!');
                 }
                 if (moduleReturn !== undefined) {
-                    if (_this[moduleName] === undefined) {
+                    if (_this.activeModules[moduleName] === undefined) {
                         // define ret as a property of the Tablemodify instance.
                         // now you can access it later via tm.modulename
-                        _this[moduleName] = moduleReturn;
+                        _this.activeModules[moduleName] = moduleReturn;
                     } else {
                         error('module name ' + moduleName + ' causes a collision and is not allowed, please choose another one!');
                     }
@@ -1729,7 +1811,7 @@ var Tablemodify = function () {
         }
     }, {
         key: 'render',
-        value: function render(r) {
+        value: function render() {
             var _this2 = this;
 
             var tBody = this.body.tBodies[0],
@@ -1825,6 +1907,39 @@ var Tablemodify = function () {
                 }
             }
         }
+
+        /**
+            reset all loaded modules of instance
+            and unset instance afterwards
+        */
+
+    }, {
+        key: '_destroy',
+        value: function _destroy(instance) {
+            try {
+                if (!instance || !instance instanceof Tablemodify) throw new Error('not a Tablemodify-object');
+                if (!instance.activeModules) throw new Error('instance has no property activeModules');
+
+                var container = instance.container;
+                var table = instance.body;
+
+                iterate(instance.activeModules, function (moduleName, module) {
+                    // revert all changes performed by this module. Module itself is responsible for correct reversion
+                    if (module.unset) module.unset();
+                });
+
+                removeClass(table, 'tm-body');
+                // remove all wrappers
+                container.parentElement.replaceChild(table, container);
+
+                // delete instance
+                iterate(instance, function (prop, val) {
+                    delete instance[prop];
+                });
+            } catch (e) {
+                console.warn(e);
+            }
+        }
     }]);
 
     return Tablemodify;
@@ -1849,19 +1964,43 @@ Tablemodify.modules = {
  * - remove all classnames starting with 'tm-'
  * set this instance to null (possible?)
  */
-Tablemodify._destroy = function (instance) {
-    var container = instance.container;
-    var table = instance.body;
+/*
+Tablemodify._destroy = (instance) => {
+    try {
+        if (!instance || !instance instanceof Tablemodify) throw new Error('not a Tablemodify-object');
 
-    // remove all wrappers
-    container.parentElement.replaceChild(table, container);
+        console.log(instance);
 
-    // undo all performed changes ...
-    removeClass(table, 'tm-body');
+        let container = instance.container;
+        let table = instance.body;
 
-    // do other necessary stuff ...
-    instance = {};
-};
+        // remove all wrappers
+        container.parentElement.replaceChild(table, container);
+
+        // undo all performed changes ...
+        removeClass(table, 'tm-body');
+
+        instance.body.style.marginTop = 0;
+        instance.origHead.style.visibility = 'initial';
+        instance.origFoot.style.visibility = 'initial';
+
+        // remove footer helper wrappers
+        let wrappers = instance.origFoot.querySelectorAll('div.tm-fixed-helper-wrapper');
+
+        [].slice.call(wrappers).forEach((wrapper) => {
+            let content = wrapper.innerHTML;
+            wrapper.outerHTML = content;
+        });
+
+
+        // do other necessary stuff ...
+        instance = {};
+
+    } catch(e) {
+        console.warn(e);
+    }
+}
+*/
 
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;

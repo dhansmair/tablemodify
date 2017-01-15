@@ -1,5 +1,5 @@
 const Module = require('./module.js');
-const {inPx, iterate, setCss, addClass,
+const {inPx, iterate, setCss, addClass, removeClass,
        getCss, getScrollbarWidth, info, error} = require('../utils.js');
 
 module.exports = new Module({
@@ -84,7 +84,7 @@ module.exports = new Module({
 
                 // add DIVs to origFoot cells so its height can be set to 0px
                 iterate(origFoot.firstElementChild.cells, function(i, cell) {
-                    cell.innerHTML = '<div>' + cell.innerHTML + '</div>';
+                    cell.innerHTML = '<div class="tm-fixed-helper-wrapper">' + cell.innerHTML + '</div>';
                 });
 
                 foot.style.borderCollapse   = borderCollapse;
@@ -97,9 +97,7 @@ module.exports = new Module({
             // add event listeners
             if (head) {
                 window.addEventListener('resize', renderHead);
-                body.addEventListener('tmFixedForceRendering', (e) => {
-                    renderHead();
-                });
+                body.addEventListener('tmFixedForceRendering',renderHead);
             }
 
             if (foot) {
@@ -159,6 +157,43 @@ module.exports = new Module({
             this.headWrap = headWrap;
             this.footWrap = footWrap;
             info('module fixed loaded');
+
+            return {
+                /**
+                 * revert all changes performed by this module
+                 * implementation might not be 100% correct yet
+                 */
+                unset: () => {
+                    const INITIAL = 'initial';
+                    try {
+                        removeClass(container, 'tm-fixed');
+                        if (headWrap) {
+                            container.removeChild(headWrap);
+                            origHead.style.visibility = INITIAL;
+                            body.style.marginTop = 0;
+                        }
+                        if (footWrap) {
+                            container.removeChild(footWrap);
+                            origFoot.style.visibility = INITIAL;
+                            bodyWrap.style.overflowX = INITIAL;
+                            bodyWrap.style.marginBottom = INITIAL;
+
+                            // remove footer helper wrappers
+                            let wrappers = origFoot.querySelectorAll('div.tm-fixed-helper-wrapper');
+
+                            [].slice.call(wrappers).forEach((wrapper) => {
+                                wrapper.outerHTML = wrapper.innerHTML;
+                            });
+                        }
+
+                        window.removeEventListener('resize', renderHead);
+                        window.removeEventListener('resize', renderFoot);
+                        body.removeEventListener('tmFixedForceRendering', renderHead);
+                    } catch(e) {
+                        error(e);
+                    }
+                }
+            };
 
         } catch(e) {
             error(e);

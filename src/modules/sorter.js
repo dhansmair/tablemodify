@@ -438,6 +438,12 @@ module.exports = new Module({
             sortDesc: index => sorterInstance.manage(index, false, false),
             info: function() {
                 console.log(sorterInstance.currentOrders);
+            },
+            unset: () => {
+                log('unsetting sorter... not implemented yet');
+                /*
+                    @Todo set order to initial ... don't know how to do it yet
+                */
             }
         };
     }

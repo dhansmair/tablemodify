@@ -29,6 +29,14 @@ module.exports = new Module({
             });
             this.appendStyles(text);
             info('module columnStyles loaded');
+
+            return {
+                unset: () => {
+                    // no implementation needed
+                    info('unsetting columnStyles');
+                }
+            };
+
         } catch(e) {
             error(e);
         }

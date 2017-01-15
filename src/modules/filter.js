@@ -180,7 +180,15 @@ module.exports = new Module({
 
             info('module filter loaded');
 
-            return instance;
+            return {
+                instance: instance,
+                unset: () => {
+                    info('unsetting filter');
+
+                    // remove all filters;
+                    this.setRows(instance.rows).render();
+                }
+            };
         } catch (e) {
             error(e);
         }

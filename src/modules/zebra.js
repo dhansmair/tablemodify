@@ -21,6 +21,13 @@ module.exports = new Module({
             this.appendStyles(text);
 
             info('module zebra loaded');
+
+            return {
+                unset: () => {
+                    // no implementation needed
+                    info('unsetting zebra');
+                }
+            };
         } catch (e) {
             error(e);
         }

@@ -31,6 +31,8 @@ class Tablemodify {
             containerId = getUniqueId();
         }
 
+        this.activeModules = {};
+
         this.bodySelector = selector;
         oldBodyParent = body.parentElement;
 
@@ -86,10 +88,10 @@ class Tablemodify {
                     warn('Module' + moduleName + ' not registered!');
                 }
                 if (moduleReturn !== undefined) {
-                    if (_this[moduleName] === undefined) {
+                    if (_this.activeModules[moduleName] === undefined) {
                         // define ret as a property of the Tablemodify instance.
                         // now you can access it later via tm.modulename
-                        _this[moduleName] = moduleReturn;
+                        _this.activeModules[moduleName] = moduleReturn;
                     } else {
                         error('module name ' + moduleName + ' causes a collision and is not allowed, please choose another one!');
                     }
@@ -141,7 +143,7 @@ class Tablemodify {
        this.renderingMode = to;
        return this;
     }
-    render(r) {
+    render() {
         let tBody = this.body.tBodies[0],
             rows = this.getRows(),
             l = rows.length;
@@ -226,6 +228,37 @@ class Tablemodify {
             }
         }
     }
+
+    /**
+        reset all loaded modules of instance
+        and unset instance afterwards
+    */
+    static _destroy(instance) {
+        try {
+            if (!instance || !instance instanceof Tablemodify) throw new Error('not a Tablemodify-object');
+            if (!instance.activeModules) throw new Error('instance has no property activeModules');
+
+            let container = instance.container;
+            let table = instance.body;
+
+            iterate(instance.activeModules, (moduleName, module) => {
+                // revert all changes performed by this module. Module itself is responsible for correct reversion
+                if (module.unset) module.unset();
+            });
+
+            removeClass(table, 'tm-body');
+            // remove all wrappers
+            container.parentElement.replaceChild(table, container);
+
+            // delete instance
+            iterate(instance, (prop, val) => {
+                delete instance[prop];
+            });
+
+        } catch(e) {
+            console.warn(e);
+        }
+    }
 }
 Tablemodify.RENDERING_MODE_CHUNKED = 1;
 Tablemodify.RENDERING_MODE_AT_ONCE = 2;
@@ -246,20 +279,43 @@ Tablemodify.modules = {
  * - remove all classnames starting with 'tm-'
  * set this instance to null (possible?)
  */
+/*
 Tablemodify._destroy = (instance) => {
-    let container = instance.container;
-    let table = instance.body;
+    try {
+        if (!instance || !instance instanceof Tablemodify) throw new Error('not a Tablemodify-object');
 
-    // remove all wrappers
-    container.parentElement.replaceChild(table, container);
+        console.log(instance);
 
-    // undo all performed changes ...
-    removeClass(table, 'tm-body');
+        let container = instance.container;
+        let table = instance.body;
 
-    // do other necessary stuff ...
-    instance = {};
+        // remove all wrappers
+        container.parentElement.replaceChild(table, container);
+
+        // undo all performed changes ...
+        removeClass(table, 'tm-body');
+
+        instance.body.style.marginTop = 0;
+        instance.origHead.style.visibility = 'initial';
+        instance.origFoot.style.visibility = 'initial';
+
+        // remove footer helper wrappers
+        let wrappers = instance.origFoot.querySelectorAll('div.tm-fixed-helper-wrapper');
+
+        [].slice.call(wrappers).forEach((wrapper) => {
+            let content = wrapper.innerHTML;
+            wrapper.outerHTML = content;
+        });
+
+
+        // do other necessary stuff ...
+        instance = {};
+
+    } catch(e) {
+        console.warn(e);
+    }
 }
-
+*/
 
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
