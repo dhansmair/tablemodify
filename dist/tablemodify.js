@@ -1589,6 +1589,7 @@ var Tablemodify = function () {
         extend(config.coreDefaults, coreSettings);
         var containerId = void 0,
             oldBodyParent = void 0,
+            _this = this,
             body = document.querySelector(selector); // must be a table
 
         // ------------- ERROR PREVENTION ---------------------------

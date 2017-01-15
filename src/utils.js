@@ -100,7 +100,7 @@ exports.setCss = function(el, styles) {
 exports.getCss = function(el, style) { return window.getComputedStyle(el, null)[style];}
 exports.inPx = function(c) { return c + 'px';}
 // iterate over a set of elements and call function for each one
-exports.iterate = function(elems, func) {
+exports.iterate = (elems, func) => {
   if (typeof elems === 'object') {
       var keys = Object.keys(elems),
           l = keys.length;

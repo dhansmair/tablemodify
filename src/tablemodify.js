@@ -7,7 +7,7 @@ const {error, warn, isNonEmptyString, getCss,
 class Tablemodify {
     constructor(selector, coreSettings) {
         extend(config.coreDefaults, coreSettings);
-        let containerId, oldBodyParent, body = document.querySelector(selector); // must be a table
+        let containerId, oldBodyParent, _this = this, body = document.querySelector(selector); // must be a table
 
         // ------------- ERROR PREVENTION ---------------------------
         // check if table is valid
