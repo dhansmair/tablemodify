@@ -38,87 +38,7 @@ div.tm-container.tm-theme-blank {
             .tableBasics;
             border-style: hidden;
             border-bottom: 1px solid @borderColor;
-            /*
-                styles for sorter plugin
-            */
-            tr {
 
-                td, th {
-                    .cellBasics;
-                }
-                .sortable {
-                    padding-right: 15px !important;
-                    cursor: pointer;
-                    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem0zLjgzOSAxNmwtMy44MzkgNC43OTgtMy44MzktNC43OThoNy42Nzh6bTQuMTYxLTJoLTE2bDggMTAgOC0xMHoiLz48L3N2Zz4=");
-                    background-repeat: no-repeat;
-                    background-position: center right;
-                    background-size: 14px;
-
-                    /* Color for hovered sortable cells */
-                    &:hover {
-                        background-color: @sortableSecondaryColor;
-                    }
-                    /* Color for active sortable cells */
-                    &.sort-up {
-                        background-color: @sortablePrimaryColor;
-                        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMGwtOCAxMGgxNmwtOC0xMHptMy44MzkgMTZsLTMuODM5IDQuNzk4LTMuODM5LTQuNzk4aDcuNjc4em00LjE2MS0yaC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
-                    }
-                    &.sort-down {
-                        background-color: @sortablePrimaryColor;
-                        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem04IDE0aC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
-                    }
-                }
-            }
-            /*
-                styles for filter plugin
-            */
-            tr.tm-filter-row {
-                transition:0.2s;
-
-                input[type=text] {
-                    overflow:hidden;
-                    padding-left:10px;
-                    padding-right:25px;
-                    background-color:transparent;
-                }
-
-                span.tm-custom-checkbox {
-                    position:absolute;
-                    top:0;
-                    right:0;
-                    width:30px;
-                    height:100%;
-                    background-color:transparent;
-                    vertical-align:middle;
-                    text-align: center;
-
-                    input[type=checkbox] {
-                        visibility: hidden;
-
-                        &:checked + label {
-                            background: #666;
-                        }
-                    }
-                    /* styles of the dot hovering the original checkbox */
-                    label {
-                        position:absolute;
-                        border-radius:50px;
-                        width:18px;
-                        height:18px;
-                        top:5px;
-                        right:5px;
-                        background-color: @baseColor;
-                        border:3px solid @borderColor;
-                        transition:0.2s;
-                        cursor:pointer;
-                    }
-                }
-            }
-            // height of the visible filter row
-            tr:hover + tr.tm-filter-row,
-            tr.tm-filter-row:hover {
-                height:30px;
-            }
         }
     }
 
@@ -159,5 +79,87 @@ div.tm-container.tm-theme-blank {
                 }
             }
         }
+    }
+
+    /*
+        styles for sorter plugin
+    */
+    tr {
+
+        td, th {
+            .cellBasics;
+        }
+        .sortable {
+            padding-right: 15px !important;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem0zLjgzOSAxNmwtMy44MzkgNC43OTgtMy44MzktNC43OThoNy42Nzh6bTQuMTYxLTJoLTE2bDggMTAgOC0xMHoiLz48L3N2Zz4=");
+            background-repeat: no-repeat;
+            background-position: center right;
+            background-size: 14px;
+
+            /* Color for hovered sortable cells */
+            &:hover {
+                background-color: @sortableSecondaryColor;
+            }
+            /* Color for active sortable cells */
+            &.sort-up {
+                background-color: @sortablePrimaryColor;
+                background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMGwtOCAxMGgxNmwtOC0xMHptMy44MzkgMTZsLTMuODM5IDQuNzk4LTMuODM5LTQuNzk4aDcuNjc4em00LjE2MS0yaC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
+            }
+            &.sort-down {
+                background-color: @sortablePrimaryColor;
+                background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem04IDE0aC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
+            }
+        }
+    }
+    /*
+        styles for filter plugin
+    */
+    tr.tm-filter-row {
+        transition:0.2s;
+
+        input[type=text] {
+            overflow:hidden;
+            padding-left:10px;
+            padding-right:25px;
+            background-color:transparent;
+        }
+
+        span.tm-custom-checkbox {
+            position:absolute;
+            top:0;
+            right:0;
+            width:30px;
+            height:100%;
+            background-color:transparent;
+            vertical-align:middle;
+            text-align: center;
+
+            input[type=checkbox] {
+                visibility: hidden;
+
+                &:checked + label {
+                    background: #666;
+                }
+            }
+            /* styles of the dot hovering the original checkbox */
+            label {
+                position:absolute;
+                border-radius:50px;
+                width:18px;
+                height:18px;
+                top:5px;
+                right:5px;
+                background-color: @baseColor;
+                border:3px solid @borderColor;
+                transition:0.2s;
+                cursor:pointer;
+            }
+        }
+    }
+    // height of the visible filter row
+    tr:hover + tr.tm-filter-row,
+    tr.tm-filter-row:hover {
+        height:30px;
     }
 }

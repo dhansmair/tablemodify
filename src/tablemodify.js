@@ -2,27 +2,27 @@
 const config = require('./config.js');
 const Module = require('./modules/module.js');
 const {error, warn, isNonEmptyString, getCss,
-       iterate, extend, addClass, getUniqueId, trigger} = require('./utils.js');
+       iterate, extend, hasClass, addClass, removeClass, getUniqueId, trigger} = require('./utils.js');
 
 class Tablemodify {
     constructor(selector, coreSettings) {
-        var containerId,
-            _this = this,
-            body = document.querySelector(selector); // must be a table
-
         extend(config.coreDefaults, coreSettings);
+        let containerId, oldBodyParent, body = document.querySelector(selector); // must be a table
 
+        // ------------- ERROR PREVENTION ---------------------------
+        // check if table is valid
         if (!body || body.nodeName !== 'TABLE') {
-          error('there is no <table> with selector ' + selector);
-          return null;
+            error('there is no <table> with selector ' + selector);
+            return null;
         }
 
-        this.bodySelector = selector;
-        let oldBodyParent = body.parentElement;
+        // check if Tm hasn't already been called for this table
+        if (hasClass(body, 'tm-body')) {
+            warn('the table ' + selector + ' is already initialized.');
+            return null;
+        }
 
-        this.columnCount = 0;
-        this.calculateColumnCount(body);
-
+        // check if containerId is valid or produce a unique id
         if (coreSettings.containerId && document.getElementById(coreSettings.containerId)) {
             throw 'the passed id ' + coreSettings.containerId + ' is not unique!';
         } else if (coreSettings.containerId) {
@@ -30,6 +30,12 @@ class Tablemodify {
         } else {
             containerId = getUniqueId();
         }
+
+        this.bodySelector = selector;
+        oldBodyParent = body.parentElement;
+
+        this.columnCount = 0;
+        this.calculateColumnCount(body);
 
         body.outerHTML =
                     `<div class='tm-container'>
@@ -230,6 +236,30 @@ Tablemodify.modules = {
     sorter: require('./modules/sorter.js'),
     zebra: require('./modules/zebra.js')
 };
+
+/**
+ * ######### DO NOT USE! METHOD NOT CORRECT YET #######################
+ * @todo: implement method with correct behaviour
+ * reset instance completely
+ * - remove all wrappers
+ * - remove all inline style settings
+ * - remove all classnames starting with 'tm-'
+ * set this instance to null (possible?)
+ */
+Tablemodify._destroy = (instance) => {
+    let container = instance.container;
+    let table = instance.body;
+
+    // remove all wrappers
+    container.parentElement.replaceChild(table, container);
+
+    // undo all performed changes ...
+    removeClass(table, 'tm-body');
+
+    // do other necessary stuff ...
+    instance = {};
+}
+
 
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;

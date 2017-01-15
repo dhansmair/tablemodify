@@ -1576,7 +1576,9 @@ var _require = require('./utils.js'),
     getCss = _require.getCss,
     iterate = _require.iterate,
     extend = _require.extend,
+    hasClass = _require.hasClass,
     addClass = _require.addClass,
+    removeClass = _require.removeClass,
     getUniqueId = _require.getUniqueId,
     trigger = _require.trigger;
 
@@ -1584,23 +1586,25 @@ var Tablemodify = function () {
     function Tablemodify(selector, coreSettings) {
         _classCallCheck(this, Tablemodify);
 
-        var containerId,
-            _this = this,
+        extend(config.coreDefaults, coreSettings);
+        var containerId = void 0,
+            oldBodyParent = void 0,
             body = document.querySelector(selector); // must be a table
 
-        extend(config.coreDefaults, coreSettings);
-
+        // ------------- ERROR PREVENTION ---------------------------
+        // check if table is valid
         if (!body || body.nodeName !== 'TABLE') {
             error('there is no <table> with selector ' + selector);
             return null;
         }
 
-        this.bodySelector = selector;
-        var oldBodyParent = body.parentElement;
+        // check if Tm hasn't already been called for this table
+        if (hasClass(body, 'tm-body')) {
+            warn('the table ' + selector + ' is already initialized.');
+            return null;
+        }
 
-        this.columnCount = 0;
-        this.calculateColumnCount(body);
-
+        // check if containerId is valid or produce a unique id
         if (coreSettings.containerId && document.getElementById(coreSettings.containerId)) {
             throw 'the passed id ' + coreSettings.containerId + ' is not unique!';
         } else if (coreSettings.containerId) {
@@ -1608,6 +1612,12 @@ var Tablemodify = function () {
         } else {
             containerId = getUniqueId();
         }
+
+        this.bodySelector = selector;
+        oldBodyParent = body.parentElement;
+
+        this.columnCount = 0;
+        this.calculateColumnCount(body);
 
         body.outerHTML = '<div class=\'tm-container\'>\n                        <style class=\'tm-custom-style\'></style>\n                        <div class=\'tm-body-wrap\'>\n                            ' + body.outerHTML + '\n                        </div>\n                    </div>';
 
@@ -1833,6 +1843,29 @@ Tablemodify.modules = {
     fixed: require('./modules/fixed.js'),
     sorter: require('./modules/sorter.js'),
     zebra: require('./modules/zebra.js')
+};
+
+/**
+ * ######### DO NOT USE! METHOD NOT CORRECT YET #######################
+ * @todo: implement method with correct behaviour
+ * reset instance completely
+ * - remove all wrappers
+ * - remove all inline style settings
+ * - remove all classnames starting with 'tm-'
+ * set this instance to null (possible?)
+ */
+Tablemodify._destroy = function (instance) {
+    var container = instance.container;
+    var table = instance.body;
+
+    // remove all wrappers
+    container.parentElement.replaceChild(table, container);
+
+    // undo all performed changes ...
+    removeClass(table, 'tm-body');
+
+    // do other necessary stuff ...
+    instance = {};
 };
 
 //Store reference to the module class for user-defined modules
