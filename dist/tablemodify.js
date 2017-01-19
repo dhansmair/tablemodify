@@ -465,7 +465,7 @@ module.exports = new Module({
                     if (index === 'all') return;
                     var i = parseInt(index) + 1;
 
-                    text += 'div #' + containerId + ' table tr > *:nth-of-type(' + i + ') {';
+                    text += 'div#' + containerId + ' table tr > *:nth-of-type(' + i + ') {';
                     iterate(cssStyles, function (prop, value) {
                         text += prop + ': ' + value + ';';
                     });
