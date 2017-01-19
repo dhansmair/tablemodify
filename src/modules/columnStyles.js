@@ -10,7 +10,7 @@ module.exports = new Module({
             let containerId = this.containerId;
 
             // style general
-            let text = `div #${containerId} table tr > * {`;
+            let text = `div#${containerId} table tr > * {`;
             iterate(settings.all, function(prop, value) {
                 text += `${prop}: ${value};`;
             });

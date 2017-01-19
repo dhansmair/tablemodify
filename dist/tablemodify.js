@@ -454,7 +454,7 @@ module.exports = new Module({
                 var containerId = _this.containerId;
 
                 // style general
-                var text = 'div #' + containerId + ' table tr > * {';
+                var text = 'div#' + containerId + ' table tr > * {';
                 iterate(settings.all, function (prop, value) {
                     text += prop + ': ' + value + ';';
                 });
@@ -1955,56 +1955,10 @@ Tablemodify.modules = {
     zebra: require('./modules/zebra.js')
 };
 
-/**
- * ######### DO NOT USE! METHOD NOT CORRECT YET #######################
- * @todo: implement method with correct behaviour
- * reset instance completely
- * - remove all wrappers
- * - remove all inline style settings
- * - remove all classnames starting with 'tm-'
- * set this instance to null (possible?)
- */
-/*
-Tablemodify._destroy = (instance) => {
-    try {
-        if (!instance || !instance instanceof Tablemodify) throw new Error('not a Tablemodify-object');
-
-        console.log(instance);
-
-        let container = instance.container;
-        let table = instance.body;
-
-        // remove all wrappers
-        container.parentElement.replaceChild(table, container);
-
-        // undo all performed changes ...
-        removeClass(table, 'tm-body');
-
-        instance.body.style.marginTop = 0;
-        instance.origHead.style.visibility = 'initial';
-        instance.origFoot.style.visibility = 'initial';
-
-        // remove footer helper wrappers
-        let wrappers = instance.origFoot.querySelectorAll('div.tm-fixed-helper-wrapper');
-
-        [].slice.call(wrappers).forEach((wrapper) => {
-            let content = wrapper.innerHTML;
-            wrapper.outerHTML = content;
-        });
-
-
-        // do other necessary stuff ...
-        instance = {};
-
-    } catch(e) {
-        console.warn(e);
-    }
-}
-*/
-
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
-
+// set version of Tablemodify
+Tablemodify.version = 'v0.9';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
 
