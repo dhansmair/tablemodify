@@ -5,7 +5,8 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 
 # demo
 
-coming soon ...
+watch and edit an example here: 
+[http://codepen.io/dhansmair/pen/ZLpzKg/](http://codepen.io/dhansmair/pen/ZLpzKg/)
 
 # basic setup
 
