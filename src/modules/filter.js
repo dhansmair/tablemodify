@@ -28,7 +28,6 @@ class Filter {
 
     constructor(tm) {
         this.tm = tm;
-        this.rows = tm.getRows();
 
         this.indices = [];
         this.patterns = [];
@@ -59,6 +58,10 @@ class Filter {
         return this.options;
     }
 
+    isFilterActive() {
+        return this.getPatterns().length !== 0;
+    }
+
     filter() {
         let indices = this.getIndices(),
             patterns = this.getPatterns(),
@@ -67,13 +70,13 @@ class Filter {
         const maxDeph = indices.length - 1;
 
         // filter rows
-        let arr = this.rows.filter(function(row) {
+        let arr = this.tm.getAllRows().filter(function(row) {
             let deph = 0, matches = true;
 
             while (matches && deph <= maxDeph) {
-                let i = indices[deph];
-                let pattern = patterns[deph];
-                let tester = row.cells[i].innerHTML;
+                let i = indices[deph],
+                    pattern = patterns[deph],
+                    tester = row.cells[i].innerHTML;
 
                 if (!options[deph]) {
                     // not case-sensitive
@@ -87,8 +90,8 @@ class Filter {
             return matches;
 
         });
-        this.tm.setRows(arr);
-        return this;
+
+        return this.tm.showRows(arr);
     }
 };
 
@@ -98,19 +101,17 @@ class FilterDefault extends Filter {
         this.tHead = tm.head ? tm.head.tHead : tm.origHead;
 
         // create the toolbar row
-        let num = this.tHead.firstElementChild.cells.length - 1;
-        let row = document.createElement('tr');
+        let num = this.tHead.firstElementChild.cells.length - 1,
+            row = document.createElement('tr'),
+            timeout;
         for (; num >= 0; num--) {
             row.appendChild(newCell());
         }
         addClass(row, 'tm-filter-row');
 
-        if (!settings.autoCollapse) {
-                row.style.height = '30px';
-        }
+        if (!settings.autoCollapse) row.style.height = '30px';
 
         // bind listeners
-        let timeout;
         row.onkeyup = (e) => {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
@@ -135,6 +136,10 @@ class FilterDefault extends Filter {
             this.run();
         }
 
+        tm.body.addEventListener('tmRowsAdded', () => {
+            if (this.isFilterActive()) this.run();
+        });
+
         // insert toolbar row into tHead
         this.tHead.appendChild(row);
     }
@@ -158,10 +163,8 @@ class FilterDefault extends Filter {
             .setOptions(options)
             .filter();
 
-        // trigger sorting
-        trigger(this.tm.body, 'tmSorterSortAgain');
+        this.tm.signal('tmSorterSortAgain', 'tmFixedForceRendering');
 
-        this.tm.render();
         return this;
     }
 }
@@ -186,7 +189,7 @@ module.exports = new Module({
                     info('unsetting filter');
 
                     // remove all filters;
-                    this.setRows(instance.rows).render();
+                    this.showAllRows();
                 }
             };
         } catch (e) {

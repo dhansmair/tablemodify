@@ -4,7 +4,7 @@ const {addClass, isFn, errorThrow, hasProp, log, warn, error,
        isBool, isNonEmptyString,
        iterate, removeClass, extend2, isObject} = require('../utils.js');
 
-function getValue(tr, i) {return tr.cells[i].innerHTML.trim();}
+function getValue(tr, i) {return tr.cells[i].innerHTML.trim().toLowerCase();}
 
 const FIRST_ENABLED_CELL = 'firstEnabled';
 const SORT_ORDER_ASC = 'asc';
@@ -125,19 +125,12 @@ class Sorter {
 
         // sort again in case it's needed.
         this.tm.body.addEventListener('tmSorterSortAgain', () => {
-            log("forced sorter to sort again");
             this.sort();
         });
 
-    }
-
-    setRows(rowArray) {
-        this.tm.setRows(rowArray);
-        return this;
-    }
-
-    getRows() {
-        return this.tm.getRows();
+        this.tm.body.addEventListener('tmRowsAdded', () => {
+            this.sort();
+        });
     }
 
     /**
@@ -234,7 +227,7 @@ class Sorter {
         let maxDepth = orders.length - 1;
         let parsers = this.getParsers();
 
-        this.tm.getRows().sort((a, b) => {
+        let sorted = this.tm.getVisibleRows().sort((a, b) => {
             let compareResult = 0, curDepth = 0;
             while (compareResult === 0 && curDepth <= maxDepth) {
                 let index = orders[curDepth][0];
@@ -245,11 +238,7 @@ class Sorter {
             return orders[curDepth][1] ? compareResult : -compareResult;
         });
 
-        return this;
-    }
-
-    render() {
-        this.tm.render();
+        this.tm.showRows(sorted);
         return this;
     }
 
@@ -299,9 +288,7 @@ class Sorter {
         if (multiSort !== true) this.removeAllOrders();
         this.setOrAddOrder(colIndex, order);
 
-        this.sort()
-            .render()
-            .renderSortingArrows();
+        this.sort().renderSortingArrows();
 
         return this;
     }

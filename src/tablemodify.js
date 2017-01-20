@@ -24,13 +24,15 @@ class Tablemodify {
 
         // check if containerId is valid or produce a unique id
         if (coreSettings.containerId && document.getElementById(coreSettings.containerId)) {
-            throw 'the passed id ' + coreSettings.containerId + ' is not unique!';
+            error('the passed id ' + coreSettings.containerId + ' is not unique!');
+            return null;
         } else if (coreSettings.containerId) {
             containerId = coreSettings.containerId;
         } else {
             containerId = getUniqueId();
         }
 
+        // references to all active modules stored in here
         this.activeModules = {};
 
         this.bodySelector = selector;
@@ -66,22 +68,17 @@ class Tablemodify {
         addClass(this.container, ('tm-theme-' + coreSettings.theme));
         addClass(body, 'tm-body');
 
-        // initialize tbody rows as 2D-array
-        this.rows = [].slice.call(this.body.tBodies[0].rows);
-
+        // the tBody, contains all visible rows in the table
+        this.visibleRows = this.body.tBodies[0];
         // contains all tr-nodes that are not displayed at the moment
-        this.fragment = document.createDocumentFragment();
+        this.hiddenRows = document.createDocumentFragment();
 
-        //Default rendering mode: everything at once
-        this.setRenderingMode(Tablemodify.RENDERING_MODE_AT_ONCE);
-        this._chunkedRenderingTimeout = null;
-        this.rowChunkSize = 50;
         // call all modules
         if (coreSettings.modules) {
             // interface for modules
             iterate(coreSettings.modules, function(moduleName, moduleSettings) {
-                var module = Tablemodify.modules[moduleName];
-                var moduleReturn;
+                let module = Tablemodify.modules[moduleName],
+                    moduleReturn;
                 if (module) {
                     moduleReturn = module.getModule(_this, moduleSettings);
                 } else {
@@ -100,6 +97,10 @@ class Tablemodify {
         }
         this.coreSettings = coreSettings;
     }
+
+    /**
+     * calculate number of columns. Usually only called at the initialisation
+     */
     calculateColumnCount(element) {
         let maxCols = 0;
         [].forEach.call(element.rows, row => {
@@ -107,76 +108,74 @@ class Tablemodify {
         });
         this.columnCount = maxCols;
     }
+
+    /**
+     * getter for number of columns
+     */
     getColumnCount() {
         return this.columnCount;
     }
+
+    /**
+     * add css text to the internal style-tag each tm-container contains
+     */
     appendStyles(text) {
         if (text.trim().length > 0) {
             this.stylesheet.appendChild(document.createTextNode(text.trim()));
         }
-    }
-    getRows() {
-        return this.rows;
-    }
-    setRows(rowArray) {
-        //If chunked rendering is running at the moment, cancel
-        window.clearTimeout(this._chunkedRenderingTimeout);
-        this.rows = rowArray;
         return this;
     }
-    addRows(rowArray) {
-        //If chunked rendering is running at the moment, cancel
-        window.clearTimeout(this._chunkedRenderingTimeout);
-        [].push.apply(this.rows, rowsArray);
 
-        return this;
+    /**
+     *  get array of references to the visible rows
+     */
+    getVisibleRows() {
+        return [].slice.call(this.visibleRows.rows);
     }
-    setRenderingMode(to) {
-        if(to !== Tablemodify.RENDERING_MODE_CHUNKED && to !== Tablemodify.RENDERING_MODE_AT_ONCE) {
-           let msg = "Tried to set unknown rendering mode";
-           warn(msg);
-           throw new Error(msg);
-       }
-       if(to === Tablemodify.RENDERING_MODE_CHUNKED && getCss(this.body, 'table-layout') !== 'fixed') {
-           warn("Using chunked rendering with non-fixed table layout is discouraged!");
-       }
-       this.renderingMode = to;
-       return this;
+
+    /**
+     *  get array of references to the hidden rows
+     */
+    getHiddenRows() {
+        return [].slice.call(this.hiddenRows.childNodes);
     }
-    render() {
-        let tBody = this.body.tBodies[0],
-            rows = this.getRows(),
-            l = rows.length;
 
-        // clear tBody
-        this.moveAllRowsToFragment();
+    /**
+     *  get array of references to all rows, both hidden and visible
+     */
+    getAllRows() {
+        return this.getVisibleRows().concat(this.getHiddenRows());
+    }
 
-        switch(this.renderingMode) {
-            case Tablemodify.RENDERING_MODE_AT_ONCE:
-                for (let i = 0; i < l; i++) {
-                    tBody.appendChild(rows[i]);
-                }
+    /**
+     * show all the rows that the param rowArray contains (as references).
+     * used by filter module
+     */
+    showRows(rowArray) {
+        this.hideAllRows();
 
-                trigger(this.body, 'tmFixedForceRendering');
-                break;
-            case Tablemodify.RENDERING_MODE_CHUNKED:
-                let chunkSize = this.rowChunkSize,
-                    start = 0;
-                const renderPart = () => {
-                    for (var z = 0; z < chunkSize; z++) {
-                        if (start + z === l) {
-                            trigger(this.body, 'tmFixedForceRendering');
-                            return;
-                        }
-                        tBody.appendChild(rows[start + z]);
-                    }
-                    start = start + z;
-                    this._chunkedRenderingTimeout = window.setTimeout(renderPart, 0);
-                }
-                this._chunkedRenderingTimeout = window.setTimeout(renderPart, 0);
-                break;
+        for (let i = 0; i < rowArray.length; i++) {
+            this.visibleRows.appendChild(rowArray[i]);
         }
         return this;
+    }
+
+    /**
+     * May be used from outside the plugin to add rows to the table.
+     * This will automatically rerun the filter & sorter module.
+     */
+    addRows(rowArray) {
+        for (let i = 0; i < rowArray.length; i++) {
+            this.visibleRows.appendChild(rowArray[i]);
+        }
+        return this.signal('tmRowsAdded');
+    }
+
+    /**
+     * add a single row
+     */
+    addRow(row) {
+        return this.addRows([row]);
     }
 
     /**
@@ -185,14 +184,35 @@ class Tablemodify {
      * The References can be used to insert the rows in the original DOM again.
      * This is necessary because IE11 had several issues with references to deleted table rows
      */
-    moveAllRowsToFragment() {
-        let rows = this.body.tBodies[0].rows,
-            l = rows.length,
-            next;
+    hideAllRows() {
+        let rows = this.visibleRows.rows, next;
 
         while (next = rows[0]) {
-            this.fragment.appendChild(next);
+            this.hiddenRows.appendChild(next);
         }
+        return this;
+    }
+
+    /**
+     * display all hidden rows again
+     */
+    showAllRows() {
+        let rows = this.hiddenRows.childNodes, next;
+
+        while (next = rows[0]) {
+            this.visibleRows.appendChild(next);
+        }
+        return this.signal('tmRowsAdded');
+    }
+
+    /**
+     * used to fire events on the original table. Modules may react to this events.
+     * Its a convention that all events are fired on this element and the modules listen to the same.
+     */
+    signal(...events) {
+        events.forEach((e) => {
+            trigger(this.body, e);
+        });
         return this;
     }
 
@@ -260,8 +280,8 @@ class Tablemodify {
         }
     }
 }
-Tablemodify.RENDERING_MODE_CHUNKED = 1;
-Tablemodify.RENDERING_MODE_AT_ONCE = 2;
+//Tablemodify.RENDERING_MODE_CHUNKED = 1;
+//Tablemodify.RENDERING_MODE_AT_ONCE = 2;
 Tablemodify.modules = {
     columnStyles: require('./modules/columnStyles.js'),
     filter: require('./modules/filter.js'),
@@ -273,6 +293,6 @@ Tablemodify.modules = {
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
 // set version of Tablemodify
-Tablemodify.version = 'v0.9';
+Tablemodify.version = 'v0.9.1';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;

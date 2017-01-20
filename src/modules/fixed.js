@@ -10,7 +10,7 @@ module.exports = new Module({
     },
     initializer: function(settings) {
         // set up
-        var head,
+        let head,
             foot,
             headWrap,
             footWrap,
@@ -18,10 +18,11 @@ module.exports = new Module({
             body = this.body,
             bodyWrap = this.bodyWrap,
             origHead = this.origHead,
-            origFoot = this.origFoot;
+            origFoot = this.origFoot,
+            scrollbarWidth = getScrollbarWidth();
 
-        var getHeaderHeight = function() { return origHead.clientHeight;};
-        var getFooterHeight = function() { return origFoot.clientHeight;};
+        function getHeaderHeight() { return origHead.clientHeight;};
+        function getFooterHeight() { return origFoot.clientHeight;};
 
         function renderHead() {
             if(!head) return;
@@ -52,11 +53,10 @@ module.exports = new Module({
         }
         try {
             addClass(container, 'tm-fixed');
-            var borderCollapse = getCss(body, 'border-collapse'),
-                scrollbarWidth = getScrollbarWidth();
-
+            let borderCollapse = getCss(body, 'border-collapse');
+            
             if (origHead && settings.fixHeader) {
-                var headerHeight = getHeaderHeight();
+                let headerHeight = getHeaderHeight();
                 head     = document.createElement('table');
                 headWrap = document.createElement('div');
                 head.appendChild(origHead.cloneNode(true));
@@ -72,7 +72,7 @@ module.exports = new Module({
                 headWrap.style.marginRight  = inPx(scrollbarWidth);
             }
             if (origFoot && settings.fixFooter) {
-                var footerHeight = getFooterHeight();
+                let footerHeight = getFooterHeight();
                 foot     = document.createElement('table');
                 footWrap = document.createElement('div');
                 foot.appendChild(origFoot.cloneNode(true));
@@ -83,7 +83,7 @@ module.exports = new Module({
                 addClass(footWrap, 'tm-foot-wrap');
 
                 // add DIVs to origFoot cells so its height can be set to 0px
-                iterate(origFoot.firstElementChild.cells, function(i, cell) {
+                iterate(origFoot.firstElementChild.cells, (i, cell) => {
                     cell.innerHTML = '<div class="tm-fixed-helper-wrapper">' + cell.innerHTML + '</div>';
                 });
 
@@ -97,13 +97,20 @@ module.exports = new Module({
             // add event listeners
             if (head) {
                 window.addEventListener('resize', renderHead);
-                body.addEventListener('tmFixedForceRendering',renderHead);
             }
 
             if (foot) {
                 window.addEventListener('resize', renderFoot);
-                body.addEventListener('tmFixedForceRendering', renderHead);
             }
+
+            body.addEventListener('tmRowsAdded', () => {
+                renderHead();
+                renderFoot();
+            });
+            body.addEventListener('tmFixedForceRendering', () => {
+                renderHead();
+                renderFoot();
+            });
 
             if (head && foot) {
                 bodyWrap.addEventListener('scroll', function() {
@@ -141,12 +148,12 @@ module.exports = new Module({
                 });
             }
 
-            setTimeout(function(){
+            setTimeout(() => {
                 // nötig, weil der Browser zum rendern manchmal eine gewisse Zeit braucht
                 renderHead();
                 renderFoot();
             }, 50);
-            setTimeout(function(){
+            setTimeout(() => {
                 // nötig, weil der Browser zum rendern manchmal eine gewisse Zeit braucht
                 renderHead();
                 renderFoot();

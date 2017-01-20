@@ -494,8 +494,6 @@ module.exports = new Module({
 },{"../utils.js":12,"./module.js":8}],6:[function(require,module,exports){
 'use strict';
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -537,7 +535,6 @@ var Filter = function () {
         _classCallCheck(this, Filter);
 
         this.tm = tm;
-        this.rows = tm.getRows();
 
         this.indices = [];
         this.patterns = [];
@@ -583,6 +580,11 @@ var Filter = function () {
             return this.options;
         }
     }, {
+        key: 'isFilterActive',
+        value: function isFilterActive() {
+            return this.getPatterns().length !== 0;
+        }
+    }, {
         key: 'filter',
         value: function filter() {
             var indices = this.getIndices(),
@@ -592,14 +594,14 @@ var Filter = function () {
             var maxDeph = indices.length - 1;
 
             // filter rows
-            var arr = this.rows.filter(function (row) {
+            var arr = this.tm.getAllRows().filter(function (row) {
                 var deph = 0,
                     matches = true;
 
                 while (matches && deph <= maxDeph) {
-                    var i = indices[deph];
-                    var pattern = patterns[deph];
-                    var tester = row.cells[i].innerHTML;
+                    var i = indices[deph],
+                        pattern = patterns[deph],
+                        tester = row.cells[i].innerHTML;
 
                     if (!options[deph]) {
                         // not case-sensitive
@@ -612,8 +614,8 @@ var Filter = function () {
                 }
                 return matches;
             });
-            this.tm.setRows(arr);
-            return this;
+
+            return this.tm.showRows(arr);
         }
     }]);
 
@@ -633,19 +635,17 @@ var FilterDefault = function (_Filter) {
         _this.tHead = tm.head ? tm.head.tHead : tm.origHead;
 
         // create the toolbar row
-        var num = _this.tHead.firstElementChild.cells.length - 1;
-        var row = document.createElement('tr');
+        var num = _this.tHead.firstElementChild.cells.length - 1,
+            row = document.createElement('tr'),
+            timeout = void 0;
         for (; num >= 0; num--) {
             row.appendChild(newCell());
         }
         addClass(row, 'tm-filter-row');
 
-        if (!settings.autoCollapse) {
-            row.style.height = '30px';
-        }
+        if (!settings.autoCollapse) row.style.height = '30px';
 
         // bind listeners
-        var timeout = void 0;
         row.onkeyup = function (e) {
             clearTimeout(timeout);
             timeout = setTimeout(function () {
@@ -669,6 +669,10 @@ var FilterDefault = function (_Filter) {
         row.onchange = function () {
             _this.run();
         };
+
+        tm.body.addEventListener('tmRowsAdded', function () {
+            if (_this.isFilterActive()) _this.run();
+        });
 
         // insert toolbar row into tHead
         _this.tHead.appendChild(row);
@@ -695,10 +699,8 @@ var FilterDefault = function (_Filter) {
 
             this.setPatterns(patterns).setIndices(indices).setOptions(options).filter();
 
-            // trigger sorting
-            trigger(this.tm.body, 'tmSorterSortAgain');
+            this.tm.signal('tmSorterSortAgain', 'tmFixedForceRendering');
 
-            this.tm.render();
             return this;
         }
     }]);
@@ -716,27 +718,21 @@ module.exports = new Module({
 
         // this := Tablemodify-instance
         try {
-            var _ret = function () {
-                addClass(_this2.container, 'tm-filter');
+            addClass(this.container, 'tm-filter');
 
-                var instance = new FilterDefault(_this2, settings);
+            var instance = new FilterDefault(this, settings);
 
-                info('module filter loaded');
+            info('module filter loaded');
 
-                return {
-                    v: {
-                        instance: instance,
-                        unset: function unset() {
-                            info('unsetting filter');
+            return {
+                instance: instance,
+                unset: function unset() {
+                    info('unsetting filter');
 
-                            // remove all filters;
-                            _this2.setRows(instance.rows).render();
-                        }
-                    }
-                };
-            }();
-
-            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+                    // remove all filters;
+                    _this2.showAllRows();
+                }
+            };
         } catch (e) {
             error(e);
         }
@@ -767,20 +763,21 @@ module.exports = new Module({
     },
     initializer: function initializer(settings) {
         // set up
-        var head,
-            foot,
-            headWrap,
-            footWrap,
+        var head = void 0,
+            foot = void 0,
+            headWrap = void 0,
+            footWrap = void 0,
             container = this.container,
             body = this.body,
             bodyWrap = this.bodyWrap,
             origHead = this.origHead,
-            origFoot = this.origFoot;
+            origFoot = this.origFoot,
+            scrollbarWidth = getScrollbarWidth();
 
-        var getHeaderHeight = function getHeaderHeight() {
+        function getHeaderHeight() {
             return origHead.clientHeight;
         };
-        var getFooterHeight = function getFooterHeight() {
+        function getFooterHeight() {
             return origFoot.clientHeight;
         };
 
@@ -809,8 +806,7 @@ module.exports = new Module({
         }
         try {
             addClass(container, 'tm-fixed');
-            var borderCollapse = getCss(body, 'border-collapse'),
-                scrollbarWidth = getScrollbarWidth();
+            var borderCollapse = getCss(body, 'border-collapse');
 
             if (origHead && settings.fixHeader) {
                 var headerHeight = getHeaderHeight();
@@ -854,13 +850,20 @@ module.exports = new Module({
             // add event listeners
             if (head) {
                 window.addEventListener('resize', renderHead);
-                body.addEventListener('tmFixedForceRendering', renderHead);
             }
 
             if (foot) {
                 window.addEventListener('resize', renderFoot);
-                body.addEventListener('tmFixedForceRendering', renderHead);
             }
+
+            body.addEventListener('tmRowsAdded', function () {
+                renderHead();
+                renderFoot();
+            });
+            body.addEventListener('tmFixedForceRendering', function () {
+                renderHead();
+                renderFoot();
+            });
 
             if (head && foot) {
                 bodyWrap.addEventListener('scroll', function () {
@@ -1068,7 +1071,7 @@ var _require = require('../utils.js'),
     isObject = _require.isObject;
 
 function getValue(tr, i) {
-    return tr.cells[i].innerHTML.trim();
+    return tr.cells[i].innerHTML.trim().toLowerCase();
 }
 
 var FIRST_ENABLED_CELL = 'firstEnabled';
@@ -1203,32 +1206,24 @@ var Sorter = function () {
 
         // sort again in case it's needed.
         this.tm.body.addEventListener('tmSorterSortAgain', function () {
-            log("forced sorter to sort again");
+            _this.sort();
+        });
+
+        this.tm.body.addEventListener('tmRowsAdded', function () {
             _this.sort();
         });
     }
 
+    /**
+     * Sets the current order for a given column or adds a new order if an order
+     * for this column did not exist
+     * @param {Number} columnIndex - The index of the column
+     * @param {Boolean} order - true for ascending, false for descending order
+     * @returns this for method chaining
+     */
+
+
     _createClass(Sorter, [{
-        key: 'setRows',
-        value: function setRows(rowArray) {
-            this.tm.setRows(rowArray);
-            return this;
-        }
-    }, {
-        key: 'getRows',
-        value: function getRows() {
-            return this.tm.getRows();
-        }
-
-        /**
-         * Sets the current order for a given column or adds a new order if an order
-         * for this column did not exist
-         * @param {Number} columnIndex - The index of the column
-         * @param {Boolean} order - true for ascending, false for descending order
-         * @returns this for method chaining
-         */
-
-    }, {
         key: 'setOrAddOrder',
         value: function setOrAddOrder(columnIndex, order) {
             if (this.hasOrder(columnIndex)) {
@@ -1346,7 +1341,7 @@ var Sorter = function () {
             var maxDepth = orders.length - 1;
             var parsers = this.getParsers();
 
-            this.tm.getRows().sort(function (a, b) {
+            var sorted = this.tm.getVisibleRows().sort(function (a, b) {
                 var compareResult = 0,
                     curDepth = 0;
                 while (compareResult === 0 && curDepth <= maxDepth) {
@@ -1358,12 +1353,7 @@ var Sorter = function () {
                 return orders[curDepth][1] ? compareResult : -compareResult;
             });
 
-            return this;
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            this.tm.render();
+            this.tm.showRows(sorted);
             return this;
         }
 
@@ -1422,7 +1412,7 @@ var Sorter = function () {
             if (multiSort !== true) this.removeAllOrders();
             this.setOrAddOrder(colIndex, order);
 
-            this.sort().render().renderSortingArrows();
+            this.sort().renderSortingArrows();
 
             return this;
         }
@@ -1681,13 +1671,15 @@ var Tablemodify = function () {
 
         // check if containerId is valid or produce a unique id
         if (coreSettings.containerId && document.getElementById(coreSettings.containerId)) {
-            throw 'the passed id ' + coreSettings.containerId + ' is not unique!';
+            error('the passed id ' + coreSettings.containerId + ' is not unique!');
+            return null;
         } else if (coreSettings.containerId) {
             containerId = coreSettings.containerId;
         } else {
             containerId = getUniqueId();
         }
 
+        // references to all active modules stored in here
         this.activeModules = {};
 
         this.bodySelector = selector;
@@ -1717,22 +1709,17 @@ var Tablemodify = function () {
         addClass(this.container, 'tm-theme-' + coreSettings.theme);
         addClass(body, 'tm-body');
 
-        // initialize tbody rows as 2D-array
-        this.rows = [].slice.call(this.body.tBodies[0].rows);
-
+        // the tBody, contains all visible rows in the table
+        this.visibleRows = this.body.tBodies[0];
         // contains all tr-nodes that are not displayed at the moment
-        this.fragment = document.createDocumentFragment();
+        this.hiddenRows = document.createDocumentFragment();
 
-        //Default rendering mode: everything at once
-        this.setRenderingMode(Tablemodify.RENDERING_MODE_AT_ONCE);
-        this._chunkedRenderingTimeout = null;
-        this.rowChunkSize = 50;
         // call all modules
         if (coreSettings.modules) {
             // interface for modules
             iterate(coreSettings.modules, function (moduleName, moduleSettings) {
-                var module = Tablemodify.modules[moduleName];
-                var moduleReturn;
+                var module = Tablemodify.modules[moduleName],
+                    moduleReturn = void 0;
                 if (module) {
                     moduleReturn = module.getModule(_this, moduleSettings);
                 } else {
@@ -1752,6 +1739,11 @@ var Tablemodify = function () {
         this.coreSettings = coreSettings;
     }
 
+    /**
+     * calculate number of columns. Usually only called at the initialisation
+     */
+
+
     _createClass(Tablemodify, [{
         key: 'calculateColumnCount',
         value: function calculateColumnCount(element) {
@@ -1761,95 +1753,98 @@ var Tablemodify = function () {
             });
             this.columnCount = maxCols;
         }
+
+        /**
+         * getter for number of columns
+         */
+
     }, {
         key: 'getColumnCount',
         value: function getColumnCount() {
             return this.columnCount;
         }
+
+        /**
+         * add css text to the internal style-tag each tm-container contains
+         */
+
     }, {
         key: 'appendStyles',
         value: function appendStyles(text) {
             if (text.trim().length > 0) {
                 this.stylesheet.appendChild(document.createTextNode(text.trim()));
             }
-        }
-    }, {
-        key: 'getRows',
-        value: function getRows() {
-            return this.rows;
-        }
-    }, {
-        key: 'setRows',
-        value: function setRows(rowArray) {
-            //If chunked rendering is running at the moment, cancel
-            window.clearTimeout(this._chunkedRenderingTimeout);
-            this.rows = rowArray;
             return this;
         }
+
+        /**
+         *  get array of references to the visible rows
+         */
+
+    }, {
+        key: 'getVisibleRows',
+        value: function getVisibleRows() {
+            return [].slice.call(this.visibleRows.rows);
+        }
+
+        /**
+         *  get array of references to the hidden rows
+         */
+
+    }, {
+        key: 'getHiddenRows',
+        value: function getHiddenRows() {
+            return [].slice.call(this.hiddenRows.childNodes);
+        }
+
+        /**
+         *  get array of references to all rows, both hidden and visible
+         */
+
+    }, {
+        key: 'getAllRows',
+        value: function getAllRows() {
+            return this.getVisibleRows().concat(this.getHiddenRows());
+        }
+
+        /**
+         * show all the rows that the param rowArray contains (as references).
+         * used by filter module
+         */
+
+    }, {
+        key: 'showRows',
+        value: function showRows(rowArray) {
+            this.hideAllRows();
+
+            for (var i = 0; i < rowArray.length; i++) {
+                this.visibleRows.appendChild(rowArray[i]);
+            }
+            return this;
+        }
+
+        /**
+         * May be used from outside the plugin to add rows to the table.
+         * This will automatically rerun the filter & sorter module.
+         */
+
     }, {
         key: 'addRows',
         value: function addRows(rowArray) {
-            //If chunked rendering is running at the moment, cancel
-            window.clearTimeout(this._chunkedRenderingTimeout);
-            [].push.apply(this.rows, rowsArray);
-
-            return this;
-        }
-    }, {
-        key: 'setRenderingMode',
-        value: function setRenderingMode(to) {
-            if (to !== Tablemodify.RENDERING_MODE_CHUNKED && to !== Tablemodify.RENDERING_MODE_AT_ONCE) {
-                var msg = "Tried to set unknown rendering mode";
-                warn(msg);
-                throw new Error(msg);
+            for (var i = 0; i < rowArray.length; i++) {
+                this.visibleRows.appendChild(rowArray[i]);
             }
-            if (to === Tablemodify.RENDERING_MODE_CHUNKED && getCss(this.body, 'table-layout') !== 'fixed') {
-                warn("Using chunked rendering with non-fixed table layout is discouraged!");
-            }
-            this.renderingMode = to;
-            return this;
+            return this.signal('tmRowsAdded');
         }
+
+        /**
+         * add a single row
+         */
+
     }, {
-        key: 'render',
-        value: function render() {
-            var _this2 = this;
-
-            var tBody = this.body.tBodies[0],
-                rows = this.getRows(),
-                l = rows.length;
-
-            // clear tBody
-            this.moveAllRowsToFragment();
-
-            (function () {
-                switch (_this2.renderingMode) {
-                    case Tablemodify.RENDERING_MODE_AT_ONCE:
-                        for (var i = 0; i < l; i++) {
-                            tBody.appendChild(rows[i]);
-                        }
-
-                        trigger(_this2.body, 'tmFixedForceRendering');
-                        break;
-                    case Tablemodify.RENDERING_MODE_CHUNKED:
-                        var chunkSize = _this2.rowChunkSize,
-                            start = 0;
-                        var renderPart = function renderPart() {
-                            for (var z = 0; z < chunkSize; z++) {
-                                if (start + z === l) {
-                                    trigger(_this2.body, 'tmFixedForceRendering');
-                                    return;
-                                }
-                                tBody.appendChild(rows[start + z]);
-                            }
-                            start = start + z;
-                            _this2._chunkedRenderingTimeout = window.setTimeout(renderPart, 0);
-                        };
-                        _this2._chunkedRenderingTimeout = window.setTimeout(renderPart, 0);
-                        break;
-                }
-            })();
-
-            return this;
+        key: 'addRow',
+        value: function addRow(row) {
+            return this.addRows([row]);
         }
 
         /**
@@ -1860,15 +1855,50 @@ var Tablemodify = function () {
          */
 
     }, {
-        key: 'moveAllRowsToFragment',
-        value: function moveAllRowsToFragment() {
-            var rows = this.body.tBodies[0].rows,
-                l = rows.length,
+        key: 'hideAllRows',
+        value: function hideAllRows() {
+            var rows = this.visibleRows.rows,
                 next = void 0;
 
             while (next = rows[0]) {
-                this.fragment.appendChild(next);
+                this.hiddenRows.appendChild(next);
             }
+            return this;
+        }
+
+        /**
+         * display all hidden rows again
+         */
+
+    }, {
+        key: 'showAllRows',
+        value: function showAllRows() {
+            var rows = this.hiddenRows.childNodes,
+                next = void 0;
+
+            while (next = rows[0]) {
+                this.visibleRows.appendChild(next);
+            }
+            return this.signal('tmRowsAdded');
+        }
+
+        /**
+         * used to fire events on the original table. Modules may react to this events.
+         * Its a convention that all events are fired on this element and the modules listen to the same.
+         */
+
+    }, {
+        key: 'signal',
+        value: function signal() {
+            var _this2 = this;
+
+            for (var _len = arguments.length, events = Array(_len), _key = 0; _key < _len; _key++) {
+                events[_key] = arguments[_key];
+            }
+
+            events.forEach(function (e) {
+                trigger(_this2.body, e);
+            });
             return this;
         }
 
@@ -1944,9 +1974,10 @@ var Tablemodify = function () {
 
     return Tablemodify;
 }();
+//Tablemodify.RENDERING_MODE_CHUNKED = 1;
+//Tablemodify.RENDERING_MODE_AT_ONCE = 2;
 
-Tablemodify.RENDERING_MODE_CHUNKED = 1;
-Tablemodify.RENDERING_MODE_AT_ONCE = 2;
+
 Tablemodify.modules = {
     columnStyles: require('./modules/columnStyles.js'),
     filter: require('./modules/filter.js'),
@@ -1958,7 +1989,7 @@ Tablemodify.modules = {
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
 // set version of Tablemodify
-Tablemodify.version = 'v0.9';
+Tablemodify.version = 'v0.9.1';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
 
