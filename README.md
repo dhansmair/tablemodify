@@ -272,7 +272,22 @@ in this example, the initializer parameter settings will be:
     odd: '#FFFFFF'   // from the defaultSettings
 }
 ``` 
+# dynamically adding rows
+
+adding rows works like this:
+```javascript
+var tm = new Tablemodify(/* ... */);
+
+tm.addRow(rowObject);
+// or
+tm.addRows(arrayOfRowObjects);
+
+```
+if any sorting is active, the rows are automatically inserted at the right position,
+and if a filter is active, tm also decides whether to hide the new rows or not. 
 
 # Theming
 
-coming soon...
+include a theme file you want and set the `theme`-property to the right name.
+to create own themes, edit an existing theme *.css or *.less file (I recommend using the second option).
+if your theme's name would be `myCustom`, Do not forget to change the name of the css-class `.tm-theme-default` to `.tm-theme-myCustom`!
