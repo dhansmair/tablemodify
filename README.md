@@ -5,7 +5,7 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 
 ### Browser support
 
-supports all newer browsers, including IE11, edge, firefox, chrome and opera. 
+supports all newer browsers, including IE11, edge, firefox, chrome, safari and opera. 
 It also supports the common mobile browsers for android. 
 
 # demo
