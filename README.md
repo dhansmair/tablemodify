@@ -387,6 +387,7 @@ creates around the original table.
 | ------ | ----------- |
 | addRow(tr) | add a single row. tr can be a tr-element or an array of values. The array´s length has to be the number of columns in your table |
 | addRows(trArray) | add multiple rows. param is an array of elements you would pass to addRow() |
+| deleteAllRows() | permanently removes all rows from the table body | 
 | appendStyles(plain) | write styles to the `<style>` element inside the container. |
 | getAllRows()     | returns an array of all rows, both hidden and visible |
 | getHiddenRows()  | returns an array of the hidden rows (hidden by the filter-module!) |
