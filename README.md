@@ -360,7 +360,10 @@ to create own themes, edit an existing theme *.css or *.less file (I recommend u
 if your theme's name would be `myCustom`, Do not forget to change the name of the css-class `.tm-theme-default` to `.tm-theme-myCustom`!
 
 # API 
-A Tablemodify-object has several functionalities you can use. Here is a little overview:
+A Tablemodify-object has several functionalities you can use. Here is a little overview.
+A lot of them are mainly useful for writing own plugins.
+To understand which elements the references in the following overview point at, please have a look at the structure Tablemodify 
+creates around the original table.
 
 | property | description |
 | -------- | ----------- |
