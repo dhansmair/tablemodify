@@ -17,6 +17,7 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 5. [Modules - writing your own](#own-modules)
 6. [Dynamically adding rows](#adding-rows)
 7. [Theming](#theming)
+
 ------------------------
 ### Browser support
 <div id='browser-support'></div>
@@ -160,7 +161,7 @@ The settings are simple:
 ```
 
 ## sorter
-
+<div id='sorter'></div>
 This module sorts the rows of your tbody, ascending or descending, sorted by a single column or even by multiple columns. For multisort, press shift and click another head cell. Still press shift and click a selected cell again to invert the order. Please keep in mind that js is generally rather slow and not made for handling big data amounts. Handling about 3000 rows works fine. 5000 still work, but it will take some time to sort and re-render, so bigger tables should be sorted on the backend, for example via php.
 
 ```javascript
@@ -198,7 +199,7 @@ This module sorts the rows of your tbody, ascending or descending, sorted by a s
 ```
 
 ### parsers
-
+<div id='parsers'></div>
 so what about the parsers? There are some available by default:
 
 | parsername    | notice  | description                                         | parameters |
@@ -229,7 +230,7 @@ A parser is simply a compare function which is passed to the Array.sort() method
 ```
 
 ### change header appearance
-
+<div id='change-header-appearance'></div>
 you can simply overwrite the default sorter styles of your table. Therefore, tm provides several css-classes.
 
 Different order-icons: 
@@ -258,7 +259,7 @@ Different background-color of active sorting:
 ```
 
 # Modules - writing your own
-
+<div id='own-modules'></div>
 to define a new module, create a new instance of `Tablemodify.Module` and pass it to `Tablemodify.addModule()`.
 
 ```javascript
@@ -326,7 +327,7 @@ in this example, the initializer parameter settings will be:
 }
 ``` 
 # Dynamically adding rows
-
+<div id='add-rows'></div>
 adding rows works like this:
 ```javascript
 var tm = new Tablemodify(/* ... */);
@@ -344,7 +345,7 @@ if any sorting is active, the rows are automatically inserted at the right posit
 and if a filter is active, tm also decides whether to hide the new rows or not. 
 
 # Theming
-
+<div id='theming'></div>
 include a theme file you want and set the `theme`-property to the right name.
 to create own themes, edit an existing theme *.css or *.less file (I recommend using the second option).
 if your theme's name would be `myCustom`, Do not forget to change the name of the css-class `.tm-theme-default` to `.tm-theme-myCustom`!
