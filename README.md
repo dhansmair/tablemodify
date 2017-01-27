@@ -4,7 +4,7 @@ tablemodify is a javascript-plugin which boosts your html tables with awesome st
 It is written in plain js, so no jQuery is required. Tm is based on a core Tablemodify-object which can be extended by several modules. There are some modules defined by default or you could even write your own if you wish to. 
 
 # Table of Contents
-=====================
+------------------------
 * [Browser support](#browser-support)
 * [Demo](#Demo)
 * [Basic setup](# Basic setup)
@@ -17,8 +17,9 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 * [Modules - writing your own](# Modules - writing your own)
 * [Dynamically adding rows](# Dynamically adding rows)
 * [Theming](#Theming)
-<div id='browser-support'>
+------------------------
 ### Browser support
+<div id='browser-support'>
 
 supports all newer browsers, including IE11, edge, firefox, chrome, safari and opera. 
 It also supports the common mobile browsers for android. 
