@@ -367,18 +367,18 @@ A Tablemodify-object has several functionalities you can use. Here is a little o
 | activeModules | an object which stores all activated modules. They offer several utitities you can use |
 | columnCount | number of table columns |
 | coreSettings | the settings you passed |
-| bodySelector | | 
-| containerId |  |
-| container |  |
-| stylesheet |  |
-| head |  |
-| body |  |
-| foot |  |
-| headWrap |  |
-| bodyWrap |  |
-| footWrap |  |
-| hiddenRows |   |
-| visibleRows | |
+| bodySelector | selector you used for the table | 
+| containerId | id of the container element |
+| container | reference to this element |
+| stylesheet | reference to this element |
+| head | reference to the table which contains the thead (only if module fixed is used) |
+| body | reference to the original table |
+| foot | reference to the table which contains the tfoot (only if module fixed is used) |
+| headWrap | reference to head wrapper |
+| bodyWrap | reference to body wrapper |
+| footWrap | reference to foot wrapper |
+| hiddenRows | reference to the documentFragment where the hidden rows are stored |
+| visibleRows | reference to the table´s `<tbody>` |
  
 | method | description | 
 | ------ | ----------- |
