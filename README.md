@@ -17,7 +17,7 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
     1. [Parsers](#parsers)
     2. [Change appearance](#change-appearance)
 5. [Modules - writing your own](#own-modules)
-6. [Dynamically adding rows](#adding-rows)
+6. [Dynamically adding rows](#add-rows)
 7. [Theming](#theming)
 
 ------------------------
