@@ -16,7 +16,7 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
     * [sorter](## sorter)
 * [Modules - writing your own](# Modules - writing your own)
 * [Dynamically adding rows](# Dynamically adding rows)
-* [Theming](# Theming)
+* [Theming](#Theming)
 
 ### Browser support
 
@@ -324,7 +324,7 @@ in this example, the initializer parameter settings will be:
     odd: '#FFFFFF'   // from the defaultSettings
 }
 ``` 
-# Dynamically adding rows
+#Dynamically adding rows
 
 adding rows works like this:
 ```javascript
@@ -342,7 +342,7 @@ Note that the inner array should have a length equal to the number of columns in
 if any sorting is active, the rows are automatically inserted at the right position,
 and if a filter is active, tm also decides whether to hide the new rows or not. 
 
-# Theming
+#Theming
 
 include a theme file you want and set the `theme`-property to the right name.
 to create own themes, edit an existing theme *.css or *.less file (I recommend using the second option).
