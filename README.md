@@ -10,12 +10,19 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 3. [Basic setup](#basic-setup)
 4. [Modules](#modules)
   1. [columnStyles](#columnStyles)
+    * styling all cells
+    * manipulating columns
   2. [zebra](#zebra)
-  3. [filter](#filter)
+  3. [filter](#filter) 
   4. [fixed](#fixed)
+    * sticky header
+    * sticky footer
   5. [sorter](#sorter)
-    1. [Parsers](#parsers)
-    2. [Change appearance](#change-appearance)
+    * Initial order
+    * Sorting on multiple columns
+    * disable columns
+    * [Parsers](#parsers)
+    * [Change appearance](#change-appearance)
 5. [Modules - writing your own](#own-modules)
 6. [Dynamically adding rows](#add-rows)
 7. [Theming](#theming)
@@ -347,7 +354,6 @@ if any sorting is active, the rows are automatically inserted at the right posit
 and if a filter is active, tm also decides whether to hide the new rows or not. 
 
 # Theming
-<div id='theming'></div>
 include a theme file you want and set the `theme`-property to the right name.
 to create own themes, edit an existing theme *.css or *.less file (I recommend using the second option).
 if your theme's name would be `myCustom`, Do not forget to change the name of the css-class `.tm-theme-default` to `.tm-theme-myCustom`!
