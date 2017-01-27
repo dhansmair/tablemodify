@@ -80,11 +80,11 @@ var settings = {
 ```
 
 # Modules
-<div id='modules'></div>
+
 now here is a detailed tutorial about the configuration of each module:
 
 ## columnStyles
-<div id='columnStyles'></div>
+
 Use columnStyles to set the CSS for the cells in each column.
 ```javascript
  var columnStylesSettings = {
@@ -161,7 +161,7 @@ The settings are simple:
 ```
 
 ## sorter
-<div id='sorter'></div>
+
 This module sorts the rows of your tbody, ascending or descending, sorted by a single column or even by multiple columns. For multisort, press shift and click another head cell. Still press shift and click a selected cell again to invert the order. Please keep in mind that js is generally rather slow and not made for handling big data amounts. Handling about 3000 rows works fine. 5000 still work, but it will take some time to sort and re-render, so bigger tables should be sorted on the backend, for example via php.
 
 ```javascript
