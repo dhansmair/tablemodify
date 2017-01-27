@@ -5,7 +5,7 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 
 # Table of Contents
 =====================
-* [Browser support](### Browser support)
+* [Browser support](#browser-support)
 * [Demo](#Demo)
 * [Basic setup](# Basic setup)
 * [Modules](# Modules)
@@ -17,12 +17,12 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 * [Modules - writing your own](# Modules - writing your own)
 * [Dynamically adding rows](# Dynamically adding rows)
 * [Theming](#Theming)
-
+<div id='browser-support'>
 ### Browser support
 
 supports all newer browsers, including IE11, edge, firefox, chrome, safari and opera. 
 It also supports the common mobile browsers for android. 
-
+</div>
 #Demo
 
 watch and edit an example here: 
