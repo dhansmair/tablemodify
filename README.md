@@ -26,6 +26,7 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 5. [Modules - writing your own](#own-modules)
 6. [Dynamically adding rows](#add-rows)
 7. [Theming](#theming)
+8. [API](#api) 
 
 ------------------------
 ### Browser support
@@ -357,3 +358,39 @@ and if a filter is active, tm also decides whether to hide the new rows or not.
 include a theme file you want and set the `theme`-property to the right name.
 to create own themes, edit an existing theme *.css or *.less file (I recommend using the second option).
 if your theme's name would be `myCustom`, Do not forget to change the name of the css-class `.tm-theme-default` to `.tm-theme-myCustom`!
+
+# API 
+A Tablemodify-object has several functionalities you can use. Here is a little overview:
+
+| property | description |
+| -------- | ----------- |
+| activeModules | an object which stores all activated modules. They offer several utitities you can use |
+| columnCount | number of table columns |
+| coreSettings | the settings you passed |
+| bodySelector | | 
+| containerId |  |
+| container |  |
+| stylesheet |  |
+| head |  |
+| body |  |
+| foot |  |
+| headWrap |  |
+| bodyWrap |  |
+| footWrap |  |
+| hiddenRows |   |
+| visibleRows | |
+ 
+| method | description | 
+| ------ | ----------- |
+| addRow(tr) | add a single row. tr can be a tr-element or an array of values. The array´s length has to be the number of columns in your table |
+| addRows(trArray) | add multiple rows. param is an array of elements you would pass to addRow() |
+| appendStyles(plain) | write styles to the `<style>` element inside the container. |
+| getAllRows()     | returns an array of all rows, both hidden and visible |
+| getHiddenRows()  | returns an array of the hidden rows (hidden by the filter-module!) |
+| getVisibleRows() | returns an array of the visible rows |
+| hideAllRows()    | moves all rows to the documentFragment `hiddenRows`. |
+| showAllRows()    | moves all rows to the original table body |
+| signal(...e)     | you can pass names of events to be fired. the modules will react to special events: <br> `"tmSorterSortAgain"`:forces sorter to sort again <br>`"tmFixedForceRendering"`: forces fixed to readjust the header cell´s withs. <br> `"tmRowsAdded"`: lets filter and sorter do their work again. internally fired when rows are added to the table 
+|
+
+
