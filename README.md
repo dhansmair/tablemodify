@@ -3,6 +3,11 @@
 tablemodify is a javascript-plugin which boosts your html tables with awesome style and functionalities! :boom:
 It is written in plain js, so no jQuery is required. Tm is based on a core Tablemodify-object which can be extended by several modules. There are some modules defined by default or you could even write your own if you wish to. 
 
+### Browser support
+
+supports all newer browsers, including IE11, edge, firefox, chrome, safari and opera. 
+It also supports the common mobile browsers for android. 
+
 # demo
 
 watch and edit an example here: 
@@ -272,7 +277,22 @@ in this example, the initializer parameter settings will be:
     odd: '#FFFFFF'   // from the defaultSettings
 }
 ``` 
+# dynamically adding rows
+
+adding rows works like this:
+```javascript
+var tm = new Tablemodify(/* ... */);
+
+tm.addRow(rowObject);
+// or
+tm.addRows(arrayOfRowObjects);
+
+```
+if any sorting is active, the rows are automatically inserted at the right position,
+and if a filter is active, tm also decides whether to hide the new rows or not. 
 
 # Theming
 
-coming soon...
+include a theme file you want and set the `theme`-property to the right name.
+to create own themes, edit an existing theme *.css or *.less file (I recommend using the second option).
+if your theme's name would be `myCustom`, Do not forget to change the name of the css-class `.tm-theme-default` to `.tm-theme-myCustom`!
