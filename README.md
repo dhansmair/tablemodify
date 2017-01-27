@@ -181,6 +181,8 @@ This module sorts the rows of your tbody, ascending or descending, sorted by a s
     };
 ```
 
+### parsers
+
 so what about the parsers? There are some available by default:
 
 | parsername    | notice  | description                                         | parameters |
@@ -209,6 +211,36 @@ A parser is simply a compare function which is passed to the Array.sort() method
         }
     };
 ```
+
+### change header appearance
+
+you can simply overwrite the default sorter styles of your table. Therefore, tm provides several css-classes.
+
+Different order-icons: 
+```css
+/* default sorter icon (for no active sorting) */
+.tm-container td.sortable {
+    background-image:url(path/to/your/icon-default.jpg);
+}
+
+/* icon for active ascending order */
+.tm-container td.sortable.sort-up {
+    background-image:url(path/to/your/icon-up.jpg);
+}
+/* icon for active descending order */
+.tm-container td.sortable.sort-down {
+    background-image:url(path/to/your/icon-down.jpg);
+}
+```
+Different background-color of active sorting:
+```css
+/* this will set the color to yellow */
+.tm-container td.sortable.sort-up, .tm-container td.sortable.sort-down {
+    background-color: 'yellow' 
+}
+
+```
+
 # Modules - writing your own
 
 to define a new module, create a new instance of `Tablemodify.Module` and pass it to `Tablemodify.addModule()`.
@@ -283,11 +315,15 @@ adding rows works like this:
 ```javascript
 var tm = new Tablemodify(/* ... */);
 
-tm.addRow(rowObject);
+tm.addRow(trElement);
 // or
-tm.addRows(arrayOfRowObjects);
-
+tm.addRows(arrayOfTrElements);
+// or
+tm.addRows(twoDimentionalArray);
 ```
+you can pass either an array of tr-elements directly or a two-dimensional array of values. 
+Note that the inner array should have a length equal to the number of columns in your table.
+
 if any sorting is active, the rows are automatically inserted at the right position,
 and if a filter is active, tm also decides whether to hide the new rows or not. 
 
