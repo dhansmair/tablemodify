@@ -1,5 +1,6 @@
 const {addClass, iterate, info, error, trigger} = require('../utils.js');
 const Module = require('./module.js');
+const FILTER_HEIGHT = '30px';
 
 const newCell = (function() {
     let cell = document.createElement('td');
@@ -109,7 +110,20 @@ class FilterDefault extends Filter {
         }
         addClass(row, 'tm-filter-row');
 
-        if (!settings.autoCollapse) row.style.height = '30px';
+        if (settings.autoCollapse){
+            // keep filter row visible if an input is focused
+            row.querySelectorAll('input').forEach((input) => {
+                input.onfocus = (e) => {
+                    row.style.height = FILTER_HEIGHT;
+                };
+                input.onblur = (e) => {
+                    row.style.removeProperty('height');
+                };
+            });
+        } else {
+            row.style.height = FILTER_HEIGHT;
+        }
+
 
         // bind listeners
         row.onkeyup = (e) => {

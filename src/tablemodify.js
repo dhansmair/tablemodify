@@ -2,7 +2,7 @@
 const config = require('./config.js');
 const Module = require('./modules/module.js');
 const {error, warn, isNonEmptyString, getCss,
-       iterate, extend, hasClass, addClass, removeClass, getUniqueId, trigger} = require('./utils.js');
+       iterate, extend, hasClass, addClass, removeClass, getUniqueId, trigger, tableFactory} = require('./utils.js');
 
 class Tablemodify {
     constructor(selector, coreSettings) {
@@ -152,11 +152,14 @@ class Tablemodify {
      * used by filter module
      */
     showRows(rowArray) {
+        let fragment = document.createDocumentFragment();
         this.hideAllRows();
 
         for (let i = 0; i < rowArray.length; i++) {
-            this.visibleRows.appendChild(rowArray[i]);
+            fragment.appendChild(rowArray[i]);
         }
+
+        this.visibleRows.appendChild(fragment);
         return this;
     }
 
@@ -164,12 +167,48 @@ class Tablemodify {
      * May be used from outside the plugin to add rows to the table.
      * This will automatically rerun the filter & sorter module.
      */
-    addRows(rowArray) {
+     addRows(arr) {
+         if (arr.length === 0) return this;
+
+         if (Array.isArray(arr[0])) {
+             return this._addJSONRows(arr);
+         } else if (arr[0].tagName === 'TR') {
+             return this._addHTMLRows(arr);
+         } else {
+             error('wrong parameter for addRows()');
+             return this;
+         }
+     }
+
+     _addHTMLRows(rowArray) {
+        let fragment = document.createDocumentFragment();
         for (let i = 0; i < rowArray.length; i++) {
-            this.visibleRows.appendChild(rowArray[i]);
+            fragment.appendChild(rowArray[i]);
         }
+        this.visibleRows.appendChild(fragment);
         return this.signal('tmRowsAdded');
     }
+
+    _addJSONRows(rowArray) {
+        let tr = document.createElement('tr'),
+            td = document.createElement('td'),
+            newTr, newTd,
+            fragment = document.createDocumentFragment();
+
+        for (let i = 0; i < rowArray.length; i++) {
+            newTr = tr.cloneNode();
+            for (let j = 0; j < rowArray[i].length; j++) {
+                newTd = td.cloneNode();
+                newTd.innerHTML = rowArray[i][j];
+                newTr.appendChild(newTd);
+            }
+            fragment.appendChild(newTr);
+        }
+
+        this.visibleRows.appendChild(fragment);
+        return this.signal('tmRowsAdded');
+    }
+
 
     /**
      * add a single row
@@ -195,13 +234,10 @@ class Tablemodify {
 
     /**
      * display all hidden rows again
+     * this is correct usage of documentFragment! appending the fragment itself appends all children instead
      */
     showAllRows() {
-        let rows = this.hiddenRows.childNodes, next;
-
-        while (next = rows[0]) {
-            this.visibleRows.appendChild(next);
-        }
+        this.visibleRows.appendChild(this.hiddenRows);
         return this.signal('tmRowsAdded');
     }
 
@@ -293,6 +329,6 @@ Tablemodify.modules = {
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
 // set version of Tablemodify
-Tablemodify.version = 'v0.9.1';
+Tablemodify.version = 'v0.9.2';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;

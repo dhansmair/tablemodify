@@ -510,6 +510,7 @@ var _require = require('../utils.js'),
     trigger = _require.trigger;
 
 var Module = require('./module.js');
+var FILTER_HEIGHT = '30px';
 
 var newCell = function () {
     var cell = document.createElement('td');
@@ -643,7 +644,19 @@ var FilterDefault = function (_Filter) {
         }
         addClass(row, 'tm-filter-row');
 
-        if (!settings.autoCollapse) row.style.height = '30px';
+        if (settings.autoCollapse) {
+            // keep filter row visible if an input is focused
+            row.querySelectorAll('input').forEach(function (input) {
+                input.onfocus = function (e) {
+                    row.style.height = FILTER_HEIGHT;
+                };
+                input.onblur = function (e) {
+                    row.style.removeProperty('height');
+                };
+            });
+        } else {
+            row.style.height = FILTER_HEIGHT;
+        }
 
         // bind listeners
         row.onkeyup = function (e) {
@@ -1644,7 +1657,8 @@ var _require = require('./utils.js'),
     addClass = _require.addClass,
     removeClass = _require.removeClass,
     getUniqueId = _require.getUniqueId,
-    trigger = _require.trigger;
+    trigger = _require.trigger,
+    tableFactory = _require.tableFactory;
 
 var Tablemodify = function () {
     function Tablemodify(selector, coreSettings) {
@@ -1815,11 +1829,14 @@ var Tablemodify = function () {
     }, {
         key: 'showRows',
         value: function showRows(rowArray) {
+            var fragment = document.createDocumentFragment();
             this.hideAllRows();
 
             for (var i = 0; i < rowArray.length; i++) {
-                this.visibleRows.appendChild(rowArray[i]);
+                fragment.appendChild(rowArray[i]);
             }
+
+            this.visibleRows.appendChild(fragment);
             return this;
         }
 
@@ -1830,10 +1847,48 @@ var Tablemodify = function () {
 
     }, {
         key: 'addRows',
-        value: function addRows(rowArray) {
-            for (var i = 0; i < rowArray.length; i++) {
-                this.visibleRows.appendChild(rowArray[i]);
+        value: function addRows(arr) {
+            if (arr.length === 0) return this;
+
+            if (Array.isArray(arr[0])) {
+                return this._addJSONRows(arr);
+            } else if (arr[0].tagName === 'TR') {
+                return this._addHTMLRows(arr);
+            } else {
+                error('wrong parameter for addRows()');
+                return this;
             }
+        }
+    }, {
+        key: '_addHTMLRows',
+        value: function _addHTMLRows(rowArray) {
+            var fragment = document.createDocumentFragment();
+            for (var i = 0; i < rowArray.length; i++) {
+                fragment.appendChild(rowArray[i]);
+            }
+            this.visibleRows.appendChild(fragment);
+            return this.signal('tmRowsAdded');
+        }
+    }, {
+        key: '_addJSONRows',
+        value: function _addJSONRows(rowArray) {
+            var tr = document.createElement('tr'),
+                td = document.createElement('td'),
+                newTr = void 0,
+                newTd = void 0,
+                fragment = document.createDocumentFragment();
+
+            for (var i = 0; i < rowArray.length; i++) {
+                newTr = tr.cloneNode();
+                for (var j = 0; j < rowArray[i].length; j++) {
+                    newTd = td.cloneNode();
+                    newTd.innerHTML = rowArray[i][j];
+                    newTr.appendChild(newTd);
+                }
+                fragment.appendChild(newTr);
+            }
+
+            this.visibleRows.appendChild(fragment);
             return this.signal('tmRowsAdded');
         }
 
@@ -1868,17 +1923,13 @@ var Tablemodify = function () {
 
         /**
          * display all hidden rows again
+         * this is correct usage of documentFragment! appending the fragment itself appends all children instead
          */
 
     }, {
         key: 'showAllRows',
         value: function showAllRows() {
-            var rows = this.hiddenRows.childNodes,
-                next = void 0;
-
-            while (next = rows[0]) {
-                this.visibleRows.appendChild(next);
-            }
+            this.visibleRows.appendChild(this.hiddenRows);
             return this.signal('tmRowsAdded');
         }
 
@@ -1989,7 +2040,7 @@ Tablemodify.modules = {
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
 // set version of Tablemodify
-Tablemodify.version = 'v0.9.1';
+Tablemodify.version = 'v0.9.2';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
 
