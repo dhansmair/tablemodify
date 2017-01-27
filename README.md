@@ -5,15 +5,17 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 
 # Table of Contents
 ------------------------
-1. [Browser support](#browser support)
+1. [Browser support](#browser-support)
 2. [Demo](#demo)
-3. [Basic setup](#basic setup)
+3. [Basic setup](#basic-setup)
 4. [Modules](#modules)
   1. [columnStyles](#columnStyles)
   2. [zebra](#zebra)
   3. [filter](#filter)
   4. [fixed](#fixed)
   5. [sorter](#sorter)
+    1. [Parsers](#parsers)
+    2. [Change appearance](#change-appearance)
 5. [Modules - writing your own](#own-modules)
 6. [Dynamically adding rows](#adding-rows)
 7. [Theming](#theming)
@@ -31,7 +33,7 @@ watch and edit an example here:
 [http://codepen.io/dhansmair/pen/ZLpzKg/](http://codepen.io/dhansmair/pen/ZLpzKg/)
 
 # Basic setup
-
+<div id='basic-setup'></div>
 First of all, get the dist-folder from Github. 
 Include these files:
 ```html
@@ -116,7 +118,7 @@ Use columnStyles to set the CSS for the cells in each column.
 ```
 
 ## zebra
-<div id='zebra'></div>
+
 A small module to add stripes to your table.
 ```javascript
    var zebraSettings = {
@@ -198,7 +200,7 @@ This module sorts the rows of your tbody, ascending or descending, sorted by a s
     };
 ```
 
-### parsers
+### Parsers
 <div id='parsers'></div>
 so what about the parsers? There are some available by default:
 
@@ -229,8 +231,8 @@ A parser is simply a compare function which is passed to the Array.sort() method
     };
 ```
 
-### change header appearance
-<div id='change-header-appearance'></div>
+### Change header appearance
+<div id='change-appearance'></div>
 you can simply overwrite the default sorter styles of your table. Therefore, tm provides several css-classes.
 
 Different order-icons: 
