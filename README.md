@@ -5,32 +5,32 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 
 # Table of Contents
 ------------------------
-* [Browser support](#browser-support)
-* [Demo](#Demo)
-* [Basic setup](# Basic setup)
-* [Modules](# Modules)
-    * [columnStyles](## columnStyles)
-    * [zebra](## zebra)
-    * [filter](## filter)
-    * [fixed](## fixed)
-    * [sorter](## sorter)
-* [Modules - writing your own](# Modules - writing your own)
-* [Dynamically adding rows](# Dynamically adding rows)
-* [Theming](#Theming)
+1. [Browser support](#browser-support)
+2. [Demo](#demo)
+3. [Basic setup](#basic-setup)
+4. [Modules](#modules)
+  1. [columnStyles](#columnStyles)
+  2. [zebra](#zebra)
+  3. [filter](#filter)
+  4. [fixed](#fixed)
+  5. [sorter](#sorter)
+5. [Modules - writing your own](#own-modules)
+6. [Dynamically adding rows](#adding-rows)
+7. [Theming](#theming)
 ------------------------
 ### Browser support
-<div id='browser-support'>
+<div id='browser-support'></div>
 
 supports all newer browsers, including IE11, edge, firefox, chrome, safari and opera. 
 It also supports the common mobile browsers for android. 
-</div>
-#Demo
 
+# Demo
+<div id='demo'></div>
 watch and edit an example here: 
 [http://codepen.io/dhansmair/pen/ZLpzKg/](http://codepen.io/dhansmair/pen/ZLpzKg/)
 
 # Basic setup
-
+<div id='basic-setup'></div>
 First of all, get the dist-folder from Github. 
 Include these files:
 ```html
@@ -79,11 +79,11 @@ var settings = {
 ```
 
 # Modules
-
+<div id='modules'></div>
 now here is a detailed tutorial about the configuration of each module:
 
 ## columnStyles
-
+<div id='columnStyles'></div>
 Use columnStyles to set the CSS for the cells in each column.
 ```javascript
  var columnStylesSettings = {
@@ -115,7 +115,7 @@ Use columnStyles to set the CSS for the cells in each column.
 ```
 
 ## zebra
-
+<div id='zebra'></div>
 A small module to add stripes to your table.
 ```javascript
    var zebraSettings = {
@@ -325,7 +325,7 @@ in this example, the initializer parameter settings will be:
     odd: '#FFFFFF'   // from the defaultSettings
 }
 ``` 
-#Dynamically adding rows
+# Dynamically adding rows
 
 adding rows works like this:
 ```javascript
@@ -343,7 +343,7 @@ Note that the inner array should have a length equal to the number of columns in
 if any sorting is active, the rows are automatically inserted at the right position,
 and if a filter is active, tm also decides whether to hide the new rows or not. 
 
-#Theming
+# Theming
 
 include a theme file you want and set the `theme`-property to the right name.
 to create own themes, edit an existing theme *.css or *.less file (I recommend using the second option).
