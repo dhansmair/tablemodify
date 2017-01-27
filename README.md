@@ -5,9 +5,9 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
 
 # Table of Contents
 ------------------------
-1. [Browser support](#browser-support)
+1. [Browser support](#browser support)
 2. [Demo](#demo)
-3. [Basic setup](#basic-setup)
+3. [Basic setup](#basic setup)
 4. [Modules](#modules)
   1. [columnStyles](#columnStyles)
   2. [zebra](#zebra)
@@ -26,12 +26,12 @@ supports all newer browsers, including IE11, edge, firefox, chrome, safari and o
 It also supports the common mobile browsers for android. 
 
 # Demo
-<div id='demo'></div>
+
 watch and edit an example here: 
 [http://codepen.io/dhansmair/pen/ZLpzKg/](http://codepen.io/dhansmair/pen/ZLpzKg/)
 
 # Basic setup
-<div id='basic-setup'></div>
+
 First of all, get the dist-folder from Github. 
 Include these files:
 ```html
