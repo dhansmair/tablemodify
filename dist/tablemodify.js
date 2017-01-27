@@ -1934,6 +1934,22 @@ var Tablemodify = function () {
         }
 
         /**
+         * deletes all rows in the table (hidden AND visible).
+         * Faster implementation than setting innerHTMl = ''
+         */
+
+    }, {
+        key: 'deleteAllRows',
+        value: function deleteAllRows() {
+            [this.visibleRows, this.hiddenRows].forEach(function (p) {
+                while (p.firstChild) {
+                    p.removeChild(p.firstChild);
+                }
+            });
+            return this;
+        }
+
+        /**
          * used to fire events on the original table. Modules may react to this events.
          * Its a convention that all events are fired on this element and the modules listen to the same.
          */

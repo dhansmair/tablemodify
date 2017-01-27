@@ -167,20 +167,20 @@ class Tablemodify {
      * May be used from outside the plugin to add rows to the table.
      * This will automatically rerun the filter & sorter module.
      */
-     addRows(arr) {
-         if (arr.length === 0) return this;
+    addRows(arr) {
+        if (arr.length === 0) return this;
 
-         if (Array.isArray(arr[0])) {
-             return this._addJSONRows(arr);
-         } else if (arr[0].tagName === 'TR') {
-             return this._addHTMLRows(arr);
-         } else {
-             error('wrong parameter for addRows()');
-             return this;
-         }
-     }
+        if (Array.isArray(arr[0])) {
+            return this._addJSONRows(arr);
+        } else if (arr[0].tagName === 'TR') {
+            return this._addHTMLRows(arr);
+        } else {
+            error('wrong parameter for addRows()');
+            return this;
+        }
+    }
 
-     _addHTMLRows(rowArray) {
+    _addHTMLRows(rowArray) {
         let fragment = document.createDocumentFragment();
         for (let i = 0; i < rowArray.length; i++) {
             fragment.appendChild(rowArray[i]);
@@ -239,6 +239,19 @@ class Tablemodify {
     showAllRows() {
         this.visibleRows.appendChild(this.hiddenRows);
         return this.signal('tmRowsAdded');
+    }
+
+    /**
+     * deletes all rows in the table (hidden AND visible).
+     * Faster implementation than setting innerHTMl = ''
+     */
+    deleteAllRows() {
+        [this.visibleRows, this.hiddenRows].forEach((p) => {
+            while (p.firstChild) {
+                p.removeChild(p.firstChild);
+            }
+        });
+        return this;
     }
 
     /**
