@@ -3,17 +3,32 @@
 tablemodify is a javascript-plugin which boosts your html tables with awesome style and functionalities! :boom:
 It is written in plain js, so no jQuery is required. Tm is based on a core Tablemodify-object which can be extended by several modules. There are some modules defined by default or you could even write your own if you wish to. 
 
+# Table of Contents
+=====================
+* [Browser support](### Browser support)
+* [Demo](#Demo)
+* [Basic setup](# Basic setup)
+* [Modules](# Modules)
+    * [columnStyles](## columnStyles)
+    * [zebra](## zebra)
+    * [filter](## filter)
+    * [fixed](## fixed)
+    * [sorter](## sorter)
+* [Modules - writing your own](# Modules - writing your own)
+* [Dynamically adding rows](# Dynamically adding rows)
+* [Theming](# Theming)
+
 ### Browser support
 
 supports all newer browsers, including IE11, edge, firefox, chrome, safari and opera. 
 It also supports the common mobile browsers for android. 
 
-# demo
+#Demo
 
 watch and edit an example here: 
 [http://codepen.io/dhansmair/pen/ZLpzKg/](http://codepen.io/dhansmair/pen/ZLpzKg/)
 
-# basic setup
+# Basic setup
 
 First of all, get the dist-folder from Github. 
 Include these files:
@@ -309,7 +324,7 @@ in this example, the initializer parameter settings will be:
     odd: '#FFFFFF'   // from the defaultSettings
 }
 ``` 
-# dynamically adding rows
+# Dynamically adding rows
 
 adding rows works like this:
 ```javascript
