@@ -517,7 +517,13 @@ var newCell = function () {
     cell.innerHTML = '<div class=\'tm-input-div\'><input type=\'text\' placeholder=\'type filter here\' /></div>\n                        <span class=\'tm-custom-checkbox\' title=\'case-sensitive\'>\n                            <input type=\'checkbox\' value=\'1\' name=\'checkbox\' />\n                            <label for=\'checkbox\'></label>\n                        </span>';
 
     return function () {
-        return cell.cloneNode(true);
+        var enabled = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+        var caseSensitive = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+        if (!enabled) return document.createElement('td');
+        var ret = cell.cloneNode(true);
+        if (!caseSensitive) ret.removeChild(ret.lastChild); // remove custom checkbox
+        return ret;
     };
 }();
 
@@ -532,7 +538,7 @@ function getCell(e) {
 // prototype for Filter
 
 var Filter = function () {
-    function Filter(tm) {
+    function Filter(tm, settings) {
         _classCallCheck(this, Filter);
 
         this.tm = tm;
@@ -540,6 +546,8 @@ var Filter = function () {
         this.indices = [];
         this.patterns = [];
         this.options = [];
+
+        this.settings = settings;
     }
 
     // setters
@@ -581,9 +589,29 @@ var Filter = function () {
             return this.options;
         }
     }, {
-        key: 'isFilterActive',
-        value: function isFilterActive() {
+        key: 'anyFilterActive',
+        value: function anyFilterActive() {
             return this.getPatterns().length !== 0;
+        }
+    }, {
+        key: 'getIsEnabled',
+        value: function getIsEnabled(i) {
+            return this.getColumnSetting(i, 'enabled');
+        }
+    }, {
+        key: 'getIsCaseSensitive',
+        value: function getIsCaseSensitive(i) {
+            return this.getColumnSetting(i, 'caseSensitive');
+        }
+    }, {
+        key: 'getColumnSetting',
+        value: function getColumnSetting(i, setting) {
+            var cols = this.settings.columns;
+            if (cols.hasOwnProperty(i) && cols[i].hasOwnProperty(setting)) {
+                // a custom value was set
+                return cols[i][setting];
+            }
+            return cols.all[setting];
         }
     }, {
         key: 'filter',
@@ -631,16 +659,20 @@ var FilterDefault = function (_Filter) {
     function FilterDefault(tm, settings) {
         _classCallCheck(this, FilterDefault);
 
-        var _this = _possibleConstructorReturn(this, (FilterDefault.__proto__ || Object.getPrototypeOf(FilterDefault)).call(this, tm));
+        var _this = _possibleConstructorReturn(this, (FilterDefault.__proto__ || Object.getPrototypeOf(FilterDefault)).call(this, tm, settings));
 
         _this.tHead = tm.head ? tm.head.tHead : tm.origHead;
 
         // create the toolbar row
-        var num = _this.tHead.firstElementChild.cells.length - 1,
+        var num = _this.tHead.firstElementChild.cells.length,
             row = document.createElement('tr'),
             timeout = void 0;
-        for (; num >= 0; num--) {
-            row.appendChild(newCell());
+
+        for (var i = 0; i < num; i++) {
+            var enabled = _this.getIsEnabled(i);
+            var cs = _this.getIsCaseSensitive(i);
+
+            row.appendChild(newCell(enabled, cs));
         }
         addClass(row, 'tm-filter-row');
 
@@ -684,7 +716,7 @@ var FilterDefault = function (_Filter) {
         };
 
         tm.body.addEventListener('tmRowsAdded', function () {
-            if (_this.isFilterActive()) _this.run();
+            if (_this.anyFilterActive()) _this.run();
         });
 
         // insert toolbar row into tHead
@@ -695,18 +727,19 @@ var FilterDefault = function (_Filter) {
     _createClass(FilterDefault, [{
         key: 'run',
         value: function run() {
-            var inputs = [].slice.call(this.tHead.querySelectorAll('input[type=text]'));
-            var checkboxes = [].slice.call(this.tHead.querySelectorAll('input[type=checkbox]'));
-
+            var filterCells = [].slice.call(this.tHead.querySelector('tr.tm-filter-row').cells);
             var patterns = [],
                 indices = [],
                 options = [];
 
-            iterate(inputs, function (i, input) {
-                if (input.value.trim() !== '') {
+            iterate(filterCells, function (i, cell) {
+                var input = cell.querySelector('input[type=text]');
+                var checkbox = cell.querySelector('input[type=checkbox]');
+
+                if (input && input.value.trim() !== '') {
                     indices.push(i);
                     patterns.push(input.value.trim());
-                    options.push(checkboxes[i].checked);
+                    if (checkbox) options.push(checkbox.checked);
                 }
             });
 
@@ -724,7 +757,13 @@ var FilterDefault = function (_Filter) {
 module.exports = new Module({
     name: "filter",
     defaultSettings: {
-        autoCollapse: true
+        autoCollapse: true,
+        columns: {
+            all: {
+                enabled: true,
+                caseSensitive: true
+            }
+        }
     },
     initializer: function initializer(settings) {
         var _this2 = this;
@@ -2056,7 +2095,7 @@ Tablemodify.modules = {
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
 // set version of Tablemodify
-Tablemodify.version = 'v0.9.2';
+Tablemodify.version = 'v0.9.3';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
 

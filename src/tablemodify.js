@@ -342,6 +342,6 @@ Tablemodify.modules = {
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
 // set version of Tablemodify
-Tablemodify.version = 'v0.9.2';
+Tablemodify.version = 'v0.9.3';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;

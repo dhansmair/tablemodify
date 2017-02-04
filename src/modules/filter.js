@@ -10,9 +10,11 @@ const newCell = (function() {
                             <label for='checkbox'></label>
                         </span>`;
 
-
-    return function() {
-        return cell.cloneNode(true);
+    return (enabled = true, caseSensitive = true) => {
+        if (!enabled) return document.createElement('td');
+        let ret = cell.cloneNode(true);
+        if (!caseSensitive) ret.removeChild(ret.lastChild); // remove custom checkbox
+        return ret;
     }
 }());
 
@@ -27,12 +29,14 @@ function getCell(e) {
 // prototype for Filter
 class Filter {
 
-    constructor(tm) {
+    constructor(tm, settings) {
         this.tm = tm;
 
         this.indices = [];
         this.patterns = [];
         this.options = [];
+
+        this.settings = settings;
     }
 
     // setters
@@ -59,8 +63,20 @@ class Filter {
         return this.options;
     }
 
-    isFilterActive() {
+    anyFilterActive() {
         return this.getPatterns().length !== 0;
+    }
+
+    getIsEnabled(i) {return this.getColumnSetting(i, 'enabled');}
+    getIsCaseSensitive(i) {return this.getColumnSetting(i, 'caseSensitive');}
+
+    getColumnSetting(i, setting) {
+        let cols = this.settings.columns;
+        if (cols.hasOwnProperty(i) && cols[i].hasOwnProperty(setting)) {
+            // a custom value was set
+            return cols[i][setting];
+        }
+        return cols.all[setting];
     }
 
     filter() {
@@ -98,15 +114,19 @@ class Filter {
 
 class FilterDefault extends Filter {
     constructor(tm, settings) {
-        super(tm);
+        super(tm, settings);
         this.tHead = tm.head ? tm.head.tHead : tm.origHead;
 
         // create the toolbar row
-        let num = this.tHead.firstElementChild.cells.length - 1,
+        let num = this.tHead.firstElementChild.cells.length,
             row = document.createElement('tr'),
             timeout;
-        for (; num >= 0; num--) {
-            row.appendChild(newCell());
+
+        for (let i = 0; i < num; i++) {
+            let enabled = this.getIsEnabled(i);
+            let cs = this.getIsCaseSensitive(i);
+
+            row.appendChild(newCell(enabled, cs));
         }
         addClass(row, 'tm-filter-row');
 
@@ -151,7 +171,7 @@ class FilterDefault extends Filter {
         }
 
         tm.body.addEventListener('tmRowsAdded', () => {
-            if (this.isFilterActive()) this.run();
+            if (this.anyFilterActive()) this.run();
         });
 
         // insert toolbar row into tHead
@@ -159,16 +179,17 @@ class FilterDefault extends Filter {
     }
 
     run() {
-        const inputs = [].slice.call(this.tHead.querySelectorAll('input[type=text]'));
-        const checkboxes = [].slice.call(this.tHead.querySelectorAll('input[type=checkbox]'));
-
+        const filterCells = [].slice.call(this.tHead.querySelector('tr.tm-filter-row').cells);
         let patterns = [], indices = [], options = [];
 
-        iterate(inputs, function(i, input) {
-            if (input.value.trim() !== '') {
+        iterate(filterCells, function(i, cell) {
+            let input = cell.querySelector('input[type=text]');
+            let checkbox = cell.querySelector('input[type=checkbox]');
+
+            if (input && input.value.trim() !== '') {
                 indices.push(i);
                 patterns.push(input.value.trim());
-                options.push(checkboxes[i].checked);
+                if (checkbox) options.push(checkbox.checked);
             }
         });
 
@@ -186,7 +207,13 @@ class FilterDefault extends Filter {
 module.exports = new Module({
     name: "filter",
     defaultSettings: {
-        autoCollapse: true
+        autoCollapse: true,
+        columns: {
+            all: {
+                enabled: true,
+                caseSensitive: true
+            }
+        }
     },
     initializer: function(settings) {
         // this := Tablemodify-instance
