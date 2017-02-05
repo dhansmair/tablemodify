@@ -14,6 +14,8 @@ It is written in plain js, so no jQuery is required. Tm is based on a core Table
     * manipulating columns
   2. [zebra](#zebra)
   3. [filter](#filter) 
+    * disable filter
+    * case sensitive filtering
   4. [fixed](#fixed)
     * sticky header
     * sticky footer
@@ -143,7 +145,26 @@ Adds a row to the thead so you can filter the table by columns.
 ```javascript
    var filterSettings = {
         // default value
-        autoCollapse: true // only show the row when thead is hovered        
+        autoCollapse: true, // only show the row when thead is hovered    
+        
+        // you can choose which column filters to enable/disable
+        // and to filter case-sensitive or not
+        columns: {
+            // set the general style for all columns
+            all: {
+                enabled: true, // default value
+                caseSensitive: true // default value
+            },
+            // define special behaviour for individual columns
+            // indices starting with 0
+            0: {
+                enabled: false
+            },
+            3: {
+                caseSensitive: false
+            }
+            // ... 
+        }
     };
 ```
 
