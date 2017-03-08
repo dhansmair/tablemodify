@@ -1,4 +1,4 @@
-const {addClass, iterate, info, error, trigger} = require('../utils.js');
+const {addClass, iterate, info, error, trigger, replaceIdsWithIndices} = require('../utils.js');
 const Module = require('./module.js');
 const FILTER_HEIGHT = '30px';
 
@@ -36,6 +36,7 @@ class Filter {
         this.patterns = [];
         this.options = [];
 
+        settings.columns = replaceIdsWithIndices(settings.columns);
         this.settings = settings;
     }
 

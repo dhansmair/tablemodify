@@ -2,9 +2,11 @@ const Module = require('./module.js');
 const dateUtils = require('../dateUtils.js');
 const {addClass, isFn, errorThrow, hasProp, log, warn, error,
        isBool, isNonEmptyString,
-       iterate, removeClass, extend2, isObject} = require('../utils.js');
+       iterate, removeClass, extend2, isObject, replaceIdsWithIndices} = require('../utils.js');
 
 function getValue(tr, i) {return tr.cells[i].innerHTML.trim().toLowerCase();}
+
+
 
 const FIRST_ENABLED_CELL = 'firstEnabled';
 const SORT_ORDER_ASC = 'asc';
@@ -72,6 +74,8 @@ class Sorter {
             body: null,
             rows: [],
         });
+
+        settings.columns = replaceIdsWithIndices(settings.columns);
         //Store a reference to the tablemodify instance
         this.tm = tableModify;
         addClass(this.tm.container, 'tm-sorter');

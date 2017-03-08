@@ -139,14 +139,12 @@ exports.isBool = b => typeof b === 'boolean';
 
 let getProp = exports.getProperty = (obj, ...props) => {
     if (!isObj(obj) || props.length === 0) return;
-    //console.log("in getprop");
     let index = 0;
     while (index < props.length - 1) {
         obj = obj[props[index]];
         if (!isObj(obj)) return;
         ++index;
     }
-    //console.log(obj, props[index]);
     if (obj[props[index]] === undefined) return;
     return obj[props[index]];
 }
@@ -157,4 +155,30 @@ exports.hasProp = (obj, ...props) => getProp(obj, ...props) !== undefined;
 */
 exports.trigger = (target, eventName, props) => {
     target.dispatchEvent(new CustomEvent(eventName, props));
+}
+
+
+/**
+    finds head cell with tm-id = tmId and returns its index
+    */
+function id2index(tmId) {
+    let cell = document.querySelector('thead > tr > *[tm-id='+tmId+']');
+    if (!cell) return null;
+    return [].slice.call(cell.parentNode.children).indexOf(cell);
+}
+
+/**
+    ersetze alle spalten, die über die tm-id identifiziert werden, durch ihren index
+*/
+exports.replaceIdsWithIndices = (columns) => {
+    Object.keys(columns).forEach((key) => {
+        if(key != 'all' && isNaN(key)) {
+            let index = id2index(key);
+            if (index != null) {
+                columns[index] = columns[key];
+                delete columns[key];
+            }
+        }
+    });
+    return columns;
 }

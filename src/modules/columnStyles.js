@@ -1,5 +1,5 @@
 const Module = require('./module.js');
-const {addClass, iterate, info, error} = require('../utils.js');
+const {addClass, iterate, info, error, replaceIdsWithIndices} = require('../utils.js');
 
 module.exports = new Module({
     name: "columnStyles",
@@ -8,6 +8,7 @@ module.exports = new Module({
             addClass(this.container, 'tm-column-styles');
 
             let containerId = this.containerId;
+            settings = replaceIdsWithIndices(settings);
 
             // style general
             let text = `div#${containerId} table tr > * {`;
@@ -19,7 +20,7 @@ module.exports = new Module({
             // add custom styles to the single columns
             iterate(settings, function(index, cssStyles) {
                 if (index === 'all') return;
-                var i = parseInt(index) + 1;
+                let i = parseInt(index) + 1;
 
                 text += `div#${containerId} table tr > *:nth-of-type(${i}) {`;
                 iterate(cssStyles, function(prop, value) {

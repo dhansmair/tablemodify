@@ -440,7 +440,8 @@ var _require = require('../utils.js'),
     addClass = _require.addClass,
     iterate = _require.iterate,
     info = _require.info,
-    error = _require.error;
+    error = _require.error,
+    replaceIdsWithIndices = _require.replaceIdsWithIndices;
 
 module.exports = new Module({
     name: "columnStyles",
@@ -452,6 +453,7 @@ module.exports = new Module({
                 addClass(_this.container, 'tm-column-styles');
 
                 var containerId = _this.containerId;
+                settings = replaceIdsWithIndices(settings);
 
                 // style general
                 var text = 'div#' + containerId + ' table tr > * {';
@@ -507,7 +509,8 @@ var _require = require('../utils.js'),
     iterate = _require.iterate,
     info = _require.info,
     error = _require.error,
-    trigger = _require.trigger;
+    trigger = _require.trigger,
+    replaceIdsWithIndices = _require.replaceIdsWithIndices;
 
 var Module = require('./module.js');
 var FILTER_HEIGHT = '30px';
@@ -547,6 +550,7 @@ var Filter = function () {
         this.patterns = [];
         this.options = [];
 
+        settings.columns = replaceIdsWithIndices(settings.columns);
         this.settings = settings;
     }
 
@@ -1120,7 +1124,8 @@ var _require = require('../utils.js'),
     iterate = _require.iterate,
     removeClass = _require.removeClass,
     extend2 = _require.extend2,
-    isObject = _require.isObject;
+    isObject = _require.isObject,
+    replaceIdsWithIndices = _require.replaceIdsWithIndices;
 
 function getValue(tr, i) {
     return tr.cells[i].innerHTML.trim().toLowerCase();
@@ -1206,6 +1211,8 @@ var Sorter = function () {
             body: null,
             rows: []
         });
+
+        settings.columns = replaceIdsWithIndices(settings.columns);
         //Store a reference to the tablemodify instance
         this.tm = tableModify;
         addClass(this.tm.container, 'tm-sorter');
@@ -2265,14 +2272,12 @@ var getProp = exports.getProperty = function (obj) {
     }
 
     if (!isObj(obj) || props.length === 0) return;
-    //console.log("in getprop");
     var index = 0;
     while (index < props.length - 1) {
         obj = obj[props[index]];
         if (!isObj(obj)) return;
         ++index;
     }
-    //console.log(obj, props[index]);
     if (obj[props[index]] === undefined) return;
     return obj[props[index]];
 };
@@ -2289,6 +2294,31 @@ exports.hasProp = function (obj) {
 */
 exports.trigger = function (target, eventName, props) {
     target.dispatchEvent(new CustomEvent(eventName, props));
+};
+
+/**
+    finds head cell with tm-id = tmId and returns its index
+    */
+function id2index(tmId) {
+    var cell = document.querySelector('thead > tr > *[tm-id=' + tmId + ']');
+    if (!cell) return null;
+    return [].slice.call(cell.parentNode.children).indexOf(cell);
+}
+
+/**
+    ersetze alle spalten, die über die tm-id identifiziert werden, durch ihren index
+*/
+exports.replaceIdsWithIndices = function (columns) {
+    Object.keys(columns).forEach(function (key) {
+        if (key != 'all' && isNaN(key)) {
+            var index = id2index(key);
+            if (index != null) {
+                columns[index] = columns[key];
+                delete columns[key];
+            }
+        }
+    });
+    return columns;
 };
 
 },{"./config.js":3,"custom-event-polyfill":1}]},{},[11]);
