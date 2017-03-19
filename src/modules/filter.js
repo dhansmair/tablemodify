@@ -2,21 +2,30 @@ const {addClass, iterate, info, error, trigger, replaceIdsWithIndices} = require
 const Module = require('./module.js');
 const FILTER_HEIGHT = '30px';
 
-const newCell = (function() {
-    let cell = document.createElement('td');
-    cell.innerHTML =   `<div class='tm-input-div'><input type='text' placeholder='type filter here' /></div>
-                        <span class='tm-custom-checkbox' title='case-sensitive'>
-                            <input type='checkbox' value='1' name='checkbox' />
-                            <label for='checkbox'></label>
-                        </span>`;
+/**
+    Factory class to produce filter cells
+*/
+class CellFactory {
+    constructor(tm) {
+        let placeholder = tm.getTerm('FILTER_PLACEHOLDER'),
+            caseSensitive = tm.getTerm('FILTER_CASESENSITIVE');
 
-    return (enabled = true, caseSensitive = true) => {
+
+        this.cell = document.createElement('td');
+        this.cell.innerHTML = `<div class='tm-input-div'><input type='text' placeholder='${placeholder}' /></div>
+                                                <span class='tm-custom-checkbox' title='${caseSensitive}'>
+                                                    <input type='checkbox' value='1' name='checkbox' />
+                                                    <label for='checkbox'></label>
+                                                </span>`;
+    }
+
+    produce(enabled = true, caseSensitive = true) {
         if (!enabled) return document.createElement('td');
-        let ret = cell.cloneNode(true);
+        let ret = this.cell.cloneNode(true);
         if (!caseSensitive) ret.removeChild(ret.lastChild); // remove custom checkbox
         return ret;
     }
-}());
+}
 
 function getCell(e) {
     let cell = e.target;
@@ -121,19 +130,20 @@ class FilterDefault extends Filter {
         // create the toolbar row
         let num = this.tHead.firstElementChild.cells.length,
             row = document.createElement('tr'),
+            cellFactory = new CellFactory(tm),
             timeout;
 
         for (let i = 0; i < num; i++) {
             let enabled = this.getIsEnabled(i);
             let cs = this.getIsCaseSensitive(i);
 
-            row.appendChild(newCell(enabled, cs));
+            row.appendChild(cellFactory.produce(enabled, cs));
         }
         addClass(row, 'tm-filter-row');
 
         if (settings.autoCollapse){
             // keep filter row visible if an input is focused
-            row.querySelectorAll('input').forEach((input) => {
+            [].slice.call(row.querySelectorAll('input')).forEach((input) => { // it seems like in IE11 .forEach only works on real arrays
                 input.onfocus = (e) => {
                     row.style.height = FILTER_HEIGHT;
                 };
@@ -229,7 +239,6 @@ module.exports = new Module({
                 instance: instance,
                 unset: () => {
                     info('unsetting filter');
-
                     // remove all filters;
                     this.showAllRows();
                 }

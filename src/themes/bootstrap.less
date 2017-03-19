@@ -13,51 +13,29 @@
 @zebraOddColor: #F9F9F9;
 
 .cellBasics {
-    //text-align:left;
-    border:none;
-    border-top:1px solid #ddd;
-    padding:8px;
+    //sbackground-color:white;
+    border-bottom:1px solid #DCDCDC;
+    //border-right:1px solid #DCDCDC;
 }
 .tableBasics {
-    border-collapse:collapse;
-    border-style: hidden;
-    //background-color:white;
-}
-div.tm-container.tm-theme-bootstrap,
-div.tm-container.tm-theme-bootstrap div.tm-foot-wrap {
     background-color:white;
-    background-image:inherit;
+    border-spacing:0px;
 }
+
 div.tm-container.tm-theme-bootstrap {
-
-    background-color: @baseColor;
-    border:none;
-
-    thead, div.tm-head-wrap  {
-        border-bottom: 1px solid #ddd;
-    }
-    tfoot, div.tm-foot-wrap {
-        border-top: 1px solid #ddd;
-    }
-
 
     div.tm-head-wrap {
         //background-color: @headerColor;
         //-webkit-box-shadow: 0px 6px 10px -10px rgba(102,102,102,1);
         //-moz-box-shadow: 0px 6px 10px -10px rgba(102,102,102,1);
         //box-shadow: 0px 6px 10px -10px rgba(102,102,102,1);
-
         table.tm-head {
-
             .tableBasics;
-            border-style: hidden;
-            font-weight:bold;
-            //border-bottom: 1px solid @borderColor;
+            tr.tm-filter-row {}
         }
     }
 
     div.tm-body-wrap {
-        background-color: transparent;
 
         table {
             .tableBasics;
@@ -66,11 +44,9 @@ div.tm-container.tm-theme-bootstrap {
                     .cellBasics;
                 }
 
-                &:nth-of-type(even) {
-                    background-color: @zebraEvenColor;
-                }
+                &:nth-of-type(even) {}
                 &:nth-of-type(odd) {
-                    background-color: @zebraOddColor;
+                    background-color:@zebraOddColor;
                 }
             }
         }
@@ -84,12 +60,11 @@ div.tm-container.tm-theme-bootstrap {
 
         table.tm-foot {
             .tableBasics;
-            border-style: hidden;
-            border-top: 1px solid @borderColor;
 
             tr {
                 td, th {
-                    .cellBasics;
+                    //.cellBasics;
+                    border-top:1px solid #DCDCDC;
                 }
             }
         }
@@ -99,19 +74,17 @@ div.tm-container.tm-theme-bootstrap {
         styles for sorter plugin
     */
     &.tm-sorter {
-        thead tr {
+        thead tr:first-of-type {
 
             td, th {
                 .cellBasics;
             }
             .sortable {
-                padding-right: 15px !important;
+                padding-right: 20px !important;
                 cursor: pointer;
-                //background-color:transparent;
-                background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem0zLjgzOSAxNmwtMy44MzkgNC43OTgtMy44MzktNC43OThoNy42Nzh6bTQuMTYxLTJoLTE2bDggMTAgOC0xMHoiLz48L3N2Zz4=");
+                background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%209%22%20height%3D%229%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M14.5%205l-4%204-4-4zM14.5%204l-4-4-4%204z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
                 background-repeat: no-repeat;
                 background-position: center right;
-                background-size: 14px;
 
                 /* Color for hovered sortable cells */
                 &:hover {
@@ -120,11 +93,11 @@ div.tm-container.tm-theme-bootstrap {
                 /* Color for active sortable cells */
                 &.sort-up {
                     background-color: @sortablePrimaryColor;
-                    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMGwtOCAxMGgxNmwtOC0xMHptMy44MzkgMTZsLTMuODM5IDQuNzk4LTMuODM5LTQuNzk4aDcuNjc4em00LjE2MS0yaC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
+                    background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%204%22%20height%3D%224%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M6.5%204l4-4%204%204z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
                 }
                 &.sort-down {
                     background-color: @sortablePrimaryColor;
-                    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem04IDE0aC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
+                    background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%204%22%20height%3D%224%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M14.5%200l-4%204-4-4z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
                 }
             }
         }
@@ -137,9 +110,12 @@ div.tm-container.tm-theme-bootstrap {
         tr.tm-filter-row {
             transition:0.2s;
 
+            td {
+                .cellBasics;
+            }
+
             div.tm-input-div {
                 input[type=text] {}
-
                 &:nth-last-child(1) > input {}
             }
 
@@ -154,5 +130,16 @@ div.tm-container.tm-theme-bootstrap {
         // height of the visible filter row
         tr:hover + tr.tm-filter-row,
         tr.tm-filter-row:hover {}
+    }
+
+    &.tm-fixed {
+        div.tm-head-wrap + div.tm-body-wrap {
+
+            table {
+                thead {
+                    -ms-visibility:collapse;
+                }
+            }
+        }
     }
 }

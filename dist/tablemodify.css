@@ -72,6 +72,9 @@ div.tm-container.tm-fixed table.tm-body tfoot td div {
   bottom: 0;
   right: 0;
 }
+div.tm-container.tm-filter thead:hover > tr.tm-filter-row {
+  height: 30px;
+}
 div.tm-container.tm-filter tr.tm-filter-row {
   position: relative;
   overflow: hidden;
@@ -133,8 +136,4 @@ div.tm-container.tm-filter tr.tm-filter-row td span.tm-custom-checkbox label {
   border: 3px solid #cccccc;
   transition: 0.2s;
   cursor: pointer;
-}
-div.tm-container.tm-filter tr:hover + tr.tm-filter-row,
-div.tm-container.tm-filter tr.tm-filter-row:hover {
-  height: 30px;
 }

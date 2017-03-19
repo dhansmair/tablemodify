@@ -2,22 +2,13 @@
 /* colors for sorters sortable head cells */
 /* colors for zebra stripes for the table */
 .cellBasics {
-  border: none;
-  border-top: 1px solid #ddd;
-  padding: 8px;
+  border-bottom: 1px solid #DCDCDC;
 }
 .tableBasics {
-  border-collapse: collapse;
-  border-style: hidden;
-}
-div.tm-container.tm-theme-bootstrap,
-div.tm-container.tm-theme-bootstrap div.tm-foot-wrap {
   background-color: white;
-  background-image: inherit;
+  border-spacing: 0px;
 }
 div.tm-container.tm-theme-bootstrap {
-  background-color: white;
-  border: none;
   /*
         styles for sorter plugin
     */
@@ -25,33 +16,16 @@ div.tm-container.tm-theme-bootstrap {
         styles for filter plugin
     */
 }
-div.tm-container.tm-theme-bootstrap thead,
-div.tm-container.tm-theme-bootstrap div.tm-head-wrap {
-  border-bottom: 1px solid #ddd;
-}
-div.tm-container.tm-theme-bootstrap tfoot,
-div.tm-container.tm-theme-bootstrap div.tm-foot-wrap {
-  border-top: 1px solid #ddd;
-}
 div.tm-container.tm-theme-bootstrap div.tm-head-wrap table.tm-head {
-  border-collapse: collapse;
-  border-style: hidden;
-  font-weight: bold;
-}
-div.tm-container.tm-theme-bootstrap div.tm-body-wrap {
-  background-color: transparent;
+  background-color: white;
+  border-spacing: 0px;
 }
 div.tm-container.tm-theme-bootstrap div.tm-body-wrap table {
-  border-collapse: collapse;
-  border-style: hidden;
+  background-color: white;
+  border-spacing: 0px;
 }
 div.tm-container.tm-theme-bootstrap div.tm-body-wrap table tr td {
-  border: none;
-  border-top: 1px solid #ddd;
-  padding: 8px;
-}
-div.tm-container.tm-theme-bootstrap div.tm-body-wrap table tr:nth-of-type(even) {
-  background-color: transparent;
+  border-bottom: 1px solid #DCDCDC;
 }
 div.tm-container.tm-theme-bootstrap div.tm-body-wrap table tr:nth-of-type(odd) {
   background-color: #F9F9F9;
@@ -60,46 +34,46 @@ div.tm-container.tm-theme-bootstrap div.tm-foot-wrap {
   background-color: white;
 }
 div.tm-container.tm-theme-bootstrap div.tm-foot-wrap table.tm-foot {
-  border-collapse: collapse;
-  border-style: hidden;
-  border-top: 1px solid #cccccc;
+  background-color: white;
+  border-spacing: 0px;
 }
 div.tm-container.tm-theme-bootstrap div.tm-foot-wrap table.tm-foot tr td,
 div.tm-container.tm-theme-bootstrap div.tm-foot-wrap table.tm-foot tr th {
-  border: none;
-  border-top: 1px solid #ddd;
-  padding: 8px;
+  border-top: 1px solid #DCDCDC;
 }
-div.tm-container.tm-theme-bootstrap.tm-sorter thead tr td,
-div.tm-container.tm-theme-bootstrap.tm-sorter thead tr th {
-  border: none;
-  border-top: 1px solid #ddd;
-  padding: 8px;
+div.tm-container.tm-theme-bootstrap.tm-sorter thead tr:first-of-type td,
+div.tm-container.tm-theme-bootstrap.tm-sorter thead tr:first-of-type th {
+  border-bottom: 1px solid #DCDCDC;
 }
-div.tm-container.tm-theme-bootstrap.tm-sorter thead tr .sortable {
-  padding-right: 15px !important;
+div.tm-container.tm-theme-bootstrap.tm-sorter thead tr:first-of-type .sortable {
+  padding-right: 20px !important;
   cursor: pointer;
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem0zLjgzOSAxNmwtMy44MzkgNC43OTgtMy44MzktNC43OThoNy42Nzh6bTQuMTYxLTJoLTE2bDggMTAgOC0xMHoiLz48L3N2Zz4=");
+  background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%209%22%20height%3D%229%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M14.5%205l-4%204-4-4zM14.5%204l-4-4-4%204z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
   background-repeat: no-repeat;
   background-position: center right;
-  background-size: 14px;
   /* Color for hovered sortable cells */
   /* Color for active sortable cells */
 }
-div.tm-container.tm-theme-bootstrap.tm-sorter thead tr .sortable:hover {
+div.tm-container.tm-theme-bootstrap.tm-sorter thead tr:first-of-type .sortable:hover {
   background-color: #a3c2db;
 }
-div.tm-container.tm-theme-bootstrap.tm-sorter thead tr .sortable.sort-up {
+div.tm-container.tm-theme-bootstrap.tm-sorter thead tr:first-of-type .sortable.sort-up {
   background-color: #6c9dc6;
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMGwtOCAxMGgxNmwtOC0xMHptMy44MzkgMTZsLTMuODM5IDQuNzk4LTMuODM5LTQuNzk4aDcuNjc4em00LjE2MS0yaC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
+  background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%204%22%20height%3D%224%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M6.5%204l4-4%204%204z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
 }
-div.tm-container.tm-theme-bootstrap.tm-sorter thead tr .sortable.sort-down {
+div.tm-container.tm-theme-bootstrap.tm-sorter thead tr:first-of-type .sortable.sort-down {
   background-color: #6c9dc6;
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem04IDE0aC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
+  background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%204%22%20height%3D%224%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M14.5%200l-4%204-4-4z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
 }
 div.tm-container.tm-theme-bootstrap.tm-filter tr.tm-filter-row {
   transition: 0.2s;
 }
+div.tm-container.tm-theme-bootstrap.tm-filter tr.tm-filter-row td {
+  border-bottom: 1px solid #DCDCDC;
+}
 div.tm-container.tm-theme-bootstrap.tm-filter tr.tm-filter-row span.tm-custom-checkbox {
   /* styles of the dot hovering the original checkbox */
+}
+div.tm-container.tm-theme-bootstrap.tm-fixed div.tm-head-wrap + div.tm-body-wrap table thead {
+  -ms-visibility: collapse;
 }

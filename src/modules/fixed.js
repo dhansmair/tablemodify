@@ -54,7 +54,7 @@ module.exports = new Module({
         try {
             addClass(container, 'tm-fixed');
             let borderCollapse = getCss(body, 'border-collapse');
-            
+
             if (origHead && settings.fixHeader) {
                 let headerHeight = getHeaderHeight();
                 head     = document.createElement('table');

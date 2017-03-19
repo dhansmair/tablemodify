@@ -3,6 +3,9 @@ const {addClass, iterate, info, error, replaceIdsWithIndices} = require('../util
 
 module.exports = new Module({
     name: "columnStyles",
+    defaultSettings: {
+        all: {}
+    },
     initializer: function(settings) {
         try {
             addClass(this.container, 'tm-column-styles');

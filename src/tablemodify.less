@@ -82,6 +82,11 @@ div.tm-container {
         styles for filter plugin
     */
     &.tm-filter {
+
+        thead:hover > tr.tm-filter-row {
+            height:30px;
+        }
+
         tr.tm-filter-row {
             position:relative;
             overflow:hidden;
@@ -153,11 +158,6 @@ div.tm-container {
                     }
                 }
             }
-        }
-        // height of the visible filter row
-        tr:hover + tr.tm-filter-row,
-        tr.tm-filter-row:hover {
-            height:30px;
         }
     }
 

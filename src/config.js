@@ -1,4 +1,5 @@
 exports.debug = false;
 exports.coreDefaults = {
-    theme: 'default'
+    theme: 'default',
+    language: 'en'
 };

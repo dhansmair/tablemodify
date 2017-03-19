@@ -1,6 +1,7 @@
 "use strict";
 const config = require('./config.js');
 const Module = require('./modules/module.js');
+const Language = require('./language.js');
 const {error, warn, isNonEmptyString, getCss,
        iterate, extend, hasClass, addClass, removeClass, getUniqueId, trigger, tableFactory} = require('./utils.js');
 
@@ -40,6 +41,8 @@ class Tablemodify {
 
         this.columnCount = 0;
         this.calculateColumnCount(body);
+
+        this.currentLanguage = coreSettings.language;
 
         body.outerHTML =
                     `<div class='tm-container'>
@@ -124,6 +127,13 @@ class Tablemodify {
             this.stylesheet.appendChild(document.createTextNode(text.trim()));
         }
         return this;
+    }
+
+    /**
+     * get a term out of the current language pack
+     */
+    getTerm(term) {
+        return Tablemodify.languages[this.currentLanguage].get(term);
     }
 
     /**
@@ -299,6 +309,15 @@ class Tablemodify {
     }
 
     /**
+        add a language pack to the collection of Languages.
+        param name: identifier of the language. May overwrite older ones
+        param term: object containing the terms. see full list in language.js
+    */
+    static addLanguage(name, terms) {
+        Tablemodify.languages[name] = new Language(name, terms);
+    }
+
+    /**
         reset all loaded modules of instance
         and unset instance afterwards
     */
@@ -329,8 +348,7 @@ class Tablemodify {
         }
     }
 }
-//Tablemodify.RENDERING_MODE_CHUNKED = 1;
-//Tablemodify.RENDERING_MODE_AT_ONCE = 2;
+
 Tablemodify.modules = {
     columnStyles: require('./modules/columnStyles.js'),
     filter: require('./modules/filter.js'),
@@ -339,9 +357,21 @@ Tablemodify.modules = {
     zebra: require('./modules/zebra.js')
 };
 
+Tablemodify.languages = {
+    en: new Language('en', {
+        FILTER_PLACEHOLDER: 'type filter here',
+        FILTER_CASESENSITIVE: 'case-sensitive'
+    }),
+    de: new Language('de', {
+        FILTER_PLACEHOLDER: 'Filter eingeben',
+        FILTER_CASESENSITIVE: 'Groß- und Kleinschreibung unterscheiden'
+    })
+};
+
+Tablemodify.Language = Language;
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
 // set version of Tablemodify
-Tablemodify.version = 'v0.9.3';
+Tablemodify.version = 'v0.9.4';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
