@@ -3,6 +3,7 @@
 /* colors for zebra stripes for the table */
 .cellBasics {
   border-bottom: 1px solid #DCDCDC;
+  padding: 5px 10px;
 }
 .tableBasics {
   background-color: white;
@@ -26,6 +27,7 @@ div.tm-container.tm-theme-bootstrap div.tm-body-wrap table {
 }
 div.tm-container.tm-theme-bootstrap div.tm-body-wrap table tr td {
   border-bottom: 1px solid #DCDCDC;
+  padding: 5px 10px;
 }
 div.tm-container.tm-theme-bootstrap div.tm-body-wrap table tr:nth-of-type(odd) {
   background-color: #F9F9F9;
@@ -39,11 +41,15 @@ div.tm-container.tm-theme-bootstrap div.tm-foot-wrap table.tm-foot {
 }
 div.tm-container.tm-theme-bootstrap div.tm-foot-wrap table.tm-foot tr td,
 div.tm-container.tm-theme-bootstrap div.tm-foot-wrap table.tm-foot tr th {
+  border-bottom: 1px solid #DCDCDC;
+  padding: 5px 10px;
   border-top: 1px solid #DCDCDC;
+  border-bottom: none;
 }
 div.tm-container.tm-theme-bootstrap.tm-sorter thead tr:first-of-type td,
 div.tm-container.tm-theme-bootstrap.tm-sorter thead tr:first-of-type th {
   border-bottom: 1px solid #DCDCDC;
+  padding: 5px 10px;
 }
 div.tm-container.tm-theme-bootstrap.tm-sorter thead tr:first-of-type .sortable {
   padding-right: 20px !important;
@@ -70,6 +76,7 @@ div.tm-container.tm-theme-bootstrap.tm-filter tr.tm-filter-row {
 }
 div.tm-container.tm-theme-bootstrap.tm-filter tr.tm-filter-row td {
   border-bottom: 1px solid #DCDCDC;
+  padding: 5px 10px;
 }
 div.tm-container.tm-theme-bootstrap.tm-filter tr.tm-filter-row span.tm-custom-checkbox {
   /* styles of the dot hovering the original checkbox */
