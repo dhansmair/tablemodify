@@ -97,7 +97,10 @@ class Filter {
         const maxDeph = indices.length - 1;
 
         // filter rows
+<<<<<<< HEAD
         /*
+=======
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
         let arr = this.tm.getAllRows().filter(function(row) {
             let deph = 0, matches = true;
 
@@ -118,6 +121,7 @@ class Filter {
             return matches;
 
         });
+<<<<<<< HEAD
         */
         let all = this.tm.getAllRows(), matching = [], notMatching = [];
         
@@ -149,6 +153,10 @@ class Filter {
         this.tm.setAvailableRows(matching);
         this.tm.setHiddenRows(notMatching);
         return this;
+=======
+
+        return this.tm.showRows(arr);
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     }
 };
 
@@ -239,8 +247,13 @@ class FilterDefault extends Filter {
             .setOptions(options)
             .filter();
 
+<<<<<<< HEAD
         //this.tm.signal('tmSorterSortAgain', 'tmFixedForceRendering');
         this.tm.actionPipeline.notify('filter');
+=======
+        this.tm.signal('tmSorterSortAgain', 'tmFixedForceRendering');
+
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
         return this;
     }
 }

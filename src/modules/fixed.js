@@ -107,11 +107,18 @@ module.exports = new Module({
                 renderHead();
                 renderFoot();
             });
+<<<<<<< HEAD
             /*
             body.addEventListener('tmFixedForceRendering', () => {
                 renderHead();
                 renderFoot();
             });*/
+=======
+            body.addEventListener('tmFixedForceRendering', () => {
+                renderHead();
+                renderFoot();
+            });
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
             if (head && foot) {
                 bodyWrap.addEventListener('scroll', function() {
@@ -167,12 +174,15 @@ module.exports = new Module({
             info('module fixed loaded');
 
             return {
+<<<<<<< HEAD
             	
             	notify: () => {	
             		renderHead();
             		renderFoot();
             	},
             	
+=======
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
                 /**
                  * revert all changes performed by this module
                  * implementation might not be 100% correct yet

@@ -2,7 +2,10 @@
 const config = require('./config.js');
 const Module = require('./modules/module.js');
 const Language = require('./language.js');
+<<<<<<< HEAD
 const ActionPipeline = require('./actionPipeline.js');
+=======
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 const {error, warn, isNonEmptyString, getCss,
        iterate, extend, hasClass, addClass, removeClass, getUniqueId, trigger, tableFactory} = require('./utils.js');
 
@@ -35,6 +38,7 @@ class Tablemodify {
         }
 
         // references to all active modules stored in here
+<<<<<<< HEAD
         this.activeModules = {
         	 /**
         	  * a special module which is always notified after sth. happened on the table data
@@ -48,6 +52,9 @@ class Tablemodify {
         		}
         	}
         };
+=======
+        this.activeModules = {};
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
         this.bodySelector = selector;
         oldBodyParent = body.parentElement;
@@ -85,6 +92,7 @@ class Tablemodify {
         addClass(body, 'tm-body');
 
         // the tBody, contains all visible rows in the table
+<<<<<<< HEAD
         //this.visibleRows = this.body.tBodies[0];
         this.DOM = this.body.tBodies[0];
         // contains all tr-nodes that are not displayed at the moment
@@ -94,6 +102,12 @@ class Tablemodify {
         
         this.actionPipeline = new ActionPipeline(this);
         
+=======
+        this.visibleRows = this.body.tBodies[0];
+        // contains all tr-nodes that are not displayed at the moment
+        this.hiddenRows = document.createDocumentFragment();
+
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
         // call all modules
         if (coreSettings.modules) {
             // interface for modules
@@ -118,6 +132,10 @@ class Tablemodify {
         }
         this.coreSettings = coreSettings;
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     /**
      * calculate number of columns. Usually only called at the initialisation
      */
@@ -156,12 +174,18 @@ class Tablemodify {
     /**
      *  get array of references to the visible rows
      */
+<<<<<<< HEAD
     getAvailableRows() {
     	return this.availableRows;
+=======
+    getVisibleRows() {
+        return [].slice.call(this.visibleRows.rows);
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     }
 
     /**
      *  get array of references to the hidden rows
+<<<<<<< HEAD
      */ 
     getHiddenRows() {
     	return this.hiddenRows;
@@ -225,11 +249,44 @@ class Tablemodify {
     	}
     }
     
+=======
+     */
+    getHiddenRows() {
+        return [].slice.call(this.hiddenRows.childNodes);
+    }
+
+    /**
+     *  get array of references to all rows, both hidden and visible
+     */
+    getAllRows() {
+        return this.getVisibleRows().concat(this.getHiddenRows());
+    }
+
+    /**
+     * show all the rows that the param rowArray contains (as references).
+     * used by filter module
+     */
+    showRows(rowArray) {
+        let fragment = document.createDocumentFragment();
+        this.hideAllRows();
+
+        for (let i = 0; i < rowArray.length; i++) {
+            fragment.appendChild(rowArray[i]);
+        }
+
+        this.visibleRows.appendChild(fragment);
+        return this;
+    }
+
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     /**
      * May be used from outside the plugin to add rows to the table.
      * This will automatically rerun the filter & sorter module.
      */
+<<<<<<< HEAD
     /*
+=======
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     addRows(arr) {
         if (arr.length === 0) return this;
 
@@ -272,6 +329,7 @@ class Tablemodify {
         return this.signal('tmRowsAdded');
     }
 
+<<<<<<< HEAD
 */
     /**
      * add a single row
@@ -280,6 +338,15 @@ class Tablemodify {
     addRow(row) {
         return this.addRows([row]);
     }*/
+=======
+
+    /**
+     * add a single row
+     */
+    addRow(row) {
+        return this.addRows([row]);
+    }
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
     /**
      * this method cleares the tablebody, without the table rows being lost. Instead, they are stored in the DocumentFragment.
@@ -287,7 +354,10 @@ class Tablemodify {
      * The References can be used to insert the rows in the original DOM again.
      * This is necessary because IE11 had several issues with references to deleted table rows
      */
+<<<<<<< HEAD
     /*
+=======
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     hideAllRows() {
         let rows = this.visibleRows.rows, next;
 
@@ -295,23 +365,37 @@ class Tablemodify {
             this.hiddenRows.appendChild(next);
         }
         return this;
+<<<<<<< HEAD
     }*/
+=======
+    }
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
     /**
      * display all hidden rows again
      * this is correct usage of documentFragment! appending the fragment itself appends all children instead
      */
+<<<<<<< HEAD
     /*
     showAllRows() {
         this.visibleRows.appendChild(this.hiddenRows);
         return this.signal('tmRowsAdded');
     }*/
+=======
+    showAllRows() {
+        this.visibleRows.appendChild(this.hiddenRows);
+        return this.signal('tmRowsAdded');
+    }
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
     /**
      * deletes all rows in the table (hidden AND visible).
      * Faster implementation than setting innerHTMl = ''
      */
+<<<<<<< HEAD
     /*
+=======
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     deleteAllRows() {
         [this.visibleRows, this.hiddenRows].forEach((p) => {
             while (p.firstChild) {
@@ -319,7 +403,11 @@ class Tablemodify {
             }
         });
         return this;
+<<<<<<< HEAD
     }*/
+=======
+    }
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
     /**
      * used to fire events on the original table. Modules may react to this events.
@@ -411,7 +499,10 @@ Tablemodify.modules = {
     filter: require('./modules/filter.js'),
     fixed: require('./modules/fixed.js'),
     sorter: require('./modules/sorter.js'),
+<<<<<<< HEAD
     pager: require('./modules/pager.js'),
+=======
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     zebra: require('./modules/zebra.js')
 };
 
@@ -422,7 +513,11 @@ Tablemodify.languages = {
     }),
     de: new Language('de', {
         FILTER_PLACEHOLDER: 'Filter eingeben',
+<<<<<<< HEAD
         FILTER_CASESENSITIVE: 'Groß- und Kleinschreibung unterscheiden'
+=======
+        FILTER_CASESENSITIVE: 'GroÃŸ- und Kleinschreibung unterscheiden'
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     })
 };
 
@@ -430,6 +525,10 @@ Tablemodify.Language = Language;
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
 // set version of Tablemodify
+<<<<<<< HEAD
 Tablemodify.version = 'v0.9.5';
+=======
+Tablemodify.version = 'v0.9.4';
+>>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
