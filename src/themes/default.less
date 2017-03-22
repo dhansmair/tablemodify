@@ -1,0 +1,143 @@
+/* BASIC COLORS */
+@baseColor: white;
+@borderColor: #cccccc;
+@headerColor: @baseColor;
+@footerColor: @baseColor;
+
+/* colors for sorters sortable head cells */
+@sortablePrimaryColor: #6c9dc6;
+@sortableSecondaryColor: lighten(@sortablePrimaryColor, 15%);
+
+/* colors for zebra stripes for the table */
+//@zebraEvenColor: transparent;
+//@zebraOddColor: tran;
+
+.cellBasics {
+    //sbackground-color:white;
+    border-bottom:1px solid #DCDCDC;
+    border-right:1px solid #DCDCDC;
+}
+.tableBasics {
+    background-color:white;
+    border-spacing:0px;
+}
+
+div.tm-container.tm-theme-default {
+
+    div.tm-head-wrap {
+        //background-color: @headerColor;
+        //-webkit-box-shadow: 0px 6px 10px -10px rgba(102,102,102,1);
+        //-moz-box-shadow: 0px 6px 10px -10px rgba(102,102,102,1);
+        //box-shadow: 0px 6px 10px -10px rgba(102,102,102,1);
+        table.tm-head {
+            .tableBasics;
+            tr.tm-filter-row {}
+        }
+    }
+
+    div.tm-body-wrap {
+
+        table {
+            .tableBasics;
+            tr {
+                td {
+                    .cellBasics;
+                }
+
+                &:nth-of-type(even) {}
+                &:nth-of-type(odd) {
+                    //background-color:@zebraOddColor;
+                }
+            }
+        }
+    }
+
+    div.tm-foot-wrap {
+        background-color: @footerColor;
+        //-webkit-box-shadow: 0px -6px 10px -10px rgba(102,102,102,1);
+        //-moz-box-shadow: 0px -6px 10px -10px rgba(102,102,102,1);
+        //box-shadow: 0px -6px 10px -10px rgba(102,102,102,1);
+
+        table.tm-foot {
+            .tableBasics;
+
+            tr {
+                td, th {
+                    //.cellBasics;
+                    border-top:1px solid #DCDCDC;
+                    border-right:1px solid #DCDCDC;
+                }
+            }
+        }
+    }
+
+    /*
+        styles for sorter plugin
+    */
+    &.tm-sorter {
+        thead tr:first-of-type {
+
+            td, th {
+                .cellBasics;
+            }
+            .sortable {
+                padding-right: 20px !important;
+                cursor: pointer;
+                background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%209%22%20height%3D%229%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M14.5%205l-4%204-4-4zM14.5%204l-4-4-4%204z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
+                background-repeat: no-repeat;
+                background-position: center right;
+
+                /* Color for hovered sortable cells */
+                &:hover {
+                    //background-color: @sortableSecondaryColor;
+                }
+                /* Color for active sortable cells */
+                &.sort-up {
+                    //background-color: @sortablePrimaryColor;
+                    background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%204%22%20height%3D%224%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M6.5%204l4-4%204%204z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
+                }
+                &.sort-down {
+                    //background-color: @sortablePrimaryColor;
+                    background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%204%22%20height%3D%224%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M14.5%200l-4%204-4-4z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
+                }
+            }
+        }
+    }
+
+    /*
+        styles for filter plugin
+    */
+    &.tm-filter {
+        tr.tm-filter-row {
+            transition:0.2s;
+
+            td {
+                .cellBasics;
+            }
+
+            div.tm-input-div {
+                input[type=text] {}
+                &:nth-last-child(1) > input {}
+            }
+
+            span.tm-custom-checkbox {
+                input[type=checkbox] {
+                    &:checked + label {}
+                }
+                /* styles of the dot hovering the original checkbox */
+                label {}
+            }
+        }
+    }
+
+    &.tm-fixed {
+        div.tm-head-wrap + div.tm-body-wrap {
+
+            table {
+                thead {
+                    -ms-visibility:collapse;
+                }
+            }
+        }
+    }
+}
