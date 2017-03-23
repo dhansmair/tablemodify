@@ -4,11 +4,7 @@ const {addClass, isFn, errorThrow, hasProp, log, warn, error,
        isBool, isNonEmptyString,
        iterate, removeClass, extend2, isObject, replaceIdsWithIndices} = require('../utils.js');
 
-<<<<<<< HEAD
 function getValue(tr, i) {return tr.cells[i].textContent.trim().toLowerCase();}
-=======
-function getValue(tr, i) {return tr.cells[i].innerHTML.trim().toLowerCase();}
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
 
 
@@ -75,31 +71,18 @@ class Sorter {
             ready: true,
             headers: {},
             headCells: [],
-<<<<<<< HEAD
             //body: null,
             rows: []
-=======
-            body: null,
-            rows: [],
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
         });
 
         settings.columns = replaceIdsWithIndices(settings.columns);
         //Store a reference to the tablemodify instance
         this.tm = tableModify;
-<<<<<<< HEAD
         
         //this.body = this.tm.body.tBodies[0];
 
         this.sortColumns = settings.columns;
         //Array of structure [[col_index_1, true | false], [col_index_2, true | false], ...]
-=======
-        addClass(this.tm.container, 'tm-sorter');
-        this.body = this.tm.body.tBodies[0];
-
-        this.sortColumns = settings.columns;
-	//Array of structure [[col_index_1, true | false], [col_index_2, true | false], ...]
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
         this.currentOrders = [];
         this.headCells = this.tm.head ? [].slice.call(this.tm.head.firstElementChild.firstElementChild.cells) : [].slice.call(this.tm.body.tHead.firstElementChild.cells);
 
@@ -244,7 +227,6 @@ class Sorter {
      * @returns this for method chaining
      */
     sort() {
-<<<<<<< HEAD
         let orders = this.currentOrders,
         	maxDepth = orders.length - 1,
         	parsers = this.getParsers();
@@ -266,25 +248,6 @@ class Sorter {
         this.tm.actionPipeline.notify('sorter');
         return this;
         
-=======
-        let orders = this.currentOrders;
-        let maxDepth = orders.length - 1;
-        let parsers = this.getParsers();
-
-        let sorted = this.tm.getVisibleRows().sort((a, b) => {
-            let compareResult = 0, curDepth = 0;
-            while (compareResult === 0 && curDepth <= maxDepth) {
-                let index = orders[curDepth][0];
-                compareResult = parsers[curDepth](getValue(a, index), getValue(b, index));
-                ++curDepth;
-            }
-            --curDepth;
-            return orders[curDepth][1] ? compareResult : -compareResult;
-        });
-
-        this.tm.showRows(sorted);
-        return this;
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     }
 
     /**
@@ -465,7 +428,6 @@ module.exports = new Module({
     },
     initializer: function(settings) {
         let sorterInstance = new Sorter(this, settings);
-<<<<<<< HEAD
         addClass(this.container, 'tm-sorter');
         return {
         	
@@ -475,9 +437,6 @@ module.exports = new Module({
         	notify: () => {
         		sorterInstance.sort();
         	},       	
-=======
-        return {
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
             sortAsc: index => sorterInstance.manage(index, false, true),
             sortDesc: index => sorterInstance.manage(index, false, false),
             info: function() {

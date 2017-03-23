@@ -382,7 +382,6 @@ try {
 },{}],3:[function(require,module,exports){
 'use strict';
 
-<<<<<<< HEAD
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -488,19 +487,13 @@ module.exports = function () {
 },{"./utils.js":15}],4:[function(require,module,exports){
 'use strict';
 
-=======
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 exports.debug = false;
 exports.coreDefaults = {
     theme: 'default',
     language: 'en'
 };
 
-<<<<<<< HEAD
 },{}],5:[function(require,module,exports){
-=======
-},{}],4:[function(require,module,exports){
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 'use strict';
 
 var _DATE_I18N, _DATE_FORMATS;
@@ -542,11 +535,7 @@ module.exports = {
     DATE_FORMATS: DATE_FORMATS
 };
 
-<<<<<<< HEAD
 },{"fecha":2}],6:[function(require,module,exports){
-=======
-},{"fecha":2}],5:[function(require,module,exports){
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -589,17 +578,9 @@ module.exports = function () {
     return Language;
 }();
 
-<<<<<<< HEAD
 },{"./utils.js":15}],7:[function(require,module,exports){
 'use strict';
 
-=======
-},{"./utils.js":13}],6:[function(require,module,exports){
-'use strict';
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 var Module = require('./module.js');
 
 var _require = require('../utils.js'),
@@ -615,7 +596,6 @@ module.exports = new Module({
         all: {}
     },
     initializer: function initializer(settings) {
-<<<<<<< HEAD
         try {
             addClass(this.container, 'tm-column-styles');
 
@@ -649,60 +629,13 @@ module.exports = new Module({
                     info('unsetting columnStyles');
                 }
             };
-=======
-        var _this = this;
-
-        try {
-            var _ret = function () {
-                addClass(_this.container, 'tm-column-styles');
-
-                var containerId = _this.containerId;
-                settings = replaceIdsWithIndices(settings);
-
-                // style general
-                var text = 'div#' + containerId + ' table tr > * {';
-                iterate(settings.all, function (prop, value) {
-                    text += prop + ': ' + value + ';';
-                });
-                text += '}';
-
-                // add custom styles to the single columns
-                iterate(settings, function (index, cssStyles) {
-                    if (index === 'all') return;
-                    var i = parseInt(index) + 1;
-
-                    text += 'div#' + containerId + ' table tr > *:nth-of-type(' + i + ') {';
-                    iterate(cssStyles, function (prop, value) {
-                        text += prop + ': ' + value + ';';
-                    });
-                    text += '}';
-                });
-                _this.appendStyles(text);
-                info('module columnStyles loaded');
-
-                return {
-                    v: {
-                        unset: function unset() {
-                            // no implementation needed
-                            info('unsetting columnStyles');
-                        }
-                    }
-                };
-            }();
-
-            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
         } catch (e) {
             error(e);
         }
     }
 });
 
-<<<<<<< HEAD
 },{"../utils.js":15,"./module.js":10}],8:[function(require,module,exports){
-=======
-},{"../utils.js":13,"./module.js":9}],7:[function(require,module,exports){
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -852,7 +785,6 @@ var Filter = function () {
             var maxDeph = indices.length - 1;
 
             // filter rows
-<<<<<<< HEAD
             /*
             let arr = this.tm.getAllRows().filter(function(row) {
                 let deph = 0, matches = true;
@@ -884,16 +816,6 @@ var Filter = function () {
                     var j = indices[deph],
                         pattern = patterns[deph],
                         tester = row.cells[j].textContent;
-=======
-            var arr = this.tm.getAllRows().filter(function (row) {
-                var deph = 0,
-                    matches = true;
-
-                while (matches && deph <= maxDeph) {
-                    var i = indices[deph],
-                        pattern = patterns[deph],
-                        tester = row.cells[i].innerHTML;
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
                     if (!options[deph]) {
                         // not case-sensitive
@@ -904,7 +826,6 @@ var Filter = function () {
                     matches = tester.indexOf(pattern) !== -1;
                     deph++;
                 }
-<<<<<<< HEAD
 
                 if (matches) {
                     matching.push(row);
@@ -916,12 +837,6 @@ var Filter = function () {
             this.tm.setAvailableRows(matching);
             this.tm.setHiddenRows(notMatching);
             return this;
-=======
-                return matches;
-            });
-
-            return this.tm.showRows(arr);
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
         }
     }]);
 
@@ -1024,13 +939,8 @@ var FilterDefault = function (_Filter) {
 
             this.setPatterns(patterns).setIndices(indices).setOptions(options).filter();
 
-<<<<<<< HEAD
             //this.tm.signal('tmSorterSortAgain', 'tmFixedForceRendering');
             this.tm.actionPipeline.notify('filter');
-=======
-            this.tm.signal('tmSorterSortAgain', 'tmFixedForceRendering');
-
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
             return this;
         }
     }]);
@@ -1074,11 +984,7 @@ module.exports = new Module({
     }
 });
 
-<<<<<<< HEAD
 },{"../utils.js":15,"./module.js":10}],9:[function(require,module,exports){
-=======
-},{"../utils.js":13,"./module.js":9}],8:[function(require,module,exports){
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 'use strict';
 
 var Module = require('./module.js');
@@ -1199,18 +1105,11 @@ module.exports = new Module({
                 renderHead();
                 renderFoot();
             });
-<<<<<<< HEAD
             /*
             body.addEventListener('tmFixedForceRendering', () => {
                 renderHead();
                 renderFoot();
             });*/
-=======
-            body.addEventListener('tmFixedForceRendering', function () {
-                renderHead();
-                renderFoot();
-            });
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
             if (head && foot) {
                 bodyWrap.addEventListener('scroll', function () {
@@ -1264,15 +1163,12 @@ module.exports = new Module({
             info('module fixed loaded');
 
             return {
-<<<<<<< HEAD
 
                 notify: function notify() {
                     renderHead();
                     renderFoot();
                 },
 
-=======
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
                 /**
                  * revert all changes performed by this module
                  * implementation might not be 100% correct yet
@@ -1314,11 +1210,7 @@ module.exports = new Module({
     }
 });
 
-<<<<<<< HEAD
 },{"../utils.js":15,"./module.js":10}],10:[function(require,module,exports){
-=======
-},{"../utils.js":13,"./module.js":9}],9:[function(require,module,exports){
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1401,7 +1293,6 @@ module.exports = function () {
     return Module;
 }();
 
-<<<<<<< HEAD
 },{"../utils.js":15}],11:[function(require,module,exports){
 'use strict';
 
@@ -1612,12 +1503,6 @@ module.exports = new Module({
 
 },{"../utils.js":15,"./module.js":10}],12:[function(require,module,exports){
 'use strict';
-=======
-},{"../utils.js":13}],10:[function(require,module,exports){
-'use strict';
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
@@ -1645,11 +1530,7 @@ var _require = require('../utils.js'),
     replaceIdsWithIndices = _require.replaceIdsWithIndices;
 
 function getValue(tr, i) {
-<<<<<<< HEAD
     return tr.cells[i].textContent.trim().toLowerCase();
-=======
-    return tr.cells[i].innerHTML.trim().toLowerCase();
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 }
 
 var FIRST_ENABLED_CELL = 'firstEnabled';
@@ -1729,24 +1610,15 @@ var Sorter = function () {
             ready: true,
             headers: {},
             headCells: [],
-<<<<<<< HEAD
             //body: null,
-=======
-            body: null,
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
             rows: []
         });
 
         settings.columns = replaceIdsWithIndices(settings.columns);
         //Store a reference to the tablemodify instance
         this.tm = tableModify;
-<<<<<<< HEAD
 
         //this.body = this.tm.body.tBodies[0];
-=======
-        addClass(this.tm.container, 'tm-sorter');
-        this.body = this.tm.body.tBodies[0];
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
         this.sortColumns = settings.columns;
         //Array of structure [[col_index_1, true | false], [col_index_2, true | false], ...]
@@ -1926,7 +1798,6 @@ var Sorter = function () {
     }, {
         key: 'sort',
         value: function sort() {
-<<<<<<< HEAD
             var orders = this.currentOrders,
                 maxDepth = orders.length - 1,
                 parsers = this.getParsers();
@@ -1947,25 +1818,6 @@ var Sorter = function () {
                 this.tm.setAvailableRows(sorted);
             }
             this.tm.actionPipeline.notify('sorter');
-=======
-            var orders = this.currentOrders;
-            var maxDepth = orders.length - 1;
-            var parsers = this.getParsers();
-
-            var sorted = this.tm.getVisibleRows().sort(function (a, b) {
-                var compareResult = 0,
-                    curDepth = 0;
-                while (compareResult === 0 && curDepth <= maxDepth) {
-                    var index = orders[curDepth][0];
-                    compareResult = parsers[curDepth](getValue(a, index), getValue(b, index));
-                    ++curDepth;
-                }
-                --curDepth;
-                return orders[curDepth][1] ? compareResult : -compareResult;
-            });
-
-            this.tm.showRows(sorted);
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
             return this;
         }
 
@@ -2099,7 +1951,6 @@ Sorter.prototype.parsers = {
                 }
             };
         } else if (settings.preset) {
-<<<<<<< HEAD
             var i18n = DATE_I18N[settings.preset];
             if (!i18n) errorThrow('Invalid preset name ' + settings.preset + ' given!');
             var formats = DATE_FORMATS[settings.preset];
@@ -2119,33 +1970,6 @@ Sorter.prototype.parsers = {
                     errorThrow('Couldn\'t compare dates: ' + e);
                 }
             };
-=======
-            var _ret = function () {
-                var i18n = DATE_I18N[settings.preset];
-                if (!i18n) errorThrow('Invalid preset name ' + settings.preset + ' given!');
-                var formats = DATE_FORMATS[settings.preset];
-                return {
-                    v: function v(a, b) {
-                        try {
-                            var aDate = false,
-                                bDate = void 0;
-                            var index = 0;
-                            while (!aDate && index < formats.length) {
-                                aDate = fecha.parse(a, formats[index]);
-                                bDate = fecha.parse(b, formats[index]);
-                                ++index;
-                            }
-                            if (!aDate) throw new Error("None of the given parsers matched!");
-                            return aDate - bDate;
-                        } catch (e) {
-                            errorThrow('Couldn\'t compare dates: ' + e);
-                        }
-                    }
-                };
-            }();
-
-            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
         } else {
             errorThrow("Neither a preset nor a date format has been given!");
         }
@@ -2192,7 +2016,6 @@ module.exports = new Module({
     },
     initializer: function initializer(settings) {
         var sorterInstance = new Sorter(this, settings);
-<<<<<<< HEAD
         addClass(this.container, 'tm-sorter');
         return {
 
@@ -2202,9 +2025,6 @@ module.exports = new Module({
             notify: function notify() {
                 sorterInstance.sort();
             },
-=======
-        return {
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
             sortAsc: function sortAsc(index) {
                 return sorterInstance.manage(index, false, true);
             },
@@ -2224,11 +2044,7 @@ module.exports = new Module({
     }
 });
 
-<<<<<<< HEAD
 },{"../dateUtils.js":5,"../utils.js":15,"./module.js":10}],13:[function(require,module,exports){
-=======
-},{"../dateUtils.js":4,"../utils.js":13,"./module.js":9}],11:[function(require,module,exports){
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 'use strict';
 
 var _require = require('../utils.js'),
@@ -2271,11 +2087,7 @@ module.exports = new Module({
     }
 });
 
-<<<<<<< HEAD
 },{"../utils.js":15,"./module.js":10}],14:[function(require,module,exports){
-=======
-},{"../utils.js":13,"./module.js":9}],12:[function(require,module,exports){
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 "use strict";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -2287,10 +2099,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var config = require('./config.js');
 var Module = require('./modules/module.js');
 var Language = require('./language.js');
-<<<<<<< HEAD
 var ActionPipeline = require('./actionPipeline.js');
-=======
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
 var _require = require('./utils.js'),
     error = _require.error,
@@ -2340,7 +2149,6 @@ var Tablemodify = function () {
         }
 
         // references to all active modules stored in here
-<<<<<<< HEAD
         this.activeModules = {
             /**
              * a special module which is always notified after sth. happened on the table data
@@ -2356,9 +2164,6 @@ var Tablemodify = function () {
                 }
             }
         };
-=======
-        this.activeModules = {};
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
         this.bodySelector = selector;
         oldBodyParent = body.parentElement;
@@ -2390,7 +2195,6 @@ var Tablemodify = function () {
         addClass(body, 'tm-body');
 
         // the tBody, contains all visible rows in the table
-<<<<<<< HEAD
         //this.visibleRows = this.body.tBodies[0];
         this.DOM = this.body.tBodies[0];
         // contains all tr-nodes that are not displayed at the moment
@@ -2399,11 +2203,6 @@ var Tablemodify = function () {
         this.availableRows = [].slice.call(this.DOM.rows); //document.createDocumentFragment();
 
         this.actionPipeline = new ActionPipeline(this);
-=======
-        this.visibleRows = this.body.tBodies[0];
-        // contains all tr-nodes that are not displayed at the moment
-        this.hiddenRows = document.createDocumentFragment();
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
         // call all modules
         if (coreSettings.modules) {
@@ -2429,10 +2228,6 @@ var Tablemodify = function () {
         }
         this.coreSettings = coreSettings;
     }
-<<<<<<< HEAD
-=======
-
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     /**
      * calculate number of columns. Usually only called at the initialisation
      */
@@ -2486,15 +2281,9 @@ var Tablemodify = function () {
          */
 
     }, {
-<<<<<<< HEAD
         key: 'getAvailableRows',
         value: function getAvailableRows() {
             return this.availableRows;
-=======
-        key: 'getVisibleRows',
-        value: function getVisibleRows() {
-            return [].slice.call(this.visibleRows.rows);
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
         }
 
         /**
@@ -2504,11 +2293,7 @@ var Tablemodify = function () {
     }, {
         key: 'getHiddenRows',
         value: function getHiddenRows() {
-<<<<<<< HEAD
             return this.hiddenRows;
-=======
-            return [].slice.call(this.hiddenRows.childNodes);
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
         }
 
         /**
@@ -2518,7 +2303,6 @@ var Tablemodify = function () {
     }, {
         key: 'getAllRows',
         value: function getAllRows() {
-<<<<<<< HEAD
             return this.availableRows.concat(this.hiddenRows);
         }
 
@@ -2550,9 +2334,6 @@ var Tablemodify = function () {
         key: 'countHiddenRows',
         value: function countHiddenRows() {
             return this.hiddenRows.length;
-=======
-            return this.getVisibleRows().concat(this.getHiddenRows());
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
         }
 
         /**
@@ -2561,7 +2342,6 @@ var Tablemodify = function () {
          */
 
     }, {
-<<<<<<< HEAD
         key: 'render',
         value: function render() {
             var limit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : Infinity;
@@ -2590,39 +2370,15 @@ var Tablemodify = function () {
                 this.DOM.removeChild(this.DOM.firstChild);
             }
         }
-=======
-        key: 'showRows',
-        value: function showRows(rowArray) {
-            var fragment = document.createDocumentFragment();
-            this.hideAllRows();
-
-            for (var i = 0; i < rowArray.length; i++) {
-                fragment.appendChild(rowArray[i]);
-            }
-
-            this.visibleRows.appendChild(fragment);
-            return this;
-        }
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
         /**
          * May be used from outside the plugin to add rows to the table.
          * This will automatically rerun the filter & sorter module.
          */
-<<<<<<< HEAD
         /*
         addRows(arr) {
             if (arr.length === 0) return this;
              if (Array.isArray(arr[0])) {
-=======
-
-    }, {
-        key: 'addRows',
-        value: function addRows(arr) {
-            if (arr.length === 0) return this;
-
-            if (Array.isArray(arr[0])) {
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
                 return this._addJSONRows(arr);
             } else if (arr[0].tagName === 'TR') {
                 return this._addHTMLRows(arr);
@@ -2631,23 +2387,14 @@ var Tablemodify = function () {
                 return this;
             }
         }
-<<<<<<< HEAD
          _addHTMLRows(rowArray) {
             let fragment = document.createDocumentFragment();
             for (let i = 0; i < rowArray.length; i++) {
-=======
-    }, {
-        key: '_addHTMLRows',
-        value: function _addHTMLRows(rowArray) {
-            var fragment = document.createDocumentFragment();
-            for (var i = 0; i < rowArray.length; i++) {
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
                 fragment.appendChild(rowArray[i]);
             }
             this.visibleRows.appendChild(fragment);
             return this.signal('tmRowsAdded');
         }
-<<<<<<< HEAD
          _addJSONRows(rowArray) {
             let tr = document.createElement('tr'),
                 td = document.createElement('td'),
@@ -2656,27 +2403,12 @@ var Tablemodify = function () {
              for (let i = 0; i < rowArray.length; i++) {
                 newTr = tr.cloneNode();
                 for (let j = 0; j < rowArray[i].length; j++) {
-=======
-    }, {
-        key: '_addJSONRows',
-        value: function _addJSONRows(rowArray) {
-            var tr = document.createElement('tr'),
-                td = document.createElement('td'),
-                newTr = void 0,
-                newTd = void 0,
-                fragment = document.createDocumentFragment();
-
-            for (var i = 0; i < rowArray.length; i++) {
-                newTr = tr.cloneNode();
-                for (var j = 0; j < rowArray[i].length; j++) {
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
                     newTd = td.cloneNode();
                     newTd.innerHTML = rowArray[i][j];
                     newTr.appendChild(newTd);
                 }
                 fragment.appendChild(newTr);
             }
-<<<<<<< HEAD
              this.visibleRows.appendChild(fragment);
             return this.signal('tmRowsAdded');
         }
@@ -2688,22 +2420,6 @@ var Tablemodify = function () {
         addRow(row) {
             return this.addRows([row]);
         }*/
-=======
-
-            this.visibleRows.appendChild(fragment);
-            return this.signal('tmRowsAdded');
-        }
-
-        /**
-         * add a single row
-         */
-
-    }, {
-        key: 'addRow',
-        value: function addRow(row) {
-            return this.addRows([row]);
-        }
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
         /**
          * this method cleares the tablebody, without the table rows being lost. Instead, they are stored in the DocumentFragment.
@@ -2711,7 +2427,6 @@ var Tablemodify = function () {
          * The References can be used to insert the rows in the original DOM again.
          * This is necessary because IE11 had several issues with references to deleted table rows
          */
-<<<<<<< HEAD
         /*
         hideAllRows() {
             let rows = this.visibleRows.rows, next;
@@ -2720,66 +2435,30 @@ var Tablemodify = function () {
             }
             return this;
         }*/
-=======
-
-    }, {
-        key: 'hideAllRows',
-        value: function hideAllRows() {
-            var rows = this.visibleRows.rows,
-                next = void 0;
-
-            while (next = rows[0]) {
-                this.hiddenRows.appendChild(next);
-            }
-            return this;
-        }
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
         /**
          * display all hidden rows again
          * this is correct usage of documentFragment! appending the fragment itself appends all children instead
          */
-<<<<<<< HEAD
         /*
         showAllRows() {
             this.visibleRows.appendChild(this.hiddenRows);
             return this.signal('tmRowsAdded');
         }*/
-=======
-
-    }, {
-        key: 'showAllRows',
-        value: function showAllRows() {
-            this.visibleRows.appendChild(this.hiddenRows);
-            return this.signal('tmRowsAdded');
-        }
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
         /**
          * deletes all rows in the table (hidden AND visible).
          * Faster implementation than setting innerHTMl = ''
          */
-<<<<<<< HEAD
         /*
         deleteAllRows() {
             [this.visibleRows, this.hiddenRows].forEach((p) => {
-=======
-
-    }, {
-        key: 'deleteAllRows',
-        value: function deleteAllRows() {
-            [this.visibleRows, this.hiddenRows].forEach(function (p) {
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
                 while (p.firstChild) {
                     p.removeChild(p.firstChild);
                 }
             });
             return this;
-<<<<<<< HEAD
         }*/
-=======
-        }
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 
         /**
          * used to fire events on the original table. Modules may react to this events.
@@ -2891,10 +2570,7 @@ Tablemodify.modules = {
     filter: require('./modules/filter.js'),
     fixed: require('./modules/fixed.js'),
     sorter: require('./modules/sorter.js'),
-<<<<<<< HEAD
     pager: require('./modules/pager.js'),
-=======
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     zebra: require('./modules/zebra.js')
 };
 
@@ -2905,11 +2581,7 @@ Tablemodify.languages = {
     }),
     de: new Language('de', {
         FILTER_PLACEHOLDER: 'Filter eingeben',
-<<<<<<< HEAD
         FILTER_CASESENSITIVE: 'Gro�- und Kleinschreibung unterscheiden'
-=======
-        FILTER_CASESENSITIVE: 'Groß- und Kleinschreibung unterscheiden'
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
     })
 };
 
@@ -2917,19 +2589,11 @@ Tablemodify.Language = Language;
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
 // set version of Tablemodify
-<<<<<<< HEAD
 Tablemodify.version = 'v0.9.5';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
 
 },{"./actionPipeline.js":3,"./config.js":4,"./language.js":6,"./modules/columnStyles.js":7,"./modules/filter.js":8,"./modules/fixed.js":9,"./modules/module.js":10,"./modules/pager.js":11,"./modules/sorter.js":12,"./modules/zebra.js":13,"./utils.js":15}],15:[function(require,module,exports){
-=======
-Tablemodify.version = 'v0.9.4';
-//make the Tablemodify object accessible globally
-window.Tablemodify = Tablemodify;
-
-},{"./config.js":3,"./language.js":5,"./modules/columnStyles.js":6,"./modules/filter.js":7,"./modules/fixed.js":8,"./modules/module.js":9,"./modules/sorter.js":10,"./modules/zebra.js":11,"./utils.js":13}],13:[function(require,module,exports){
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -3144,8 +2808,4 @@ exports.replaceIdsWithIndices = function (columns) {
     return columns;
 };
 
-<<<<<<< HEAD
 },{"./config.js":4,"custom-event-polyfill":1}]},{},[14]);
-=======
-},{"./config.js":3,"custom-event-polyfill":1}]},{},[12]);
->>>>>>> ffd86d16082a52ecbdcd2018d80598698e2bcbe2
