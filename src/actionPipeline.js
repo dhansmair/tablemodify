@@ -13,21 +13,6 @@ const RELOAD = '__reload',
 const hierarchy = [RELOAD, FILTER, SORTER, PAGER, RENDERER, FIXED];
 
 /**
- * private
- * generates an array containing all active modules in order of their hierarchy.
- * @param object activeModules
- * @returns array of strings queue
- */
-/*
-function generateQueue(activeModules) {
-	let queue = [];	
-	hierarchy.forEach((moduleName) => {
-		if (activeModules.hasOwnProperty(moduleName)) queue.push(moduleName);
-	});
-	return queue;
-}*/
-
-/**
  * tm always holds exactly one ActionPipeline instance. 
  * When a Module in the Hierarchy changes data of the table in some way (like filtering, sorting, paging), the next active Module in the hierarchy
  * gets notified and can also perform changes (and trigger again afterwards).
@@ -53,17 +38,8 @@ module.exports = class ActionPipeline {
 	 */
 	notify(sender, msg) {
 		try {			
-			//if (!sender) return;
-			//let index = this.queue.indexOf(sender);
-			//if (index === -1 || index >= this.queue.length - 1) return;
-			
 			let receiver = this._getSuccessor(sender);
-			
-			
-			/*
-			let receiverName = this.queue[index + 1],
-				receiver = this.activeModules[receiverName]; // the module handler object
-			*/
+
 			if (receiver != null) receiver.notify(msg);				
 		} catch(e) {
 			error(e);

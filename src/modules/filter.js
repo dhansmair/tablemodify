@@ -97,28 +97,6 @@ class Filter {
         const maxDeph = indices.length - 1;
 
         // filter rows
-        /*
-        let arr = this.tm.getAllRows().filter(function(row) {
-            let deph = 0, matches = true;
-
-            while (matches && deph <= maxDeph) {
-                let i = indices[deph],
-                    pattern = patterns[deph],
-                    tester = row.cells[i].innerHTML;
-
-                if (!options[deph]) {
-                    // not case-sensitive
-                    pattern = pattern.toLowerCase();
-                    tester = tester.toLowerCase();
-                }
-
-                matches = tester.indexOf(pattern) !== -1;
-                deph++;
-            }
-            return matches;
-
-        });
-        */
         let all = this.tm.getAllRows(), matching = [], notMatching = [];
         
         for (let i = 0; i < all.length; i++) {

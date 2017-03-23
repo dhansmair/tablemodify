@@ -404,21 +404,6 @@ var RELOAD = '__reload',
 var hierarchy = [RELOAD, FILTER, SORTER, PAGER, RENDERER, FIXED];
 
 /**
- * private
- * generates an array containing all active modules in order of their hierarchy.
- * @param object activeModules
- * @returns array of strings queue
- */
-/*
-function generateQueue(activeModules) {
-	let queue = [];	
-	hierarchy.forEach((moduleName) => {
-		if (activeModules.hasOwnProperty(moduleName)) queue.push(moduleName);
-	});
-	return queue;
-}*/
-
-/**
  * tm always holds exactly one ActionPipeline instance. 
  * When a Module in the Hierarchy changes data of the table in some way (like filtering, sorting, paging), the next active Module in the hierarchy
  * gets notified and can also perform changes (and trigger again afterwards).
@@ -450,16 +435,8 @@ module.exports = function () {
 		key: 'notify',
 		value: function notify(sender, msg) {
 			try {
-				//if (!sender) return;
-				//let index = this.queue.indexOf(sender);
-				//if (index === -1 || index >= this.queue.length - 1) return;
-
 				var receiver = this._getSuccessor(sender);
 
-				/*
-    let receiverName = this.queue[index + 1],
-    	receiver = this.activeModules[receiverName]; // the module handler object
-    */
 				if (receiver != null) receiver.notify(msg);
 			} catch (e) {
 				error(e);
@@ -788,20 +765,20 @@ var Filter = function () {
             /*
             let arr = this.tm.getAllRows().filter(function(row) {
                 let deph = 0, matches = true;
-                 while (matches && deph <= maxDeph) {
+                  while (matches && deph <= maxDeph) {
                     let i = indices[deph],
                         pattern = patterns[deph],
                         tester = row.cells[i].innerHTML;
-                     if (!options[deph]) {
+                      if (!options[deph]) {
                         // not case-sensitive
                         pattern = pattern.toLowerCase();
                         tester = tester.toLowerCase();
                     }
-                     matches = tester.indexOf(pattern) !== -1;
+                      matches = tester.indexOf(pattern) !== -1;
                     deph++;
                 }
                 return matches;
-             });
+              });
             */
             var all = this.tm.getAllRows(),
                 matching = [],
@@ -2378,7 +2355,7 @@ var Tablemodify = function () {
         /*
         addRows(arr) {
             if (arr.length === 0) return this;
-             if (Array.isArray(arr[0])) {
+              if (Array.isArray(arr[0])) {
                 return this._addJSONRows(arr);
             } else if (arr[0].tagName === 'TR') {
                 return this._addHTMLRows(arr);
@@ -2387,7 +2364,7 @@ var Tablemodify = function () {
                 return this;
             }
         }
-         _addHTMLRows(rowArray) {
+          _addHTMLRows(rowArray) {
             let fragment = document.createDocumentFragment();
             for (let i = 0; i < rowArray.length; i++) {
                 fragment.appendChild(rowArray[i]);
@@ -2395,12 +2372,12 @@ var Tablemodify = function () {
             this.visibleRows.appendChild(fragment);
             return this.signal('tmRowsAdded');
         }
-         _addJSONRows(rowArray) {
+          _addJSONRows(rowArray) {
             let tr = document.createElement('tr'),
                 td = document.createElement('td'),
                 newTr, newTd,
                 fragment = document.createDocumentFragment();
-             for (let i = 0; i < rowArray.length; i++) {
+              for (let i = 0; i < rowArray.length; i++) {
                 newTr = tr.cloneNode();
                 for (let j = 0; j < rowArray[i].length; j++) {
                     newTd = td.cloneNode();
@@ -2409,7 +2386,7 @@ var Tablemodify = function () {
                 }
                 fragment.appendChild(newTr);
             }
-             this.visibleRows.appendChild(fragment);
+              this.visibleRows.appendChild(fragment);
             return this.signal('tmRowsAdded');
         }
         */
@@ -2430,7 +2407,7 @@ var Tablemodify = function () {
         /*
         hideAllRows() {
             let rows = this.visibleRows.rows, next;
-             while (next = rows[0]) {
+              while (next = rows[0]) {
                 this.hiddenRows.appendChild(next);
             }
             return this;
