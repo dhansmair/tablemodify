@@ -6,6 +6,17 @@ const defaultParams = {           //default-name
 };
 
 /**
+ *  these is the default return object of every Module
+ */
+const defaultReturns = {
+    instance: {},
+	unset: () => {},
+	getStats: () => {},
+	info: () => {},
+	notify: () => {}
+};
+
+/**
  * This class represents a single Tablemodify module.
  * It provides a standard interface for defining modules, takes care of settings
  * validation, settings-completion with default settings and can be extended with
@@ -50,6 +61,6 @@ module.exports = class Module {
      */
     getModule(tableModify, settings) {
         settings = this.getSettings(settings);
-        return this.initializer.call(tableModify, settings, this);
+        return extend2(this.initializer.call(tableModify, settings, this), defaultReturns);
     }
 };

@@ -404,17 +404,17 @@ var RELOAD = '__reload',
 var hierarchy = [RELOAD, FILTER, SORTER, PAGER, RENDERER, FIXED];
 
 /**
- * tm always holds exactly one ActionPipeline instance. 
+ * tm always holds exactly one ActionPipeline instance.
  * When a Module in the Hierarchy changes data of the table in some way (like filtering, sorting, paging), the next active Module in the hierarchy
  * gets notified and can also perform changes (and trigger again afterwards).
  * for Example, after a filter-operation the table has to be resorted and the pager has to display different data.
- * 
+ *
  * In the end of each chain reaction, the built-in pseudoModule RENDERER is triggered to re-render the table so the effects will be shown.
- * the advantage is that it will always rerender once and not after each action 
+ * the advantage is that it will always rerender once and not after each action
  */
 module.exports = function () {
 
-	/** 
+	/**
   * only called once in tablemodify.js
   */
 	function ActionPipeline(tm) {
@@ -451,6 +451,7 @@ module.exports = function () {
 			}
 			for (; i < hierarchy.length; i++) {
 				var name = hierarchy[i];
+				console.log(name);
 				if (this.activeModules.hasOwnProperty(name)) {
 					return this.activeModules[name];
 				}
@@ -461,7 +462,7 @@ module.exports = function () {
 	return ActionPipeline;
 }();
 
-},{"./utils.js":16}],4:[function(require,module,exports){
+},{"./utils.js":15}],4:[function(require,module,exports){
 'use strict';
 
 exports.debug = false;
@@ -556,7 +557,7 @@ module.exports = function () {
     return Language;
 }();
 
-},{"./utils.js":16}],7:[function(require,module,exports){
+},{"./utils.js":15}],7:[function(require,module,exports){
 'use strict';
 
 var Module = require('./module.js');
@@ -613,7 +614,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":16,"./module.js":10}],8:[function(require,module,exports){
+},{"../utils.js":15,"./module.js":10}],8:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -633,7 +634,6 @@ var _require = require('../utils.js'),
     replaceIdsWithIndices = _require.replaceIdsWithIndices;
 
 var Module = require('./module.js');
-var ModuleReturn = require('./moduleReturn.js');
 var FILTER_HEIGHT = '30px';
 
 /**
@@ -933,7 +933,7 @@ module.exports = new Module({
 
             info('module filter loaded');
 
-            return new ModuleReturn({
+            return {
                 instance: instance,
                 getStats: function getStats() {
                     return {
@@ -950,14 +950,14 @@ module.exports = new Module({
                     // remove all filters;
                     _this2.showAllRows();
                 }
-            });
+            };
         } catch (e) {
             error(e);
         }
     }
 });
 
-},{"../utils.js":16,"./module.js":10,"./moduleReturn.js":11}],9:[function(require,module,exports){
+},{"../utils.js":15,"./module.js":10}],9:[function(require,module,exports){
 'use strict';
 
 var Module = require('./module.js');
@@ -1183,7 +1183,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":16,"./module.js":10}],10:[function(require,module,exports){
+},{"../utils.js":15,"./module.js":10}],10:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1203,6 +1203,17 @@ var defaultParams = { //default-name
     initializer: function initializer() {
         return null;
     } //default: empty module
+};
+
+/**
+ *  these is the default return object of every Module
+ */
+var defaultReturns = {
+    instance: {},
+    unset: function unset() {},
+    getStats: function getStats() {},
+    info: function info() {},
+    notify: function notify() {}
 };
 
 /**
@@ -1259,37 +1270,14 @@ module.exports = function () {
         key: "getModule",
         value: function getModule(tableModify, settings) {
             settings = this.getSettings(settings);
-            return this.initializer.call(tableModify, settings, this);
+            return extend2(this.initializer.call(tableModify, settings, this), defaultReturns);
         }
     }]);
 
     return Module;
 }();
 
-},{"../utils.js":16}],11:[function(require,module,exports){
-'use strict';
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var _require = require('../utils.js'),
-    extend2 = _require.extend2;
-
-var defaultSettings = {
-	instance: {},
-	unset: function unset() {},
-	getStats: function getStats() {},
-	info: function info() {},
-	notify: function notify() {}
-};
-
-module.exports = function ModuleReturn(params) {
-	_classCallCheck(this, ModuleReturn);
-
-	extend2(params, defaultSettings);
-	extend2(this, params);
-};
-
-},{"../utils.js":16}],12:[function(require,module,exports){
+},{"../utils.js":15}],11:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1297,7 +1285,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Module = require('./module.js');
-var ModuleReturn = require('./moduleReturn.js');
 
 var _require = require('../utils.js'),
     addClass = _require.addClass,
@@ -1427,6 +1414,12 @@ var Controller = function () {
 			}
 			return this;
 		}
+	}, {
+		key: 'update',
+		value: function update() {
+			this.updateTotalPages();
+			return this;
+		}
 	}]);
 
 	return Controller;
@@ -1466,12 +1459,16 @@ var Pager = function () {
 			}
 			return this;
 		}
+
+		/**
+   * fetches limit and offset from the view
+   */
+
 	}, {
 		key: 'update',
 		value: function update() {
-			this.setOffset(this.controller.getOffset()).setLimit(this.controller.getLimit());
-			//.run();
-			return this;
+			this.controller.update();
+			return this.setOffset(this.controller.getOffset()).setLimit(this.controller.getLimit());
 		}
 
 		// setters
@@ -1489,7 +1486,7 @@ var Pager = function () {
 			return this;
 		}
 
-		// 
+		//
 
 	}, {
 		key: 'setTotalManually',
@@ -1535,7 +1532,7 @@ module.exports = new Module({
 			// initialize the pager internal values
 			instance.update();
 
-			return new ModuleReturn({
+			return {
 				instance: instance,
 				show: function show(limit, offset) {
 					instance.setOffset(offset).setLimit(limit).run();
@@ -1548,19 +1545,19 @@ module.exports = new Module({
 				},
 				notify: function notify() {
 					// force pager to run again
-					instance.run();
+					instance.update().run();
 				},
 				setTotalManually: function setTotalManually(num) {
 					instance.setTotalManually(num);
 				}
-			});
+			};
 		} catch (e) {
 			error(e);
 		}
 	}
 });
 
-},{"../utils.js":16,"./module.js":10,"./moduleReturn.js":11}],13:[function(require,module,exports){
+},{"../utils.js":15,"./module.js":10}],12:[function(require,module,exports){
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -1570,7 +1567,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Module = require('./module.js');
-var ModuleReturn = require('./moduleReturn.js');
 var dateUtils = require('../dateUtils.js');
 
 var _require = require('../utils.js'),
@@ -2086,21 +2082,18 @@ module.exports = new Module({
         var instance = new Sorter(this, settings);
         addClass(this.container, 'tm-sorter');
 
-        return new ModuleReturn({
+        return {
             instance: instance,
             notify: function notify() {
                 instance.sort();
             },
             getStats: function getStats() {
-                //let indices = [], orders = [];
                 var orders = instance.currentOrders.map(function (arr) {
-                    //orders.push([arr[0], (arr[1] ? 'asc' : 'desc')]);
                     return {
                         index: arr[0],
                         order: arr[1] ? 'asc' : 'desc'
                     };
                 });
-
                 return orders;
             },
             sortAsc: function sortAsc(index) {
@@ -2119,11 +2112,11 @@ module.exports = new Module({
                     @Todo set order to initial ... don't know how to do it yet
                 */
             }
-        });
+        };
     }
 });
 
-},{"../dateUtils.js":5,"../utils.js":16,"./module.js":10,"./moduleReturn.js":11}],14:[function(require,module,exports){
+},{"../dateUtils.js":5,"../utils.js":15,"./module.js":10}],13:[function(require,module,exports){
 'use strict';
 
 var _require = require('../utils.js'),
@@ -2166,7 +2159,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":16,"./module.js":10}],15:[function(require,module,exports){
+},{"../utils.js":15,"./module.js":10}],14:[function(require,module,exports){
 "use strict";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -2239,7 +2232,7 @@ var Tablemodify = function () {
 
                     var offset = msg.offset || 0,
                         limit = msg.limit || Infinity;
-                    _this.render(limit, offset).actionPipeline.notify();
+                    _this.render(limit, offset).actionPipeline.notify('__renderer');
                 }
             }
         };
@@ -2404,11 +2397,21 @@ var Tablemodify = function () {
         value: function setHiddenRows(arr) {
             this.hiddenRows = arr;
         }
+
+        /**
+         * returns number of available rows
+         */
+
     }, {
         key: 'countAvailableRows',
         value: function countAvailableRows() {
             return this.availableRows.length;
         }
+
+        /**
+         * returns number of hidden rows
+         */
+
     }, {
         key: 'countHiddenRows',
         value: function countHiddenRows() {
@@ -2444,7 +2447,8 @@ var Tablemodify = function () {
         }
 
         /**
-         * 
+         * efficient way to empty the visible table rows
+         * @return this for chaining
          */
 
     }, {
@@ -2457,7 +2461,9 @@ var Tablemodify = function () {
         }
 
         /**
-         * 
+         * clears the body and appends new rows
+         * @param data: array or string
+         * @return this for chaining
          */
 
     }, {
@@ -2467,23 +2473,74 @@ var Tablemodify = function () {
         }
 
         /**
-         * 
+         * appends rows to the table and updates the internal availableRows & hiddenRows arrays
+         * @param data: array or string
+         * @return this for chaining
          */
 
     }, {
         key: 'appendRows',
         value: function appendRows(data) {
             if (typeof data === 'string') {
-
                 this.DOM.innerHTML += data;
             } else if (Array.isArray(data)) {
-
                 for (var i = 0; i < data.length; i++) {
                     this.DOM.appendChild(data[i]);
                 }
             }
             this.setAvailableRows([].slice.call(this.DOM));
             this.setHiddenRows([]);
+            return this;
+        }
+
+        /**
+         * clears DOM and then does appendRaw(). See it for more information
+         * @param {array} data
+         * @return this for chaining 
+         */
+
+    }, {
+        key: 'insertRaw',
+        value: function insertRaw(data) {
+            return this.clearDOM().appendRaw(data);
+        }
+
+        /**
+         * appends data of a special raw data type:
+         * @param {array} data: 2D-array of objects like this: {c: "content", a: {attribute1: value, attribute2: value}}
+         * @return this for chaining
+         */
+
+    }, {
+        key: 'appendRaw',
+        value: function appendRaw(data) {
+            var trPattern = document.createElement('tr'),
+                tdPattern = document.createElement('td');
+            //let fragment = document.createDocumentFragment();
+            for (var i = 0; i < data.length; i++) {
+                var tr = trPattern.cloneNode(),
+                    row = data[i];
+
+                var _loop = function _loop(j) {
+                    var td = tdPattern.cloneNode(),
+                        cell = row[j];
+                    td.innerHTML = cell.c;
+
+                    if (cell.hasOwnProperty('a')) {
+                        Object.keys(cell.a).forEach(function (prop) {
+                            td.addAttribute(prop, cell.a[prop]);
+                        });
+                    }
+                    tr.appendChild(td);
+                };
+
+                for (var j = 0; j < row.length; j++) {
+                    _loop(j);
+                }
+
+                this.availableRows.push(tr);
+            }
+            this.reload();
             return this;
         }
 
@@ -2504,7 +2561,6 @@ var Tablemodify = function () {
 
             // collect all necessary data
             var infos = {};
-
             ['sorter', 'filter', 'pager'].forEach(function (name) {
                 if (_this2.isActive(name)) {
                     infos[name] = _this2.getModule(name).getStats();
@@ -2534,11 +2590,25 @@ var Tablemodify = function () {
             });
             return this;
         }
+
+        /**
+         * check if a module is acitve
+         * @param {string} name: name of modules
+         * @return {boolean}
+        */
+
     }, {
         key: 'isActive',
         value: function isActive(name) {
             return this.activeModules.hasOwnProperty(name);
         }
+
+        /**
+         * returns the module if it is active
+         * @param {string} name: name of the module
+         * @return {object} module return of null if module is not active
+         */
+
     }, {
         key: 'getModule',
         value: function getModule(name) {
@@ -2547,6 +2617,13 @@ var Tablemodify = function () {
             }
             return null;
         }
+
+        /**
+         * get the index of the table header cell with the passed tm-id attribute
+         * @param {string} tmId
+         * @return {number} index if it exists, null otherwise
+         */
+
     }, {
         key: 'id2index',
         value: function id2index(tmId) {
@@ -2554,6 +2631,13 @@ var Tablemodify = function () {
             if (!cell) return null;
             return [].slice.call(cell.parentNode.children).indexOf(cell);
         }
+
+        /**
+         * returns the tm-id of a table header cell with the passed index
+         * @param {number} index
+         * @return {string} tm-id
+         */
+
     }, {
         key: 'index2id',
         value: function index2id(index) {
@@ -2562,6 +2646,12 @@ var Tablemodify = function () {
             if (!cell) return null;
             return cell.getAttribute('tm-id');
         }
+
+        /**
+         * initiates reloading through the action pipeline
+         * @return this for chaining
+         */
+
     }, {
         key: 'reload',
         value: function reload() {
@@ -2684,7 +2774,7 @@ Tablemodify.version = 'v0.9.5';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
 
-},{"./actionPipeline.js":3,"./config.js":4,"./language.js":6,"./modules/columnStyles.js":7,"./modules/filter.js":8,"./modules/fixed.js":9,"./modules/module.js":10,"./modules/pager.js":12,"./modules/sorter.js":13,"./modules/zebra.js":14,"./utils.js":16}],16:[function(require,module,exports){
+},{"./actionPipeline.js":3,"./config.js":4,"./language.js":6,"./modules/columnStyles.js":7,"./modules/filter.js":8,"./modules/fixed.js":9,"./modules/module.js":10,"./modules/pager.js":11,"./modules/sorter.js":12,"./modules/zebra.js":13,"./utils.js":15}],15:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -2909,4 +2999,4 @@ exports.replaceIdsWithIndices = function (columns) {
     return columns;
 };
 
-},{"./config.js":4,"custom-event-polyfill":1}]},{},[15]);
+},{"./config.js":4,"custom-event-polyfill":1}]},{},[14]);

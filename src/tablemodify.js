@@ -44,7 +44,7 @@ class Tablemodify {
         		notify: (msg = {}) => {
         			let offset = msg.offset || 0,
         				limit = msg.limit || Infinity;
-            		_this.render(limit, offset).actionPipeline.notify();
+            		_this.render(limit, offset).actionPipeline.notify('__renderer');
         		}
         	}
         };
@@ -91,10 +91,10 @@ class Tablemodify {
         //this.hiddenRows = document.createDocumentFragment();
         this.hiddenRows = [];
         this.availableRows = [].slice.call(this.DOM.rows);//document.createDocumentFragment();
-        
+
         this.actionPipeline = new ActionPipeline(this);
         this.coreSettings = coreSettings;
-        
+
         // call all modules
         if (coreSettings.modules) {
             // interface for modules
@@ -116,7 +116,7 @@ class Tablemodify {
                     }
                 }
             });
-        }        
+        }
     }
     /**
      * calculate number of columns. Usually only called at the initialisation
@@ -162,65 +162,71 @@ class Tablemodify {
 
     /**
      *  get array of references to the hidden rows
-     */ 
+     */
     getHiddenRows() {
     	return this.hiddenRows;
     }
-    
+
     /**
      *  get array of references to all rows, both hidden and visible
-     */   
+     */
     getAllRows() {
     	return this.availableRows.concat(this.hiddenRows);
     }
-    
+
     /**
      * setter
      */
     setAvailableRows(arr) {
     	this.availableRows = arr;
     }
-    
+
     /**
      * setter
      */
     setHiddenRows(arr) {
     	this.hiddenRows = arr
     }
-    
-    
+
+    /**
+     * returns number of available rows
+     */
     countAvailableRows() {
     	return this.availableRows.length;
     }
-    
+
+    /**
+     * returns number of hidden rows
+     */
     countHiddenRows() {
     	return this.hiddenRows.length;
     }
- 
+
     /**
      * show all the rows that the param rowArray contains (as references).
      * used by filter module
-     */   
+     */
     render(limit = Infinity, offset = 0) {
     	this.clearDOM();
     	let fragment = document.createDocumentFragment();
-    	
+
     	if (limit === Infinity || limit+offset > this.availableRows.length) {
     		limit = this.availableRows.length;
     	} else {
     		limit += offset;
     	}
-    
+
     	for (; offset < limit; offset++) {
     		fragment.appendChild(this.availableRows[offset]);
     	}
-    	
+
     	this.DOM.appendChild(fragment);
     	return this;
-    }   
+    }
 
     /**
-     * 
+     * efficient way to empty the visible table rows
+     * @return this for chaining
      */
     clearDOM() {
     	while (this.DOM.firstChild) {
@@ -228,25 +234,26 @@ class Tablemodify {
     	}
     	return this;
     }
-    
+
     /**
-     * 
+     * clears the body and appends new rows
+     * @param data: array or string
+     * @return this for chaining
      */
     insertRows(data) {
     	return this.clearDOM().appendRows(data);
     }
-    
+
     /**
-     * 
+     * appends rows to the table and updates the internal availableRows & hiddenRows arrays
+     * @param data: array or string
+     * @return this for chaining
      */
     appendRows(data) {
     	if (typeof data === 'string') {
-    		
-    		this.DOM.innerHTML += data;
-    		
-    	} else if (Array.isArray(data)) {
-    		
-    		for (let i = 0; i < data.length; i++) {
+	        this.DOM.innerHTML += data;
+        } else if (Array.isArray(data)) {
+            for (let i = 0; i < data.length; i++) {
     			this.DOM.appendChild(data[i]);
     		}
     	}
@@ -254,7 +261,46 @@ class Tablemodify {
 		this.setHiddenRows([]);
 		return this;
     }
-    
+
+    /**
+     * clears DOM and then does appendRaw(). See it for more information
+     * @param {array} data
+     * @return this for chaining 
+     */
+    insertRaw(data) {
+        return this.clearDOM().appendRaw(data);
+    }
+
+    /**
+     * appends data of a special raw data type:
+     * @param {array} data: 2D-array of objects like this: {c: "content", a: {attribute1: value, attribute2: value}}
+     * @return this for chaining
+     */
+    appendRaw(data) {
+        let trPattern = document.createElement('tr'),
+            tdPattern = document.createElement('td');
+        //let fragment = document.createDocumentFragment();
+        for (let i = 0; i < data.length; i++) {
+            let tr = trPattern.cloneNode(), row = data[i];
+            for (let j = 0; j < row.length; j++) {
+                let td = tdPattern.cloneNode(), cell = row[j];
+                td.innerHTML = cell.c;
+
+                if (cell.hasOwnProperty('a')) {
+                    Object.keys(cell.a).forEach((prop) => {
+                        td.addAttribute(prop, cell.a[prop]);
+                    });
+
+                }
+                tr.appendChild(td);
+            }
+
+            this.availableRows.push(tr);
+        }
+        this.reload();
+        return this;
+    }
+
     /**
      * called when any module detects a change and before it performs its actions.
      * if a "beforeUpdate" function is passed at the tablemodiy initialisation, it will be called.
@@ -264,21 +310,20 @@ class Tablemodify {
     beforeUpdate(moduleName) {
     	// beforeUpdate method passed? Just go on if not.
     	if (!this.coreSettings.hasOwnProperty('beforeUpdate')) return true;
-    	
+
     	// collect all necessary data
     	let infos = {};
-    	
     	['sorter', 'filter', 'pager'].forEach((name) => {
     		if (this.isActive(name)) {
     			infos[name] = this.getModule(name).getStats();
     		}
     	});
-    	   	
+
     	let ret = this.coreSettings.beforeUpdate(infos, moduleName);
-    	return (ret === null || ret === undefined || ret === true);   	
+    	return (ret === null || ret === undefined || ret === true);
     }
-    
-    
+
+
     /**
      * used to fire events on the original table. Modules may react to this events.
      * Its a convention that all events are fired on this element and the modules listen to the same.
@@ -289,11 +334,21 @@ class Tablemodify {
         });
         return this;
     }
-    
+
+    /**
+     * check if a module is acitve
+     * @param {string} name: name of modules
+     * @return {boolean}
+	 */
     isActive(name) {
     	return this.activeModules.hasOwnProperty(name);
     }
-    
+
+    /**
+     * returns the module if it is active
+     * @param {string} name: name of the module
+     * @return {object} module return of null if module is not active
+     */
     getModule(name) {
     	if (this.isActive(name)) {
     		return this.activeModules[name];
@@ -301,26 +356,38 @@ class Tablemodify {
     	return null;
     }
 
+    /**
+     * get the index of the table header cell with the passed tm-id attribute
+     * @param {string} tmId
+     * @return {number} index if it exists, null otherwise
+     */
     id2index(tmId) {
     	let cell = this.container.querySelector('thead > tr > *[tm-id='+tmId+']');
         if (!cell) return null;
         return [].slice.call(cell.parentNode.children).indexOf(cell);
     }
-    
+
+    /**
+     * returns the tm-id of a table header cell with the passed index
+     * @param {number} index
+     * @return {string} tm-id
+     */
     index2id(index) {
     	index++;
     	let cell = this.container.querySelector('thead > tr:first-of-type > *:nth-of-type('+index+')');
         if (!cell) return null;
         return cell.getAttribute('tm-id');
     }
-    
-    
+
+    /**
+     * initiates reloading through the action pipeline
+     * @return this for chaining
+     */
     reload() {
     	this.actionPipeline.notify('__reload');
     	return this;
     }
-    
-    
+
     /**
      * Static method for adding user-defined modules
      * this-value in a static method is the constructor function itself (here
@@ -412,7 +479,7 @@ Tablemodify.languages = {
     }),
     de: new Language('de', {
         FILTER_PLACEHOLDER: 'Filter eingeben',
-        FILTER_CASESENSITIVE: 'Groß- und Kleinschreibung unterscheiden',
+        FILTER_CASESENSITIVE: 'Groï¿½- und Kleinschreibung unterscheiden',
         PAGER_PAGENUMBER_SEPARATOR: ' / '
     })
 };

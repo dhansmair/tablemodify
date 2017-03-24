@@ -1,6 +1,5 @@
 const {addClass, iterate, info, error, trigger, replaceIdsWithIndices} = require('../utils.js');
 const Module = require('./module.js');
-const ModuleReturn = require('./moduleReturn.js');
 const FILTER_HEIGHT = '30px';
 
 /**
@@ -97,28 +96,28 @@ class Filter {
             options = this.getOptions();
 
 	        const maxDeph = indices.length - 1;
-	
+
 	        // filter rows
 	        let all = this.tm.getAllRows(), matching = [], notMatching = [];
-	        
+
 	        for (let i = 0; i < all.length; i++) {
 	        	let row = all[i], deph = 0, matches = true;
-	
+
 	            while (matches && deph <= maxDeph) {
 	                let j = indices[deph],
 	                    pattern = patterns[deph],
 	                    tester = row.cells[j].textContent;
-	
+
 	                if (!options[deph]) {
 	                    // not case-sensitive
 	                    pattern = pattern.toLowerCase();
 	                    tester = tester.toLowerCase();
 	                }
-	
+
 	                matches = tester.indexOf(pattern) !== -1;
 	                deph++;
 	            }
-	            
+
 				if (matches) {
 					matching.push(row);
 				} else {
@@ -128,9 +127,9 @@ class Filter {
 	        info(matching.length + ' treffer');
 	        this.tm.setAvailableRows(matching);
 	        this.tm.setHiddenRows(notMatching);
-	        
+
 	        this.tm.actionPipeline.notify('filter');
-    	}      
+    	}
         return this;
     }
 };
@@ -222,7 +221,7 @@ class FilterDefault extends Filter {
             .setOptions(options)
             .filter();
 
-        
+
         return this;
     }
 }
@@ -247,7 +246,7 @@ module.exports = new Module({
 
             info('module filter loaded');
 
-            return new ModuleReturn({
+            return {
                 instance: instance,
                 getStats: () => {
                 	return {
@@ -264,7 +263,7 @@ module.exports = new Module({
                     // remove all filters;
                     this.showAllRows();
                 }
-            });
+            };
         } catch (e) {
             error(e);
         }

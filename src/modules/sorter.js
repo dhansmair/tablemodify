@@ -1,13 +1,10 @@
 const Module = require('./module.js');
-const ModuleReturn = require('./moduleReturn.js');
 const dateUtils = require('../dateUtils.js');
 const {addClass, isFn, errorThrow, hasProp, log, warn, error,
        isBool, isNonEmptyString,
        iterate, removeClass, extend2, isObject, replaceIdsWithIndices} = require('../utils.js');
 
 function getValue(tr, i) {return tr.cells[i].textContent.trim().toLowerCase();}
-
-
 
 const FIRST_ENABLED_CELL = 'firstEnabled';
 const SORT_ORDER_ASC = 'asc';
@@ -230,7 +227,7 @@ class Sorter {
     		let orders = this.currentOrders,
         	maxDepth = orders.length - 1,
         	parsers = this.getParsers();
-        
+
 	        if (orders.length !== 0) {
 	        	let sorted = this.tm.getAvailableRows().sort((a, b) => {
 	                let compareResult = 0, curDepth = 0;
@@ -242,12 +239,12 @@ class Sorter {
 	                --curDepth;
 	                return orders[curDepth][1] ? compareResult : -compareResult;
 	            });
-	
+
 	            this.tm.setAvailableRows(sorted);
-	        }        
+	        }
 	        this.tm.actionPipeline.notify('sorter');
-    	}       
-        return this;      
+    	}
+        return this;
     }
 
     /**
@@ -282,13 +279,13 @@ class Sorter {
      * @returns this for method chaining
      */
     manage(colIndex, multiSort, order) {
-    	
+
     	if (typeof colIndex == 'string' && isNaN(parseInt(colIndex))) {
     		let i = this.tm.id2index(colIndex);
-    		
+
     		if (i != null) colIndex = i;
     	}
-    	
+
     	/*
         if (!this.getIsEnabled(colIndex)) {
             warn(`Tried to sort by non-sortable column index ${colIndex}`);
@@ -437,36 +434,33 @@ module.exports = new Module({
     initializer: function(settings) {
         let instance = new Sorter(this, settings);
         addClass(this.container, 'tm-sorter');
-        
-        return new ModuleReturn({
+
+        return {
         	instance: instance,
         	notify: () => {
         		instance.sort();
-        	},   
+        	},
 			getStats: () => {
-				//let indices = [], orders = [];
-				let orders = instance.currentOrders.map((arr) => {					
-					//orders.push([arr[0], (arr[1] ? 'asc' : 'desc')]);
+				let orders = instance.currentOrders.map((arr) => {
 					return {
 						index: arr[0],
 						order: (arr[1] ? 'asc' : 'desc')
 					};
 				});
-				
-				return orders;
+                return orders;
 			},
             sortAsc: index => instance.manage(index, false, true),
             sortDesc: index => instance.manage(index, false, false),
             info: function() {
                 console.log(instance.currentOrders);
             },
-           
+
             unset: () => {
                 log('unsetting sorter... not implemented yet');
                 /*
                     @Todo set order to initial ... don't know how to do it yet
                 */
             }
-        });
+        };
     }
 });
