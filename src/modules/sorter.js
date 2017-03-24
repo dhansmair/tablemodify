@@ -1,4 +1,5 @@
 const Module = require('./module.js');
+const ModuleReturn = require('./moduleReturn.js');
 const dateUtils = require('../dateUtils.js');
 const {addClass, isFn, errorThrow, hasProp, log, warn, error,
        isBool, isNonEmptyString,
@@ -78,8 +79,6 @@ class Sorter {
         settings.columns = replaceIdsWithIndices(settings.columns);
         //Store a reference to the tablemodify instance
         this.tm = tableModify;
-        
-        //this.body = this.tm.body.tBodies[0];
 
         this.sortColumns = settings.columns;
         //Array of structure [[col_index_1, true | false], [col_index_2, true | false], ...]
@@ -227,27 +226,28 @@ class Sorter {
      * @returns this for method chaining
      */
     sort() {
-        let orders = this.currentOrders,
+    	if (this.tm.beforeUpdate('sorter')) {
+    		let orders = this.currentOrders,
         	maxDepth = orders.length - 1,
         	parsers = this.getParsers();
         
-        if (orders.length !== 0) {
-        	let sorted = this.tm.getAvailableRows().sort((a, b) => {
-                let compareResult = 0, curDepth = 0;
-                while (compareResult === 0 && curDepth <= maxDepth) {
-                    let index = orders[curDepth][0];
-                    compareResult = parsers[curDepth](getValue(a, index), getValue(b, index));
-                    ++curDepth;
-                }
-                --curDepth;
-                return orders[curDepth][1] ? compareResult : -compareResult;
-            });
-
-            this.tm.setAvailableRows(sorted);
-        }        
-        this.tm.actionPipeline.notify('sorter');
-        return this;
-        
+	        if (orders.length !== 0) {
+	        	let sorted = this.tm.getAvailableRows().sort((a, b) => {
+	                let compareResult = 0, curDepth = 0;
+	                while (compareResult === 0 && curDepth <= maxDepth) {
+	                    let index = orders[curDepth][0];
+	                    compareResult = parsers[curDepth](getValue(a, index), getValue(b, index));
+	                    ++curDepth;
+	                }
+	                --curDepth;
+	                return orders[curDepth][1] ? compareResult : -compareResult;
+	            });
+	
+	            this.tm.setAvailableRows(sorted);
+	        }        
+	        this.tm.actionPipeline.notify('sorter');
+    	}       
+        return this;      
     }
 
     /**
@@ -282,10 +282,18 @@ class Sorter {
      * @returns this for method chaining
      */
     manage(colIndex, multiSort, order) {
+    	
+    	if (typeof colIndex == 'string' && isNaN(parseInt(colIndex))) {
+    		let i = this.tm.id2index(colIndex);
+    		
+    		if (i != null) colIndex = i;
+    	}
+    	
+    	/*
         if (!this.getIsEnabled(colIndex)) {
             warn(`Tried to sort by non-sortable column index ${colIndex}`);
             return this;
-        }
+        }*/
         if (!isBool(order)) {
             if (this.hasOrder(colIndex)) {
                 order = !this.getOrder(colIndex);
@@ -427,27 +435,38 @@ module.exports = new Module({
         customParsers: {}
     },
     initializer: function(settings) {
-        let sorterInstance = new Sorter(this, settings);
+        let instance = new Sorter(this, settings);
         addClass(this.container, 'tm-sorter');
-        return {
-        	
-        	/**
-        	 * call this method to force sorting again
-        	 */
+        
+        return new ModuleReturn({
+        	instance: instance,
         	notify: () => {
-        		sorterInstance.sort();
-        	},       	
-            sortAsc: index => sorterInstance.manage(index, false, true),
-            sortDesc: index => sorterInstance.manage(index, false, false),
+        		instance.sort();
+        	},   
+			getStats: () => {
+				//let indices = [], orders = [];
+				let orders = instance.currentOrders.map((arr) => {					
+					//orders.push([arr[0], (arr[1] ? 'asc' : 'desc')]);
+					return {
+						index: arr[0],
+						order: (arr[1] ? 'asc' : 'desc')
+					};
+				});
+				
+				return orders;
+			},
+            sortAsc: index => instance.manage(index, false, true),
+            sortDesc: index => instance.manage(index, false, false),
             info: function() {
-                console.log(sorterInstance.currentOrders);
+                console.log(instance.currentOrders);
             },
+           
             unset: () => {
                 log('unsetting sorter... not implemented yet');
                 /*
                     @Todo set order to initial ... don't know how to do it yet
                 */
             }
-        };
+        });
     }
 });

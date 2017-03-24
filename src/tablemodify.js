@@ -93,6 +93,7 @@ class Tablemodify {
         this.availableRows = [].slice.call(this.DOM.rows);//document.createDocumentFragment();
         
         this.actionPipeline = new ActionPipeline(this);
+        this.coreSettings = coreSettings;
         
         // call all modules
         if (coreSettings.modules) {
@@ -115,8 +116,7 @@ class Tablemodify {
                     }
                 }
             });
-        }
-        this.coreSettings = coreSettings;
+        }        
     }
     /**
      * calculate number of columns. Usually only called at the initialisation
@@ -219,108 +219,66 @@ class Tablemodify {
     	return this;
     }   
 
+    /**
+     * 
+     */
     clearDOM() {
     	while (this.DOM.firstChild) {
     		this.DOM.removeChild(this.DOM.firstChild);
     	}
+    	return this;
     }
     
     /**
-     * May be used from outside the plugin to add rows to the table.
-     * This will automatically rerun the filter & sorter module.
+     * 
      */
-    /*
-    addRows(arr) {
-        if (arr.length === 0) return this;
-
-        if (Array.isArray(arr[0])) {
-            return this._addJSONRows(arr);
-        } else if (arr[0].tagName === 'TR') {
-            return this._addHTMLRows(arr);
-        } else {
-            error('wrong parameter for addRows()');
-            return this;
-        }
+    insertRows(data) {
+    	return this.clearDOM().appendRows(data);
     }
-
-    _addHTMLRows(rowArray) {
-        let fragment = document.createDocumentFragment();
-        for (let i = 0; i < rowArray.length; i++) {
-            fragment.appendChild(rowArray[i]);
-        }
-        this.visibleRows.appendChild(fragment);
-        return this.signal('tmRowsAdded');
+    
+    /**
+     * 
+     */
+    appendRows(data) {
+    	if (typeof data === 'string') {
+    		
+    		this.DOM.innerHTML += data;
+    		
+    	} else if (Array.isArray(data)) {
+    		
+    		for (let i = 0; i < data.length; i++) {
+    			this.DOM.appendChild(data[i]);
+    		}
+    	}
+    	this.setAvailableRows([].slice.call(this.DOM));
+		this.setHiddenRows([]);
+		return this;
     }
-
-    _addJSONRows(rowArray) {
-        let tr = document.createElement('tr'),
-            td = document.createElement('td'),
-            newTr, newTd,
-            fragment = document.createDocumentFragment();
-
-        for (let i = 0; i < rowArray.length; i++) {
-            newTr = tr.cloneNode();
-            for (let j = 0; j < rowArray[i].length; j++) {
-                newTd = td.cloneNode();
-                newTd.innerHTML = rowArray[i][j];
-                newTr.appendChild(newTd);
-            }
-            fragment.appendChild(newTr);
-        }
-
-        this.visibleRows.appendChild(fragment);
-        return this.signal('tmRowsAdded');
+    
+    /**
+     * called when any module detects a change and before it performs its actions.
+     * if a "beforeUpdate" function is passed at the tablemodiy initialisation, it will be called.
+     * the module only does something if this method doesn't return false
+     * @param {string} moduleName: which module calls this method
+     */
+    beforeUpdate(moduleName) {
+    	// beforeUpdate method passed? Just go on if not.
+    	if (!this.coreSettings.hasOwnProperty('beforeUpdate')) return true;
+    	
+    	// collect all necessary data
+    	let infos = {};
+    	
+    	['sorter', 'filter', 'pager'].forEach((name) => {
+    		if (this.isActive(name)) {
+    			infos[name] = this.getModule(name).getStats();
+    		}
+    	});
+    	   	
+    	let ret = this.coreSettings.beforeUpdate(infos, moduleName);
+    	return (ret === null || ret === undefined || ret === true);   	
     }
-
-*/
-    /**
-     * add a single row
-     */
-    /*
-    addRow(row) {
-        return this.addRows([row]);
-    }*/
-
-    /**
-     * this method cleares the tablebody, without the table rows being lost. Instead, they are stored in the DocumentFragment.
-     * References to the table rows (laying in the array this.rows) now point on the elements in the fragment.
-     * The References can be used to insert the rows in the original DOM again.
-     * This is necessary because IE11 had several issues with references to deleted table rows
-     */
-    /*
-    hideAllRows() {
-        let rows = this.visibleRows.rows, next;
-
-        while (next = rows[0]) {
-            this.hiddenRows.appendChild(next);
-        }
-        return this;
-    }*/
-
-    /**
-     * display all hidden rows again
-     * this is correct usage of documentFragment! appending the fragment itself appends all children instead
-     */
-    /*
-    showAllRows() {
-        this.visibleRows.appendChild(this.hiddenRows);
-        return this.signal('tmRowsAdded');
-    }*/
-
-    /**
-     * deletes all rows in the table (hidden AND visible).
-     * Faster implementation than setting innerHTMl = ''
-     */
-    /*
-    deleteAllRows() {
-        [this.visibleRows, this.hiddenRows].forEach((p) => {
-            while (p.firstChild) {
-                p.removeChild(p.firstChild);
-            }
-        });
-        return this;
-    }*/
-
+    
+    
     /**
      * used to fire events on the original table. Modules may react to this events.
      * Its a convention that all events are fired on this element and the modules listen to the same.
@@ -331,7 +289,38 @@ class Tablemodify {
         });
         return this;
     }
+    
+    isActive(name) {
+    	return this.activeModules.hasOwnProperty(name);
+    }
+    
+    getModule(name) {
+    	if (this.isActive(name)) {
+    		return this.activeModules[name];
+    	}
+    	return null;
+    }
 
+    id2index(tmId) {
+    	let cell = this.container.querySelector('thead > tr > *[tm-id='+tmId+']');
+        if (!cell) return null;
+        return [].slice.call(cell.parentNode.children).indexOf(cell);
+    }
+    
+    index2id(index) {
+    	index++;
+    	let cell = this.container.querySelector('thead > tr:first-of-type > *:nth-of-type('+index+')');
+        if (!cell) return null;
+        return cell.getAttribute('tm-id');
+    }
+    
+    
+    reload() {
+    	this.actionPipeline.notify('__reload');
+    	return this;
+    }
+    
+    
     /**
      * Static method for adding user-defined modules
      * this-value in a static method is the constructor function itself (here
@@ -418,11 +407,13 @@ Tablemodify.modules = {
 Tablemodify.languages = {
     en: new Language('en', {
         FILTER_PLACEHOLDER: 'type filter here',
-        FILTER_CASESENSITIVE: 'case-sensitive'
+        FILTER_CASESENSITIVE: 'case-sensitive',
+        PAGER_PAGENUMBER_SEPARATOR: ' / '
     }),
     de: new Language('de', {
         FILTER_PLACEHOLDER: 'Filter eingeben',
-        FILTER_CASESENSITIVE: 'Groﬂ- und Kleinschreibung unterscheiden'
+        FILTER_CASESENSITIVE: 'Groﬂ- und Kleinschreibung unterscheiden',
+        PAGER_PAGENUMBER_SEPARATOR: ' / '
     })
 };
 

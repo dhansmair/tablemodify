@@ -461,7 +461,7 @@ module.exports = function () {
 	return ActionPipeline;
 }();
 
-},{"./utils.js":15}],4:[function(require,module,exports){
+},{"./utils.js":16}],4:[function(require,module,exports){
 'use strict';
 
 exports.debug = false;
@@ -530,7 +530,8 @@ var _require = require('./utils.js'),
 
 var defaults = {
     FILTER_PLACEHOLDER: 'type filter here',
-    FILTER_CASESENSITIVE: 'case-sensitive'
+    FILTER_CASESENSITIVE: 'case-sensitive',
+    PAGER_PAGENUMBER_SEPARATOR: ' / '
 };
 
 module.exports = function () {
@@ -548,14 +549,14 @@ module.exports = function () {
                 return this.terms[term];
             }
             warn('term ' + term + ' not defined');
-            return null;
+            return '';
         }
     }]);
 
     return Language;
 }();
 
-},{"./utils.js":15}],7:[function(require,module,exports){
+},{"./utils.js":16}],7:[function(require,module,exports){
 'use strict';
 
 var Module = require('./module.js');
@@ -612,7 +613,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":15,"./module.js":10}],8:[function(require,module,exports){
+},{"../utils.js":16,"./module.js":10}],8:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -632,6 +633,7 @@ var _require = require('../utils.js'),
     replaceIdsWithIndices = _require.replaceIdsWithIndices;
 
 var Module = require('./module.js');
+var ModuleReturn = require('./moduleReturn.js');
 var FILTER_HEIGHT = '30px';
 
 /**
@@ -755,64 +757,50 @@ var Filter = function () {
     }, {
         key: 'filter',
         value: function filter() {
-            var indices = this.getIndices(),
-                patterns = this.getPatterns(),
-                options = this.getOptions();
+            if (this.tm.beforeUpdate('filter')) {
+                var indices = this.getIndices(),
+                    patterns = this.getPatterns(),
+                    options = this.getOptions();
 
-            var maxDeph = indices.length - 1;
+                var maxDeph = indices.length - 1;
 
-            // filter rows
-            /*
-            let arr = this.tm.getAllRows().filter(function(row) {
-                let deph = 0, matches = true;
-                  while (matches && deph <= maxDeph) {
-                    let i = indices[deph],
-                        pattern = patterns[deph],
-                        tester = row.cells[i].innerHTML;
-                      if (!options[deph]) {
-                        // not case-sensitive
-                        pattern = pattern.toLowerCase();
-                        tester = tester.toLowerCase();
-                    }
-                      matches = tester.indexOf(pattern) !== -1;
-                    deph++;
-                }
-                return matches;
-              });
-            */
-            var all = this.tm.getAllRows(),
-                matching = [],
-                notMatching = [];
+                // filter rows
+                var all = this.tm.getAllRows(),
+                    matching = [],
+                    notMatching = [];
 
-            for (var i = 0; i < all.length; i++) {
-                var row = all[i],
-                    deph = 0,
-                    matches = true;
+                for (var i = 0; i < all.length; i++) {
+                    var row = all[i],
+                        deph = 0,
+                        matches = true;
 
-                while (matches && deph <= maxDeph) {
-                    var j = indices[deph],
-                        pattern = patterns[deph],
-                        tester = row.cells[j].textContent;
+                    while (matches && deph <= maxDeph) {
+                        var j = indices[deph],
+                            pattern = patterns[deph],
+                            tester = row.cells[j].textContent;
 
-                    if (!options[deph]) {
-                        // not case-sensitive
-                        pattern = pattern.toLowerCase();
-                        tester = tester.toLowerCase();
+                        if (!options[deph]) {
+                            // not case-sensitive
+                            pattern = pattern.toLowerCase();
+                            tester = tester.toLowerCase();
+                        }
+
+                        matches = tester.indexOf(pattern) !== -1;
+                        deph++;
                     }
 
-                    matches = tester.indexOf(pattern) !== -1;
-                    deph++;
+                    if (matches) {
+                        matching.push(row);
+                    } else {
+                        notMatching.push(row);
+                    }
                 }
+                info(matching.length + ' treffer');
+                this.tm.setAvailableRows(matching);
+                this.tm.setHiddenRows(notMatching);
 
-                if (matches) {
-                    matching.push(row);
-                } else {
-                    notMatching.push(row);
-                }
+                this.tm.actionPipeline.notify('filter');
             }
-            info(matching.length + ' treffer');
-            this.tm.setAvailableRows(matching);
-            this.tm.setHiddenRows(notMatching);
             return this;
         }
     }]);
@@ -916,8 +904,6 @@ var FilterDefault = function (_Filter) {
 
             this.setPatterns(patterns).setIndices(indices).setOptions(options).filter();
 
-            //this.tm.signal('tmSorterSortAgain', 'tmFixedForceRendering');
-            this.tm.actionPipeline.notify('filter');
             return this;
         }
     }]);
@@ -947,21 +933,31 @@ module.exports = new Module({
 
             info('module filter loaded');
 
-            return {
+            return new ModuleReturn({
                 instance: instance,
+                getStats: function getStats() {
+                    return {
+                        patterns: instance.getPatterns(),
+                        indices: instance.getIndices(),
+                        options: instance.getOptions()
+                    };
+                },
+                notify: function notify() {
+                    instance.run();
+                },
                 unset: function unset() {
                     info('unsetting filter');
                     // remove all filters;
                     _this2.showAllRows();
                 }
-            };
+            });
         } catch (e) {
             error(e);
         }
     }
 });
 
-},{"../utils.js":15,"./module.js":10}],9:[function(require,module,exports){
+},{"../utils.js":16,"./module.js":10,"./moduleReturn.js":11}],9:[function(require,module,exports){
 'use strict';
 
 var Module = require('./module.js');
@@ -1187,7 +1183,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":15,"./module.js":10}],10:[function(require,module,exports){
+},{"../utils.js":16,"./module.js":10}],10:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1270,7 +1266,30 @@ module.exports = function () {
     return Module;
 }();
 
-},{"../utils.js":15}],11:[function(require,module,exports){
+},{"../utils.js":16}],11:[function(require,module,exports){
+'use strict';
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _require = require('../utils.js'),
+    extend2 = _require.extend2;
+
+var defaultSettings = {
+	instance: {},
+	unset: function unset() {},
+	getStats: function getStats() {},
+	info: function info() {},
+	notify: function notify() {}
+};
+
+module.exports = function ModuleReturn(params) {
+	_classCallCheck(this, ModuleReturn);
+
+	extend2(params, defaultSettings);
+	extend2(this, params);
+};
+
+},{"../utils.js":16}],12:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1278,11 +1297,13 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Module = require('./module.js');
+var ModuleReturn = require('./moduleReturn.js');
 
 var _require = require('../utils.js'),
     addClass = _require.addClass,
     error = _require.error,
-    extend2 = _require.extend2;
+    extend2 = _require.extend2,
+    delay = _require.delay;
 
 var Controller = function () {
 	function Controller(sets, pager) {
@@ -1304,33 +1325,39 @@ var Controller = function () {
 		this.pager = pager;
 
 		this.left.addEventListener('click', function () {
-			var val = parseInt(_this.number.value) - 1;
+			var val = _this.getCurrentPageNumber() - 1;
 
 			if (val > 0) {
-				_this.number.value = val;
-				_this.pager.update();
+				_this.setCurrentPageNumber(val);
+
+				delay(function () {
+					_this.pager.update().run();
+				});
 			}
 		});
 
 		this.right.addEventListener('click', function () {
-			var val = parseInt(_this.number.value) + 1;
+			var val = _this.getCurrentPageNumber() + 1;
 
-			if (val <= _this.getTotal()) {
-				_this.number.value = val;
-				_this.pager.update();
+			if (val <= _this.getTotalPages()) {
+				_this.setCurrentPageNumber(val);
+
+				delay(function () {
+					_this.pager.update().run();
+				});
 			}
 		});
 
 		this.number.addEventListener('change', function () {
-			var val = _this.number.value;
+			var val = _this.getCurrentPageNumber();
 
 			if (isNaN(val) || val < 1) {
-				_this.number.value = 1;
-			} else if (val > _this.getTotal()) {
-				_this.number.value = _this.getTotal();
+				val = 1;
+			} else if (val > _this.getTotalPages()) {
+				val = _this.getTotalPages();
 			}
-
-			_this.pager.update();
+			_this.setCurrentPageNumber(val);
+			_this.pager.update().run();
 		});
 
 		this.limit.addEventListener('change', function () {
@@ -1339,11 +1366,10 @@ var Controller = function () {
 			if (isNaN(val) || val < 1) {
 				_this.limit.value = 1;
 			}
-			_this.updateTotal();
-			_this.pager.update();
+			_this.setCurrentPageNumber(1).updateTotalPages().pager.update().run();
 		});
 
-		this.updateTotal();
+		this.updateTotalPages();
 	}
 
 	_createClass(Controller, [{
@@ -1352,11 +1378,11 @@ var Controller = function () {
 			var val = this.number.value;
 
 			if (isNaN(val) || val < 1) {
-				this.number.value = 1;
-			} else if (val > this.getTotal()) {
-				this.number.value = this.getTotal();
+				this.setCurrentPageNumber(1);
+			} else if (val > this.getTotalPages()) {
+				this.setCurrentPageNumber(this.getTotalPages());
 			}
-			return parseInt(this.number.value - 1) * this.getLimit();
+			return parseInt(this.getCurrentPageNumber() - 1) * this.getLimit();
 		}
 	}, {
 		key: 'getLimit',
@@ -1364,15 +1390,40 @@ var Controller = function () {
 			return parseInt(this.limit.value);
 		}
 	}, {
-		key: 'getTotal',
-		value: function getTotal() {
-			return Math.ceil(this.pager.tm.countAvailableRows() / this.getLimit());
+		key: 'getTotalPages',
+		value: function getTotalPages() {
+			var total = 0;
+
+			if (this.pager.totalManually && this.pager.totalManually >= 0) {
+				total = this.pager.totalManually;
+			} else {
+				total = this.pager.tm.countAvailableRows();
+			}
+
+			return Math.ceil(total / this.getLimit());
 		}
 	}, {
-		key: 'updateTotal',
-		value: function updateTotal() {
+		key: 'setCurrentPageNumber',
+		value: function setCurrentPageNumber(num) {
+			num = parseInt(num);
+
+			if (!isNaN(num)) {
+				var innerHeight = parseInt(window.getComputedStyle(this.number).height);
+				this.number.style.width = num.toString().length * 12 + 'px';
+				this.number.value = num;
+			}
+			return this;
+		}
+	}, {
+		key: 'getCurrentPageNumber',
+		value: function getCurrentPageNumber() {
+			return parseInt(this.number.value);
+		}
+	}, {
+		key: 'updateTotalPages',
+		value: function updateTotalPages() {
 			if (this.total != null) {
-				this.total.innerHTML = '/' + this.getTotal();
+				this.total.innerHTML = this.pager.tm.getTerm('PAGER_PAGENUMBER_SEPARATOR') + this.getTotalPages() + ' ';
 			}
 			return this;
 		}
@@ -1386,10 +1437,17 @@ var Pager = function () {
 		_classCallCheck(this, Pager);
 
 		this.tm = tm;
-		this.offset = settings.offset;
-		this.limit = settings.limit;
-
+		this.offset = parseInt(settings.offset);
+		this.limit = parseInt(settings.limit);
+		this.totalManually = parseInt(settings.totalManually);
 		this.controller = new Controller(settings.controller, this);
+
+		this.update();
+
+		try {
+			this.controller.setCurrentPageNumber(this.controller.getCurrentPageNumber());
+			this.controller.number.removeAttribute('disabled');
+		} catch (e) {}
 	}
 
 	/**
@@ -1400,17 +1458,20 @@ var Pager = function () {
 	_createClass(Pager, [{
 		key: 'run',
 		value: function run() {
-			console.info('Es wird angezeigt: ' + (this.offset + 1) + ' bis ' + (this.offset + this.limit));
-			this.tm.actionPipeline.notify('pager', {
-				offset: this.offset,
-				limit: this.limit
-			});
+			if (this.tm.beforeUpdate('pager')) {
+				this.tm.actionPipeline.notify('pager', {
+					offset: this.getOffset(),
+					limit: this.getLimit()
+				});
+			}
 			return this;
 		}
 	}, {
 		key: 'update',
 		value: function update() {
-			this.setOffset(this.controller.getOffset()).setLimit(this.controller.getLimit()).run();
+			this.setOffset(this.controller.getOffset()).setLimit(this.controller.getLimit());
+			//.run();
+			return this;
 		}
 
 		// setters
@@ -1427,14 +1488,26 @@ var Pager = function () {
 			if (limit != null && !isNaN(limit)) this.limit = limit;
 			return this;
 		}
-		/*
-  getOffset() {
-  	return this.offset;
-  }
-  getLimit() { 
-  	return this.limit;
-  }*/
 
+		// 
+
+	}, {
+		key: 'setTotalManually',
+		value: function setTotalManually(num) {
+			this.totalManually = parseInt(num);
+			this.controller.updateTotalPages();
+			return this;
+		}
+	}, {
+		key: 'getOffset',
+		value: function getOffset() {
+			return this.offset;
+		}
+	}, {
+		key: 'getLimit',
+		value: function getLimit() {
+			return this.limit;
+		}
 	}]);
 
 	return Pager;
@@ -1445,6 +1518,7 @@ module.exports = new Module({
 	defaultSettings: {
 		offset: 0,
 		limit: Infinity,
+		totalManually: false,
 		controller: {
 			left: null,
 			right: null,
@@ -1455,30 +1529,38 @@ module.exports = new Module({
 	},
 	initializer: function initializer(settings) {
 		try {
-			var pagerInstance = new Pager(this, settings); // this = tablemodify
+			var instance = new Pager(this, settings); // this = tablemodify
 			addClass(this.container, 'tm-pager');
 
-			pagerInstance.update();
+			// initialize the pager internal values
+			instance.update();
 
-			return {
-				instance: pagerInstance,
+			return new ModuleReturn({
+				instance: instance,
 				show: function show(limit, offset) {
-					pagerInstance.setOffset(offset).setLimit(limit).run();
+					instance.setOffset(offset).setLimit(limit).run();
+				},
+				getStats: function getStats() {
+					return {
+						offset: instance.getOffset(),
+						limit: instance.getLimit()
+					};
 				},
 				notify: function notify() {
 					// force pager to run again
-					pagerInstance.run();
+					instance.run();
 				},
-				info: function info() {},
-				unset: function unset() {}
-			};
+				setTotalManually: function setTotalManually(num) {
+					instance.setTotalManually(num);
+				}
+			});
 		} catch (e) {
 			error(e);
 		}
 	}
 });
 
-},{"../utils.js":15,"./module.js":10}],12:[function(require,module,exports){
+},{"../utils.js":16,"./module.js":10,"./moduleReturn.js":11}],13:[function(require,module,exports){
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -1488,6 +1570,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Module = require('./module.js');
+var ModuleReturn = require('./moduleReturn.js');
 var dateUtils = require('../dateUtils.js');
 
 var _require = require('../utils.js'),
@@ -1594,8 +1677,6 @@ var Sorter = function () {
         settings.columns = replaceIdsWithIndices(settings.columns);
         //Store a reference to the tablemodify instance
         this.tm = tableModify;
-
-        //this.body = this.tm.body.tBodies[0];
 
         this.sortColumns = settings.columns;
         //Array of structure [[col_index_1, true | false], [col_index_2, true | false], ...]
@@ -1775,26 +1856,28 @@ var Sorter = function () {
     }, {
         key: 'sort',
         value: function sort() {
-            var orders = this.currentOrders,
-                maxDepth = orders.length - 1,
-                parsers = this.getParsers();
+            if (this.tm.beforeUpdate('sorter')) {
+                var orders = this.currentOrders,
+                    maxDepth = orders.length - 1,
+                    parsers = this.getParsers();
 
-            if (orders.length !== 0) {
-                var sorted = this.tm.getAvailableRows().sort(function (a, b) {
-                    var compareResult = 0,
-                        curDepth = 0;
-                    while (compareResult === 0 && curDepth <= maxDepth) {
-                        var index = orders[curDepth][0];
-                        compareResult = parsers[curDepth](getValue(a, index), getValue(b, index));
-                        ++curDepth;
-                    }
-                    --curDepth;
-                    return orders[curDepth][1] ? compareResult : -compareResult;
-                });
+                if (orders.length !== 0) {
+                    var sorted = this.tm.getAvailableRows().sort(function (a, b) {
+                        var compareResult = 0,
+                            curDepth = 0;
+                        while (compareResult === 0 && curDepth <= maxDepth) {
+                            var index = orders[curDepth][0];
+                            compareResult = parsers[curDepth](getValue(a, index), getValue(b, index));
+                            ++curDepth;
+                        }
+                        --curDepth;
+                        return orders[curDepth][1] ? compareResult : -compareResult;
+                    });
 
-                this.tm.setAvailableRows(sorted);
+                    this.tm.setAvailableRows(sorted);
+                }
+                this.tm.actionPipeline.notify('sorter');
             }
-            this.tm.actionPipeline.notify('sorter');
             return this;
         }
 
@@ -1839,10 +1922,18 @@ var Sorter = function () {
     }, {
         key: 'manage',
         value: function manage(colIndex, multiSort, order) {
-            if (!this.getIsEnabled(colIndex)) {
-                warn('Tried to sort by non-sortable column index ' + colIndex);
-                return this;
+
+            if (typeof colIndex == 'string' && isNaN(parseInt(colIndex))) {
+                var i = this.tm.id2index(colIndex);
+
+                if (i != null) colIndex = i;
             }
+
+            /*
+               if (!this.getIsEnabled(colIndex)) {
+                   warn(`Tried to sort by non-sortable column index ${colIndex}`);
+                   return this;
+               }*/
             if (!isBool(order)) {
                 if (this.hasOrder(colIndex)) {
                     order = !this.getOrder(colIndex);
@@ -1992,36 +2083,47 @@ module.exports = new Module({
         customParsers: {}
     },
     initializer: function initializer(settings) {
-        var sorterInstance = new Sorter(this, settings);
+        var instance = new Sorter(this, settings);
         addClass(this.container, 'tm-sorter');
-        return {
 
-            /**
-             * call this method to force sorting again
-             */
+        return new ModuleReturn({
+            instance: instance,
             notify: function notify() {
-                sorterInstance.sort();
+                instance.sort();
+            },
+            getStats: function getStats() {
+                //let indices = [], orders = [];
+                var orders = instance.currentOrders.map(function (arr) {
+                    //orders.push([arr[0], (arr[1] ? 'asc' : 'desc')]);
+                    return {
+                        index: arr[0],
+                        order: arr[1] ? 'asc' : 'desc'
+                    };
+                });
+
+                return orders;
             },
             sortAsc: function sortAsc(index) {
-                return sorterInstance.manage(index, false, true);
+                return instance.manage(index, false, true);
             },
             sortDesc: function sortDesc(index) {
-                return sorterInstance.manage(index, false, false);
+                return instance.manage(index, false, false);
             },
             info: function info() {
-                console.log(sorterInstance.currentOrders);
+                console.log(instance.currentOrders);
             },
+
             unset: function unset() {
                 log('unsetting sorter... not implemented yet');
                 /*
                     @Todo set order to initial ... don't know how to do it yet
                 */
             }
-        };
+        });
     }
 });
 
-},{"../dateUtils.js":5,"../utils.js":15,"./module.js":10}],13:[function(require,module,exports){
+},{"../dateUtils.js":5,"../utils.js":16,"./module.js":10,"./moduleReturn.js":11}],14:[function(require,module,exports){
 'use strict';
 
 var _require = require('../utils.js'),
@@ -2064,7 +2166,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":15,"./module.js":10}],14:[function(require,module,exports){
+},{"../utils.js":16,"./module.js":10}],15:[function(require,module,exports){
 "use strict";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -2180,6 +2282,7 @@ var Tablemodify = function () {
         this.availableRows = [].slice.call(this.DOM.rows); //document.createDocumentFragment();
 
         this.actionPipeline = new ActionPipeline(this);
+        this.coreSettings = coreSettings;
 
         // call all modules
         if (coreSettings.modules) {
@@ -2203,7 +2306,6 @@ var Tablemodify = function () {
                 }
             });
         }
-        this.coreSettings = coreSettings;
     }
     /**
      * calculate number of columns. Usually only called at the initialisation
@@ -2340,102 +2442,78 @@ var Tablemodify = function () {
             this.DOM.appendChild(fragment);
             return this;
         }
+
+        /**
+         * 
+         */
+
     }, {
         key: 'clearDOM',
         value: function clearDOM() {
             while (this.DOM.firstChild) {
                 this.DOM.removeChild(this.DOM.firstChild);
             }
-        }
-
-        /**
-         * May be used from outside the plugin to add rows to the table.
-         * This will automatically rerun the filter & sorter module.
-         */
-        /*
-        addRows(arr) {
-            if (arr.length === 0) return this;
-              if (Array.isArray(arr[0])) {
-                return this._addJSONRows(arr);
-            } else if (arr[0].tagName === 'TR') {
-                return this._addHTMLRows(arr);
-            } else {
-                error('wrong parameter for addRows()');
-                return this;
-            }
-        }
-          _addHTMLRows(rowArray) {
-            let fragment = document.createDocumentFragment();
-            for (let i = 0; i < rowArray.length; i++) {
-                fragment.appendChild(rowArray[i]);
-            }
-            this.visibleRows.appendChild(fragment);
-            return this.signal('tmRowsAdded');
-        }
-          _addJSONRows(rowArray) {
-            let tr = document.createElement('tr'),
-                td = document.createElement('td'),
-                newTr, newTd,
-                fragment = document.createDocumentFragment();
-              for (let i = 0; i < rowArray.length; i++) {
-                newTr = tr.cloneNode();
-                for (let j = 0; j < rowArray[i].length; j++) {
-                    newTd = td.cloneNode();
-                    newTd.innerHTML = rowArray[i][j];
-                    newTr.appendChild(newTd);
-                }
-                fragment.appendChild(newTr);
-            }
-              this.visibleRows.appendChild(fragment);
-            return this.signal('tmRowsAdded');
-        }
-        */
-        /**
-         * add a single row
-         */
-        /*
-        addRow(row) {
-            return this.addRows([row]);
-        }*/
-
-        /**
-         * this method cleares the tablebody, without the table rows being lost. Instead, they are stored in the DocumentFragment.
-         * References to the table rows (laying in the array this.rows) now point on the elements in the fragment.
-         * The References can be used to insert the rows in the original DOM again.
-         * This is necessary because IE11 had several issues with references to deleted table rows
-         */
-        /*
-        hideAllRows() {
-            let rows = this.visibleRows.rows, next;
-              while (next = rows[0]) {
-                this.hiddenRows.appendChild(next);
-            }
             return this;
-        }*/
+        }
 
         /**
-         * display all hidden rows again
-         * this is correct usage of documentFragment! appending the fragment itself appends all children instead
+         * 
          */
-        /*
-        showAllRows() {
-            this.visibleRows.appendChild(this.hiddenRows);
-            return this.signal('tmRowsAdded');
-        }*/
+
+    }, {
+        key: 'insertRows',
+        value: function insertRows(data) {
+            return this.clearDOM().appendRows(data);
+        }
 
         /**
-         * deletes all rows in the table (hidden AND visible).
-         * Faster implementation than setting innerHTMl = ''
+         * 
          */
-        /*
-        deleteAllRows() {
-            [this.visibleRows, this.hiddenRows].forEach((p) => {
-                while (p.firstChild) {
-                    p.removeChild(p.firstChild);
+
+    }, {
+        key: 'appendRows',
+        value: function appendRows(data) {
+            if (typeof data === 'string') {
+
+                this.DOM.innerHTML += data;
+            } else if (Array.isArray(data)) {
+
+                for (var i = 0; i < data.length; i++) {
+                    this.DOM.appendChild(data[i]);
+                }
+            }
+            this.setAvailableRows([].slice.call(this.DOM));
+            this.setHiddenRows([]);
+            return this;
+        }
+
+        /**
+         * called when any module detects a change and before it performs its actions.
+         * if a "beforeUpdate" function is passed at the tablemodiy initialisation, it will be called.
+         * the module only does something if this method doesn't return false
+         * @param {string} moduleName: which module calls this method
+         */
+
+    }, {
+        key: 'beforeUpdate',
+        value: function beforeUpdate(moduleName) {
+            var _this2 = this;
+
+            // beforeUpdate method passed? Just go on if not.
+            if (!this.coreSettings.hasOwnProperty('beforeUpdate')) return true;
+
+            // collect all necessary data
+            var infos = {};
+
+            ['sorter', 'filter', 'pager'].forEach(function (name) {
+                if (_this2.isActive(name)) {
+                    infos[name] = _this2.getModule(name).getStats();
                 }
             });
-            return this;
-        }*/
+
+            var ret = this.coreSettings.beforeUpdate(infos, moduleName);
+            return ret === null || ret === undefined || ret === true;
+        }
 
         /**
          * used to fire events on the original table. Modules may react to this events.
@@ -2445,15 +2523,49 @@ var Tablemodify = function () {
     }, {
         key: 'signal',
         value: function signal() {
-            var _this2 = this;
+            var _this3 = this;
 
             for (var _len = arguments.length, events = Array(_len), _key = 0; _key < _len; _key++) {
                 events[_key] = arguments[_key];
             }
 
             events.forEach(function (e) {
-                trigger(_this2.body, e);
+                trigger(_this3.body, e);
             });
+            return this;
+        }
+    }, {
+        key: 'isActive',
+        value: function isActive(name) {
+            return this.activeModules.hasOwnProperty(name);
+        }
+    }, {
+        key: 'getModule',
+        value: function getModule(name) {
+            if (this.isActive(name)) {
+                return this.activeModules[name];
+            }
+            return null;
+        }
+    }, {
+        key: 'id2index',
+        value: function id2index(tmId) {
+            var cell = this.container.querySelector('thead > tr > *[tm-id=' + tmId + ']');
+            if (!cell) return null;
+            return [].slice.call(cell.parentNode.children).indexOf(cell);
+        }
+    }, {
+        key: 'index2id',
+        value: function index2id(index) {
+            index++;
+            var cell = this.container.querySelector('thead > tr:first-of-type > *:nth-of-type(' + index + ')');
+            if (!cell) return null;
+            return cell.getAttribute('tm-id');
+        }
+    }, {
+        key: 'reload',
+        value: function reload() {
+            this.actionPipeline.notify('__reload');
             return this;
         }
 
@@ -2554,11 +2666,13 @@ Tablemodify.modules = {
 Tablemodify.languages = {
     en: new Language('en', {
         FILTER_PLACEHOLDER: 'type filter here',
-        FILTER_CASESENSITIVE: 'case-sensitive'
+        FILTER_CASESENSITIVE: 'case-sensitive',
+        PAGER_PAGENUMBER_SEPARATOR: ' / '
     }),
     de: new Language('de', {
         FILTER_PLACEHOLDER: 'Filter eingeben',
-        FILTER_CASESENSITIVE: 'Gro�- und Kleinschreibung unterscheiden'
+        FILTER_CASESENSITIVE: 'Gro�- und Kleinschreibung unterscheiden',
+        PAGER_PAGENUMBER_SEPARATOR: ' / '
     })
 };
 
@@ -2570,7 +2684,7 @@ Tablemodify.version = 'v0.9.5';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
 
-},{"./actionPipeline.js":3,"./config.js":4,"./language.js":6,"./modules/columnStyles.js":7,"./modules/filter.js":8,"./modules/fixed.js":9,"./modules/module.js":10,"./modules/pager.js":11,"./modules/sorter.js":12,"./modules/zebra.js":13,"./utils.js":15}],15:[function(require,module,exports){
+},{"./actionPipeline.js":3,"./config.js":4,"./language.js":6,"./modules/columnStyles.js":7,"./modules/filter.js":8,"./modules/fixed.js":9,"./modules/module.js":10,"./modules/pager.js":12,"./modules/sorter.js":13,"./modules/zebra.js":14,"./utils.js":16}],16:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -2769,6 +2883,16 @@ function id2index(tmId) {
     return [].slice.call(cell.parentNode.children).indexOf(cell);
 }
 
+exports.delay = function () {
+    var ms = 400,
+        t = void 0;
+
+    return function (cb) {
+        window.clearTimeout(t);
+        t = window.setTimeout(cb, ms);
+    };
+}();
+
 /**
     ersetze alle spalten, die über die tm-id identifiziert werden, durch ihren index
 */
@@ -2785,4 +2909,4 @@ exports.replaceIdsWithIndices = function (columns) {
     return columns;
 };
 
-},{"./config.js":4,"custom-event-polyfill":1}]},{},[14]);
+},{"./config.js":4,"custom-event-polyfill":1}]},{},[15]);

@@ -167,6 +167,16 @@ function id2index(tmId) {
     return [].slice.call(cell.parentNode.children).indexOf(cell);
 }
 
+
+exports.delay = (() => {
+	let ms = 400, t;
+	
+	return (cb) => {
+		window.clearTimeout(t);
+		t = window.setTimeout(cb, ms);
+	};
+})();
+
 /**
     ersetze alle spalten, die über die tm-id identifiziert werden, durch ihren index
 */

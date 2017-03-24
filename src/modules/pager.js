@@ -1,5 +1,6 @@
 const Module = require('./module.js');
-const {addClass, error, extend2} = require('../utils.js');
+const ModuleReturn = require('./moduleReturn.js');
+const {addClass, error, extend2, delay} = require('../utils.js');
 
 class Controller {
 	constructor(sets, pager) {
@@ -17,33 +18,39 @@ class Controller {
 		this.pager = pager;
 		
 		this.left.addEventListener('click', () => {
-			let val = parseInt(_this.number.value) - 1;
+			let val = _this.getCurrentPageNumber() - 1;
 			
 			if (val > 0) {
-				_this.number.value = val;
-				_this.pager.update();
-			}			
+				_this.setCurrentPageNumber(val);
+				
+				delay(() => {
+					_this.pager.update().run();
+				});		
+			}						
 		});
 		
 		this.right.addEventListener('click', () => {			
-			let val = parseInt(_this.number.value) + 1;
+			let val = _this.getCurrentPageNumber() + 1;
 			
-			if (val <= _this.getTotal()) {
-				_this.number.value = val;
-				_this.pager.update();
-			}		
+			if (val <= _this.getTotalPages()) {
+				_this.setCurrentPageNumber(val);
+				
+				delay(() => {
+					_this.pager.update().run();
+				});	
+			}				
 		});		
 	
 		this.number.addEventListener('change', () => {
-			let val = _this.number.value;
+			let val = _this.getCurrentPageNumber();
 			
 			if (isNaN(val) || val < 1) {
-				_this.number.value = 1;
-			} else if (val > _this.getTotal()) {
-				_this.number.value = _this.getTotal();
+				val = 1;
+			} else if (val > _this.getTotalPages()) {
+				val = _this.getTotalPages();
 			}
-			
-			_this.pager.update();
+			_this.setCurrentPageNumber(val);
+			_this.pager.update().run();
 		});
 	
 		this.limit.addEventListener('change', () => {
@@ -52,65 +59,98 @@ class Controller {
 			if (isNaN(val) || val < 1) {
 				_this.limit.value = 1;
 			}
-			_this.updateTotal();
-			_this.pager.update();
+			_this.setCurrentPageNumber(1)
+				.updateTotalPages()
+				.pager.update().run();
 		});
 		
-		this.updateTotal();
+		this.updateTotalPages();
 	}	
 	
 	getOffset() {
 		let val = this.number.value;
 		
 		if (isNaN(val) || val < 1) {
-			this.number.value = 1;
-		} else if (val > this.getTotal()) {
-			this.number.value = this.getTotal();
+			this.setCurrentPageNumber(1);
+		} else if (val > this.getTotalPages()) {
+			this.setCurrentPageNumber(this.getTotalPages());
 		}
-		return parseInt(this.number.value - 1) * this.getLimit();
+		return parseInt(this.getCurrentPageNumber() - 1) * this.getLimit();
 	}
 	
 	getLimit() {
 		return parseInt(this.limit.value);
 	}
 	
-	getTotal() {
-		return Math.ceil(this.pager.tm.countAvailableRows() / this.getLimit());
+	getTotalPages() {
+		let total = 0;
+		
+		if (this.pager.totalManually && this.pager.totalManually >= 0) {
+			total = this.pager.totalManually;
+		} else {
+			total = this.pager.tm.countAvailableRows();
+		}
+		
+		return Math.ceil(total / this.getLimit());	
 	}
 	
-	updateTotal() {
-		if (this.total != null) {
-			this.total.innerHTML = '/' + this.getTotal();
+	setCurrentPageNumber(num) {
+		num = parseInt(num);
+	
+		if (!isNaN(num)) {
+			let innerHeight = parseInt(window.getComputedStyle(this.number).height); 
+			this.number.style.width = (num.toString().length * 12) + 'px';
+			this.number.value = num;			
 		}
 		return this;
 	}
+	
+	getCurrentPageNumber() {
+		return parseInt(this.number.value);
+	}
+	
+	updateTotalPages() {
+		if (this.total != null) {
+			this.total.innerHTML = this.pager.tm.getTerm('PAGER_PAGENUMBER_SEPARATOR') + this.getTotalPages() + ' ';
+		}
+		return this;
+	}	
 }
 
 class Pager {
 	constructor(tm, settings) {
 		this.tm = tm;
-		this.offset = settings.offset;
-		this.limit = settings.limit;
-		
+		this.offset = parseInt(settings.offset);
+		this.limit = parseInt(settings.limit);
+		this.totalManually = parseInt(settings.totalManually);
 		this.controller = new Controller(settings.controller, this);	
+		
+		this.update();
+		
+		try {
+			this.controller.setCurrentPageNumber(this.controller.getCurrentPageNumber());
+			this.controller.number.removeAttribute('disabled');
+		} catch(e) {}
 	}
 	
 	/**
 	 * main method run(): performs change
 	 */
 	run() {
-		console.info('Es wird angezeigt: ' + (this.offset+1) + ' bis ' + (this.offset + this.limit));
-		this.tm.actionPipeline.notify('pager', {
-			offset: this.offset,
-			limit: this.limit
-		});
+		if (this.tm.beforeUpdate('pager')) {
+			this.tm.actionPipeline.notify('pager', {
+				offset: this.getOffset(),
+				limit: this.getLimit()
+			});
+		}		
 		return this;
 	}
 	
 	update() {
 		this.setOffset(this.controller.getOffset())
-		    .setLimit(this.controller.getLimit())
-		    .run();
+		    .setLimit(this.controller.getLimit());
+		    //.run();
+		return this;
 	}
 	
 	// setters
@@ -122,13 +162,20 @@ class Pager {
 		if (limit != null && !isNaN(limit)) this.limit = limit;
 		return this;
 	}
-	/*
+	
+	// 
+	setTotalManually(num) {
+		this.totalManually = parseInt(num);
+		this.controller.updateTotalPages();
+		return this;
+	}
+	
 	getOffset() {
 		return this.offset;
 	}
 	getLimit() { 
 		return this.limit;
-	}*/
+	}
 }     
              
 module.exports = new Module({
@@ -136,6 +183,7 @@ module.exports = new Module({
 	defaultSettings: {
 		offset: 0,
 		limit: Infinity,
+		totalManually: false,
 		controller: {
 			left: null,
 			right: null,
@@ -146,26 +194,35 @@ module.exports = new Module({
 	},
 	initializer: function(settings) {
 		try {
-			let pagerInstance = new Pager(this, settings); // this = tablemodify
+			let instance = new Pager(this, settings); // this = tablemodify
 			addClass(this.container, 'tm-pager');
 			
-			pagerInstance.update();
+			// initialize the pager internal values
+			instance.update();
 			
-			return {
-				instance: pagerInstance,
+			return new ModuleReturn({
+				instance: instance,
 				show: (limit, offset) => {
-					pagerInstance
+					instance
 						.setOffset(offset)
 						.setLimit(limit)
 						.run();
 				},
+				getStats: () => {
+		        	return {
+		        		offset: instance.getOffset(),
+		        		limit: instance.getLimit()
+		        	};
+		        },
 				notify: () => {
 					// force pager to run again
-					pagerInstance.run();			
+					instance.run();			
 				},
-				info: () => {},
-				unset: () => {}
-			};
+				setTotalManually: (num) => {
+					instance.setTotalManually(num);
+				}
+			});
+			
 		} catch(e) {
 			error(e);
 		}		

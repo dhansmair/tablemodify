@@ -1,5 +1,6 @@
 const {addClass, iterate, info, error, trigger, replaceIdsWithIndices} = require('../utils.js');
 const Module = require('./module.js');
+const ModuleReturn = require('./moduleReturn.js');
 const FILTER_HEIGHT = '30px';
 
 /**
@@ -90,42 +91,46 @@ class Filter {
     }
 
     filter() {
-        let indices = this.getIndices(),
+    	if (this.tm.beforeUpdate('filter')) {
+    		let indices = this.getIndices(),
             patterns = this.getPatterns(),
             options = this.getOptions();
 
-        const maxDeph = indices.length - 1;
-
-        // filter rows
-        let all = this.tm.getAllRows(), matching = [], notMatching = [];
-        
-        for (let i = 0; i < all.length; i++) {
-        	let row = all[i], deph = 0, matches = true;
-
-            while (matches && deph <= maxDeph) {
-                let j = indices[deph],
-                    pattern = patterns[deph],
-                    tester = row.cells[j].textContent;
-
-                if (!options[deph]) {
-                    // not case-sensitive
-                    pattern = pattern.toLowerCase();
-                    tester = tester.toLowerCase();
-                }
-
-                matches = tester.indexOf(pattern) !== -1;
-                deph++;
-            }
-            
-			if (matches) {
-				matching.push(row);
-			} else {
-				notMatching.push(row);
-			}
-    	}
-        info(matching.length + ' treffer');
-        this.tm.setAvailableRows(matching);
-        this.tm.setHiddenRows(notMatching);
+	        const maxDeph = indices.length - 1;
+	
+	        // filter rows
+	        let all = this.tm.getAllRows(), matching = [], notMatching = [];
+	        
+	        for (let i = 0; i < all.length; i++) {
+	        	let row = all[i], deph = 0, matches = true;
+	
+	            while (matches && deph <= maxDeph) {
+	                let j = indices[deph],
+	                    pattern = patterns[deph],
+	                    tester = row.cells[j].textContent;
+	
+	                if (!options[deph]) {
+	                    // not case-sensitive
+	                    pattern = pattern.toLowerCase();
+	                    tester = tester.toLowerCase();
+	                }
+	
+	                matches = tester.indexOf(pattern) !== -1;
+	                deph++;
+	            }
+	            
+				if (matches) {
+					matching.push(row);
+				} else {
+					notMatching.push(row);
+				}
+	    	}
+	        info(matching.length + ' treffer');
+	        this.tm.setAvailableRows(matching);
+	        this.tm.setHiddenRows(notMatching);
+	        
+	        this.tm.actionPipeline.notify('filter');
+    	}      
         return this;
     }
 };
@@ -217,8 +222,7 @@ class FilterDefault extends Filter {
             .setOptions(options)
             .filter();
 
-        //this.tm.signal('tmSorterSortAgain', 'tmFixedForceRendering');
-        this.tm.actionPipeline.notify('filter');
+        
         return this;
     }
 }
@@ -243,14 +247,24 @@ module.exports = new Module({
 
             info('module filter loaded');
 
-            return {
+            return new ModuleReturn({
                 instance: instance,
+                getStats: () => {
+                	return {
+                		patterns: instance.getPatterns(),
+                		indices: instance.getIndices(),
+                		options: instance.getOptions()
+                	};
+                },
+                notify: () => {
+                	instance.run();
+                },
                 unset: () => {
                     info('unsetting filter');
                     // remove all filters;
                     this.showAllRows();
                 }
-            };
+            });
         } catch (e) {
             error(e);
         }

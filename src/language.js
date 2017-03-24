@@ -5,7 +5,8 @@ const {extend, warn} = require('./utils.js');
  */
 let defaults = {
     FILTER_PLACEHOLDER: 'type filter here',
-    FILTER_CASESENSITIVE: 'case-sensitive'
+    FILTER_CASESENSITIVE: 'case-sensitive',
+    PAGER_PAGENUMBER_SEPARATOR: ' / '
 };
 
 module.exports = class Language {
@@ -20,6 +21,6 @@ module.exports = class Language {
             return this.terms[term];
         }
         warn('term ' + term + ' not defined');
-        return null;
+        return '';
     }
 };
