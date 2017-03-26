@@ -4,8 +4,7 @@ const Module = require('./modules/module.js');
 const Language = require('./language.js');
 const ActionPipeline = require('./actionPipeline.js');
 const EventSystem = require('./eventSystem.js');
-const {error, warn, isNonEmptyString, getCss,
-       iterate, extend, hasClass, addClass, removeClass, getUniqueId, tableFactory} = require('./utils.js');
+const {error, warn, isNonEmptyString, iterate, extend, hasClass, addClass, removeClass, getUniqueId, tableFactory} = require('./utils.js');
 
 class Tablemodify {
     constructor(selector, coreSettings) {
@@ -218,11 +217,15 @@ class Tablemodify {
     	} else {
     		limit += offset;
     	}
-
+        /*
     	for (; offset < limit; offset++) {
     		fragment.appendChild(this.availableRows[offset]);
-    	}
-
+    	}*/
+        while (this.availableRows[offset] !== undefined && offset < limit) {
+            fragment.appendChild(this.availableRows[offset]);
+            offset++;
+        }
+        
     	this.DOM.appendChild(fragment);
     	return this;
     }
@@ -263,6 +266,13 @@ class Tablemodify {
     	this.setAvailableRows([].slice.call(this.DOM));
 		this.setHiddenRows([]);
 		return this;
+    }
+
+    removeRows() {
+        this.clearDOM()
+            .setHiddenRows([])
+            .setAvailableRows([])
+            .reload();
     }
 
     /**

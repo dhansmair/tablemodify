@@ -102,16 +102,6 @@ module.exports = new Module({
             if (foot) {
                 window.addEventListener('resize', renderFoot);
             }
-            /*
-            body.addEventListener('tmRowsAdded', () => {
-                renderHead();
-                renderFoot();
-            });*/
-            /*
-            body.addEventListener('tmFixedForceRendering', () => {
-                renderHead();
-                renderFoot();
-            });*/
 
             if (head && foot) {
                 bodyWrap.addEventListener('scroll', function() {

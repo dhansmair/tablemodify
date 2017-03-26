@@ -121,15 +121,6 @@ class Sorter {
                 this.manage(initIndex, false, initOrder);
             }
         }
-
-        // sort again in case it's needed.
-        /*
-        this.tm.body.addEventListener('tmSorterSortAgain', () => {
-            this.sort();
-        });
-        this.tm.body.addEventListener('tmRowsAdded', () => {
-            this.sort();
-        });*/
     }
 
     /**
