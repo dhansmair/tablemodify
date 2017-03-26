@@ -1,5 +1,4 @@
 const config = require('./config.js');
-require('custom-event-polyfill');
 // custom console logging functions
 exports.log = function(text) {
     if(config.debug) console.log('tm-log: ' + text);
@@ -150,13 +149,14 @@ let getProp = exports.getProperty = (obj, ...props) => {
 }
 exports.hasProp = (obj, ...props) => getProp(obj, ...props) !== undefined;
 
-/**
-    trigger custom events supported by all browsers
-*/
-exports.trigger = (target, eventName, props) => {
-    target.dispatchEvent(new CustomEvent(eventName, props));
-}
+exports.delay = (() => {
+	let ms = 400, t;
 
+	return (cb) => {
+		window.clearTimeout(t);
+		t = window.setTimeout(cb, ms);
+	};
+})();
 
 /**
     finds head cell with tm-id = tmId and returns its index
@@ -164,19 +164,8 @@ exports.trigger = (target, eventName, props) => {
 function id2index(tmId) {
     let cell = document.querySelector('thead > tr > *[tm-id='+tmId+']');
     if (!cell) return null;
-    return [].slice.call(cell.parentNode.children).indexOf(cell);
+    return [].indexOf.call(cell.parentNode.children, cell);
 }
-
-
-exports.delay = (() => {
-	let ms = 400, t;
-	
-	return (cb) => {
-		window.clearTimeout(t);
-		t = window.setTimeout(cb, ms);
-	};
-})();
-
 /**
     ersetze alle spalten, die über die tm-id identifiziert werden, durch ihren index
 */

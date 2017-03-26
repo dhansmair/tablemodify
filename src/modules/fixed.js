@@ -102,11 +102,11 @@ module.exports = new Module({
             if (foot) {
                 window.addEventListener('resize', renderFoot);
             }
-
+            /*
             body.addEventListener('tmRowsAdded', () => {
                 renderHead();
                 renderFoot();
-            });
+            });*/
             /*
             body.addEventListener('tmFixedForceRendering', () => {
                 renderHead();
@@ -167,12 +167,12 @@ module.exports = new Module({
             info('module fixed loaded');
 
             return {
-            	
-            	notify: () => {	
+
+            	notify: () => {
             		renderHead();
             		renderFoot();
             	},
-            	
+
                 /**
                  * revert all changes performed by this module
                  * implementation might not be 100% correct yet

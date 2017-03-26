@@ -92,14 +92,13 @@ class Filter {
     filter() {
     	if (this.tm.beforeUpdate('filter')) {
     		let indices = this.getIndices(),
-            patterns = this.getPatterns(),
-            options = this.getOptions();
+                patterns = this.getPatterns(),
+                options = this.getOptions(),
+                all = this.tm.getAllRows(),
+                matching = [], notMatching = [];
 
 	        const maxDeph = indices.length - 1;
-
 	        // filter rows
-	        let all = this.tm.getAllRows(), matching = [], notMatching = [];
-
 	        for (let i = 0; i < all.length; i++) {
 	        	let row = all[i], deph = 0, matches = true;
 
@@ -124,11 +123,10 @@ class Filter {
 					notMatching.push(row);
 				}
 	    	}
-	        info(matching.length + ' treffer');
-	        this.tm.setAvailableRows(matching);
-	        this.tm.setHiddenRows(notMatching);
 
-	        this.tm.actionPipeline.notify('filter');
+	        this.tm.setAvailableRows(matching)
+	           .setHiddenRows(notMatching)
+               .actionPipeline.notify('filter');
     	}
         return this;
     }
@@ -192,10 +190,10 @@ class FilterDefault extends Filter {
         row.onchange = () => {
             this.run();
         }
-
+        /*
         tm.body.addEventListener('tmRowsAdded', () => {
             if (this.anyFilterActive()) this.run();
-        });
+        });*/
 
         // insert toolbar row into tHead
         this.tHead.appendChild(row);
@@ -220,8 +218,6 @@ class FilterDefault extends Filter {
             .setIndices(indices)
             .setOptions(options)
             .filter();
-
-
         return this;
     }
 }
@@ -241,9 +237,7 @@ module.exports = new Module({
         // this := Tablemodify-instance
         try {
             addClass(this.container, 'tm-filter');
-
             let instance = new FilterDefault(this, settings);
-
             info('module filter loaded');
 
             return {

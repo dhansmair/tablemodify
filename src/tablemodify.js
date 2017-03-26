@@ -3,8 +3,9 @@ const config = require('./config.js');
 const Module = require('./modules/module.js');
 const Language = require('./language.js');
 const ActionPipeline = require('./actionPipeline.js');
+const EventSystem = require('./eventSystem.js');
 const {error, warn, isNonEmptyString, getCss,
-       iterate, extend, hasClass, addClass, removeClass, getUniqueId, trigger, tableFactory} = require('./utils.js');
+       iterate, extend, hasClass, addClass, removeClass, getUniqueId, tableFactory} = require('./utils.js');
 
 class Tablemodify {
     constructor(selector, coreSettings) {
@@ -85,14 +86,14 @@ class Tablemodify {
         addClass(body, 'tm-body');
 
         // the tBody, contains all visible rows in the table
-        //this.visibleRows = this.body.tBodies[0];
         this.DOM = this.body.tBodies[0];
         // contains all tr-nodes that are not displayed at the moment
-        //this.hiddenRows = document.createDocumentFragment();
         this.hiddenRows = [];
-        this.availableRows = [].slice.call(this.DOM.rows);//document.createDocumentFragment();
+        // an array containing references to all available tr elements. They are not necessarily displayed in the DOM
+        this.availableRows = [].slice.call(this.DOM.rows);
 
         this.actionPipeline = new ActionPipeline(this);
+        this.eventSystem = new EventSystem(this);
         this.coreSettings = coreSettings;
 
         // call all modules
@@ -179,13 +180,15 @@ class Tablemodify {
      */
     setAvailableRows(arr) {
     	this.availableRows = arr;
+        return this;
     }
 
     /**
      * setter
      */
     setHiddenRows(arr) {
-    	this.hiddenRows = arr
+    	this.hiddenRows = arr;
+        return this;
     }
 
     /**
@@ -265,7 +268,7 @@ class Tablemodify {
     /**
      * clears DOM and then does appendRaw(). See it for more information
      * @param {array} data
-     * @return this for chaining 
+     * @return this for chaining
      */
     insertRaw(data) {
         return this.clearDOM().appendRaw(data);
@@ -279,22 +282,20 @@ class Tablemodify {
     appendRaw(data) {
         let trPattern = document.createElement('tr'),
             tdPattern = document.createElement('td');
-        //let fragment = document.createDocumentFragment();
+
         for (let i = 0; i < data.length; i++) {
             let tr = trPattern.cloneNode(), row = data[i];
+
             for (let j = 0; j < row.length; j++) {
                 let td = tdPattern.cloneNode(), cell = row[j];
                 td.innerHTML = cell.c;
-
                 if (cell.hasOwnProperty('a')) {
                     Object.keys(cell.a).forEach((prop) => {
                         td.addAttribute(prop, cell.a[prop]);
                     });
-
                 }
                 tr.appendChild(td);
             }
-
             this.availableRows.push(tr);
         }
         this.reload();
@@ -321,18 +322,6 @@ class Tablemodify {
 
     	let ret = this.coreSettings.beforeUpdate(infos, moduleName);
     	return (ret === null || ret === undefined || ret === true);
-    }
-
-
-    /**
-     * used to fire events on the original table. Modules may react to this events.
-     * Its a convention that all events are fired on this element and the modules listen to the same.
-     */
-    signal(...events) {
-        events.forEach((e) => {
-            trigger(this.body, e);
-        });
-        return this;
     }
 
     /**
@@ -364,7 +353,7 @@ class Tablemodify {
     id2index(tmId) {
     	let cell = this.container.querySelector('thead > tr > *[tm-id='+tmId+']');
         if (!cell) return null;
-        return [].slice.call(cell.parentNode.children).indexOf(cell);
+        return [].indexOf.call(cell.parentNode.children, cell);
     }
 
     /**
@@ -386,6 +375,30 @@ class Tablemodify {
     reload() {
     	this.actionPipeline.notify('__reload');
     	return this;
+    }
+
+    /**
+     * register an event listener to this tm instance.
+     * multiple listeners can listen to the same event and will be fired in the same order as they are applied.
+     * (!) not a normal js Event
+     * @param {string} eventName
+     * @param {function} func
+     * @return this for chaining
+     */
+    on(eventName, func) {
+        this.eventSystem.on(eventName, func);
+        return this;
+    }
+
+    /**
+     * trigger an event on this tm instance
+     * (!) tm event, not a normal js event
+     * @param {string} eventName
+     * @return this for chaining
+     */
+    trigger(eventName, ...params) {
+        this.eventSystem.trigger(eventName, ...params);
+        return this;
     }
 
     /**

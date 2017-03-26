@@ -1,50 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-// Polyfill for creating CustomEvents on IE9/10/11
-
-// code pulled from:
-// https://github.com/d4tocchini/customevent-polyfill
-// https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent#Polyfill
-
-try {
-    var ce = new window.CustomEvent('test');
-    ce.preventDefault();
-    if (ce.defaultPrevented !== true) {
-        // IE has problems with .preventDefault() on custom events
-        // http://stackoverflow.com/questions/23349191
-        throw new Error('Could not prevent default');
-    }
-} catch(e) {
-  var CustomEvent = function(event, params) {
-    var evt, origPrevent;
-    params = params || {
-      bubbles: false,
-      cancelable: false,
-      detail: undefined
-    };
-
-    evt = document.createEvent("CustomEvent");
-    evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-    origPrevent = evt.preventDefault;
-    evt.preventDefault = function () {
-      origPrevent.call(this);
-      try {
-        Object.defineProperty(this, 'defaultPrevented', {
-          get: function () {
-            return true;
-          }
-        });
-      } catch(e) {
-        this.defaultPrevented = true;
-      }
-    };
-    return evt;
-  };
-
-  CustomEvent.prototype = window.Event.prototype;
-  window.CustomEvent = CustomEvent; // expose definition to window
-}
-
-},{}],2:[function(require,module,exports){
 (function (main) {
   'use strict';
 
@@ -379,7 +333,7 @@ try {
   }
 })(this);
 
-},{}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -420,8 +374,7 @@ module.exports = function () {
 	function ActionPipeline(tm) {
 		_classCallCheck(this, ActionPipeline);
 
-		//this.queue = generateQueue(tm.activeModules);
-		this.activeModules = tm.activeModules;
+		this.tm = tm;
 	}
 
 	/**
@@ -434,9 +387,9 @@ module.exports = function () {
 	_createClass(ActionPipeline, [{
 		key: 'notify',
 		value: function notify(sender, msg) {
+			this.tm.trigger('action', sender);
 			try {
 				var receiver = this._getSuccessor(sender);
-
 				if (receiver != null) receiver.notify(msg);
 			} catch (e) {
 				error(e);
@@ -446,15 +399,11 @@ module.exports = function () {
 		key: '_getSuccessor',
 		value: function _getSuccessor(sender) {
 			var i = hierarchy.indexOf(sender) + 1;
-			if (i === 0) {
-				return null;
-			}
+			if (i === 0) return null;
+
 			for (; i < hierarchy.length; i++) {
 				var name = hierarchy[i];
-				console.log(name);
-				if (this.activeModules.hasOwnProperty(name)) {
-					return this.activeModules[name];
-				}
+				if (this.tm.activeModules.hasOwnProperty(name)) return this.tm.activeModules[name];
 			}
 		}
 	}]);
@@ -462,7 +411,7 @@ module.exports = function () {
 	return ActionPipeline;
 }();
 
-},{"./utils.js":15}],4:[function(require,module,exports){
+},{"./utils.js":15}],3:[function(require,module,exports){
 'use strict';
 
 exports.debug = false;
@@ -471,7 +420,7 @@ exports.coreDefaults = {
     language: 'en'
 };
 
-},{}],5:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var _DATE_I18N, _DATE_FORMATS;
@@ -513,7 +462,56 @@ module.exports = {
     DATE_FORMATS: DATE_FORMATS
 };
 
-},{"fecha":2}],6:[function(require,module,exports){
+},{"fecha":1}],5:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * this class is a simple event system for a tablemodify instance.
+ *
+ */
+module.exports = function () {
+    function EventSystem(tm) {
+        _classCallCheck(this, EventSystem);
+
+        this.tm = tm;
+        this.events = {};
+    }
+
+    _createClass(EventSystem, [{
+        key: 'on',
+        value: function on(eventName, func) {
+            if (typeof func !== 'function') {
+                throw new Error('not a function!');
+            }
+            if (!this.events.hasOwnProperty(eventName)) this.events[eventName] = [];
+
+            this.events[eventName].push(func);
+        }
+    }, {
+        key: 'trigger',
+        value: function trigger(eventName) {
+            var _this = this;
+
+            for (var _len = arguments.length, params = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+                params[_key - 1] = arguments[_key];
+            }
+
+            if (this.events.hasOwnProperty(eventName)) {
+                this.events[eventName].forEach(function (func) {
+                    func.apply(_this.tm, params);
+                });
+            }
+        }
+    }]);
+
+    return EventSystem;
+}();
+
+},{}],6:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -760,15 +758,13 @@ var Filter = function () {
             if (this.tm.beforeUpdate('filter')) {
                 var indices = this.getIndices(),
                     patterns = this.getPatterns(),
-                    options = this.getOptions();
-
-                var maxDeph = indices.length - 1;
-
-                // filter rows
-                var all = this.tm.getAllRows(),
+                    options = this.getOptions(),
+                    all = this.tm.getAllRows(),
                     matching = [],
                     notMatching = [];
 
+                var maxDeph = indices.length - 1;
+                // filter rows
                 for (var i = 0; i < all.length; i++) {
                     var row = all[i],
                         deph = 0,
@@ -795,11 +791,8 @@ var Filter = function () {
                         notMatching.push(row);
                     }
                 }
-                info(matching.length + ' treffer');
-                this.tm.setAvailableRows(matching);
-                this.tm.setHiddenRows(notMatching);
 
-                this.tm.actionPipeline.notify('filter');
+                this.tm.setAvailableRows(matching).setHiddenRows(notMatching).actionPipeline.notify('filter');
             }
             return this;
         }
@@ -873,10 +866,10 @@ var FilterDefault = function (_Filter) {
         row.onchange = function () {
             _this.run();
         };
-
-        tm.body.addEventListener('tmRowsAdded', function () {
-            if (_this.anyFilterActive()) _this.run();
-        });
+        /*
+        tm.body.addEventListener('tmRowsAdded', () => {
+            if (this.anyFilterActive()) this.run();
+        });*/
 
         // insert toolbar row into tHead
         _this.tHead.appendChild(row);
@@ -903,7 +896,6 @@ var FilterDefault = function (_Filter) {
             });
 
             this.setPatterns(patterns).setIndices(indices).setOptions(options).filter();
-
             return this;
         }
     }]);
@@ -928,9 +920,7 @@ module.exports = new Module({
         // this := Tablemodify-instance
         try {
             addClass(this.container, 'tm-filter');
-
             var instance = new FilterDefault(this, settings);
-
             info('module filter loaded');
 
             return {
@@ -1073,11 +1063,11 @@ module.exports = new Module({
             if (foot) {
                 window.addEventListener('resize', renderFoot);
             }
-
-            body.addEventListener('tmRowsAdded', function () {
+            /*
+            body.addEventListener('tmRowsAdded', () => {
                 renderHead();
                 renderFoot();
-            });
+            });*/
             /*
             body.addEventListener('tmFixedForceRendering', () => {
                 renderHead();
@@ -1666,7 +1656,6 @@ var Sorter = function () {
             ready: true,
             headers: {},
             headCells: [],
-            //body: null,
             rows: []
         });
 
@@ -1720,13 +1709,13 @@ var Sorter = function () {
         }
 
         // sort again in case it's needed.
-        this.tm.body.addEventListener('tmSorterSortAgain', function () {
-            _this.sort();
+        /*
+        this.tm.body.addEventListener('tmSorterSortAgain', () => {
+            this.sort();
         });
-
-        this.tm.body.addEventListener('tmRowsAdded', function () {
-            _this.sort();
-        });
+        this.tm.body.addEventListener('tmRowsAdded', () => {
+            this.sort();
+        });*/
     }
 
     /**
@@ -2116,7 +2105,7 @@ module.exports = new Module({
     }
 });
 
-},{"../dateUtils.js":5,"../utils.js":15,"./module.js":10}],13:[function(require,module,exports){
+},{"../dateUtils.js":4,"../utils.js":15,"./module.js":10}],13:[function(require,module,exports){
 'use strict';
 
 var _require = require('../utils.js'),
@@ -2172,6 +2161,7 @@ var config = require('./config.js');
 var Module = require('./modules/module.js');
 var Language = require('./language.js');
 var ActionPipeline = require('./actionPipeline.js');
+var EventSystem = require('./eventSystem.js');
 
 var _require = require('./utils.js'),
     error = _require.error,
@@ -2184,7 +2174,6 @@ var _require = require('./utils.js'),
     addClass = _require.addClass,
     removeClass = _require.removeClass,
     getUniqueId = _require.getUniqueId,
-    trigger = _require.trigger,
     tableFactory = _require.tableFactory;
 
 var Tablemodify = function () {
@@ -2267,14 +2256,14 @@ var Tablemodify = function () {
         addClass(body, 'tm-body');
 
         // the tBody, contains all visible rows in the table
-        //this.visibleRows = this.body.tBodies[0];
         this.DOM = this.body.tBodies[0];
         // contains all tr-nodes that are not displayed at the moment
-        //this.hiddenRows = document.createDocumentFragment();
         this.hiddenRows = [];
-        this.availableRows = [].slice.call(this.DOM.rows); //document.createDocumentFragment();
+        // an array containing references to all available tr elements. They are not necessarily displayed in the DOM
+        this.availableRows = [].slice.call(this.DOM.rows);
 
         this.actionPipeline = new ActionPipeline(this);
+        this.eventSystem = new EventSystem(this);
         this.coreSettings = coreSettings;
 
         // call all modules
@@ -2386,6 +2375,7 @@ var Tablemodify = function () {
         key: 'setAvailableRows',
         value: function setAvailableRows(arr) {
             this.availableRows = arr;
+            return this;
         }
 
         /**
@@ -2396,6 +2386,7 @@ var Tablemodify = function () {
         key: 'setHiddenRows',
         value: function setHiddenRows(arr) {
             this.hiddenRows = arr;
+            return this;
         }
 
         /**
@@ -2496,7 +2487,7 @@ var Tablemodify = function () {
         /**
          * clears DOM and then does appendRaw(). See it for more information
          * @param {array} data
-         * @return this for chaining 
+         * @return this for chaining
          */
 
     }, {
@@ -2516,7 +2507,7 @@ var Tablemodify = function () {
         value: function appendRaw(data) {
             var trPattern = document.createElement('tr'),
                 tdPattern = document.createElement('td');
-            //let fragment = document.createDocumentFragment();
+
             for (var i = 0; i < data.length; i++) {
                 var tr = trPattern.cloneNode(),
                     row = data[i];
@@ -2525,7 +2516,6 @@ var Tablemodify = function () {
                     var td = tdPattern.cloneNode(),
                         cell = row[j];
                     td.innerHTML = cell.c;
-
                     if (cell.hasOwnProperty('a')) {
                         Object.keys(cell.a).forEach(function (prop) {
                             td.addAttribute(prop, cell.a[prop]);
@@ -2537,7 +2527,6 @@ var Tablemodify = function () {
                 for (var j = 0; j < row.length; j++) {
                     _loop(j);
                 }
-
                 this.availableRows.push(tr);
             }
             this.reload();
@@ -2569,26 +2558,6 @@ var Tablemodify = function () {
 
             var ret = this.coreSettings.beforeUpdate(infos, moduleName);
             return ret === null || ret === undefined || ret === true;
-        }
-
-        /**
-         * used to fire events on the original table. Modules may react to this events.
-         * Its a convention that all events are fired on this element and the modules listen to the same.
-         */
-
-    }, {
-        key: 'signal',
-        value: function signal() {
-            var _this3 = this;
-
-            for (var _len = arguments.length, events = Array(_len), _key = 0; _key < _len; _key++) {
-                events[_key] = arguments[_key];
-            }
-
-            events.forEach(function (e) {
-                trigger(_this3.body, e);
-            });
-            return this;
         }
 
         /**
@@ -2629,7 +2598,7 @@ var Tablemodify = function () {
         value: function id2index(tmId) {
             var cell = this.container.querySelector('thead > tr > *[tm-id=' + tmId + ']');
             if (!cell) return null;
-            return [].slice.call(cell.parentNode.children).indexOf(cell);
+            return [].indexOf.call(cell.parentNode.children, cell);
         }
 
         /**
@@ -2656,6 +2625,42 @@ var Tablemodify = function () {
         key: 'reload',
         value: function reload() {
             this.actionPipeline.notify('__reload');
+            return this;
+        }
+
+        /**
+         * register an event listener to this tm instance.
+         * multiple listeners can listen to the same event and will be fired in the same order as they are applied.
+         * (!) not a normal js Event
+         * @param {string} eventName
+         * @param {function} func
+         * @return this for chaining
+         */
+
+    }, {
+        key: 'on',
+        value: function on(eventName, func) {
+            this.eventSystem.on(eventName, func);
+            return this;
+        }
+
+        /**
+         * trigger an event on this tm instance
+         * (!) tm event, not a normal js event
+         * @param {string} eventName
+         * @return this for chaining
+         */
+
+    }, {
+        key: 'trigger',
+        value: function trigger(eventName) {
+            var _eventSystem;
+
+            for (var _len = arguments.length, params = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+                params[_key - 1] = arguments[_key];
+            }
+
+            (_eventSystem = this.eventSystem).trigger.apply(_eventSystem, [eventName].concat(params));
             return this;
         }
 
@@ -2774,13 +2779,12 @@ Tablemodify.version = 'v0.9.5';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
 
-},{"./actionPipeline.js":3,"./config.js":4,"./language.js":6,"./modules/columnStyles.js":7,"./modules/filter.js":8,"./modules/fixed.js":9,"./modules/module.js":10,"./modules/pager.js":11,"./modules/sorter.js":12,"./modules/zebra.js":13,"./utils.js":15}],15:[function(require,module,exports){
+},{"./actionPipeline.js":2,"./config.js":3,"./eventSystem.js":5,"./language.js":6,"./modules/columnStyles.js":7,"./modules/filter.js":8,"./modules/fixed.js":9,"./modules/module.js":10,"./modules/pager.js":11,"./modules/sorter.js":12,"./modules/zebra.js":13,"./utils.js":15}],15:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var config = require('./config.js');
-require('custom-event-polyfill');
 // custom console logging functions
 exports.log = function (text) {
     if (config.debug) console.log('tm-log: ' + text);
@@ -2957,22 +2961,6 @@ exports.hasProp = function (obj) {
     return getProp.apply(undefined, [obj].concat(props)) !== undefined;
 };
 
-/**
-    trigger custom events supported by all browsers
-*/
-exports.trigger = function (target, eventName, props) {
-    target.dispatchEvent(new CustomEvent(eventName, props));
-};
-
-/**
-    finds head cell with tm-id = tmId and returns its index
-    */
-function id2index(tmId) {
-    var cell = document.querySelector('thead > tr > *[tm-id=' + tmId + ']');
-    if (!cell) return null;
-    return [].slice.call(cell.parentNode.children).indexOf(cell);
-}
-
 exports.delay = function () {
     var ms = 400,
         t = void 0;
@@ -2983,6 +2971,14 @@ exports.delay = function () {
     };
 }();
 
+/**
+    finds head cell with tm-id = tmId and returns its index
+    */
+function id2index(tmId) {
+    var cell = document.querySelector('thead > tr > *[tm-id=' + tmId + ']');
+    if (!cell) return null;
+    return [].indexOf.call(cell.parentNode.children, cell);
+}
 /**
     ersetze alle spalten, die über die tm-id identifiziert werden, durch ihren index
 */
@@ -2999,4 +2995,4 @@ exports.replaceIdsWithIndices = function (columns) {
     return columns;
 };
 
-},{"./config.js":4,"custom-event-polyfill":1}]},{},[14]);
+},{"./config.js":3}]},{},[14]);

@@ -69,7 +69,6 @@ class Sorter {
             ready: true,
             headers: {},
             headCells: [],
-            //body: null,
             rows: []
         });
 
@@ -124,13 +123,13 @@ class Sorter {
         }
 
         // sort again in case it's needed.
+        /*
         this.tm.body.addEventListener('tmSorterSortAgain', () => {
             this.sort();
         });
-
         this.tm.body.addEventListener('tmRowsAdded', () => {
             this.sort();
-        });
+        });*/
     }
 
     /**
