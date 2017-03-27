@@ -54,7 +54,7 @@ class Controller {
 
 		this.limit.addEventListener('change', () => {
 			let val = _this.limit.value;
-
+			console.log(val);
 			if (isNaN(val) || val < 1) {
 				_this.limit.value = 1;
 			}
@@ -68,11 +68,11 @@ class Controller {
 
 	getOffset() {
 		let val = this.number.value;
-
-		if (isNaN(val) || val < 1) {
+		let totalPages = this.getTotalPages();
+		if (isNaN(val) || (val < 1 && totalPages != 0)) {
 			this.setCurrentPageNumber(1);
-		} else if (val > this.getTotalPages()) {
-			this.setCurrentPageNumber(this.getTotalPages());
+		} else if (val > totalPages) {
+			this.setCurrentPageNumber(totalPages);
 		}
 		return parseInt(this.getCurrentPageNumber() - 1) * this.getLimit();
 	}
@@ -114,9 +114,18 @@ class Controller {
 		}
 		return this;
 	}
+	
+	updatePageNumber() {
+		let totalPages = this.getTotalPages();
+		if (this.getCurrentPageNumber() > totalPages) {
+			this.setCurrentPageNumber(totalPages);
+			this.pager.update().run();
+		}
+		return this;
+	};
 
 	update() {
-		this.updateTotalPages();
+		this.updateTotalPages().updatePageNumber();
 		return this;
 	}
 }
@@ -172,7 +181,8 @@ class Pager {
 	//
 	setTotalManually(num) {
 		this.totalManually = parseInt(num);
-		this.controller.updateTotalPages();
+		this.update();
+		//this.controller.updateTotalPages();
 		return this;
 	}
 

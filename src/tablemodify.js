@@ -263,8 +263,9 @@ class Tablemodify {
     			this.DOM.appendChild(data[i]);
     		}
     	}
-    	this.setAvailableRows([].slice.call(this.DOM));
-		this.setHiddenRows([]);
+    	this.setAvailableRows([].slice.call(this.DOM))
+			.setHiddenRows([]);
+			
 		return this;
     }
 
