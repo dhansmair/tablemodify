@@ -9,11 +9,13 @@ module.exports = new Module({
         fixFooter:false
     },
     initializer: function(settings) {
+    	
         // set up
         let head,
             foot,
             headWrap,
             footWrap,
+            _this = this,
             container = this.container,
             body = this.body,
             bodyWrap = this.bodyWrap,
@@ -26,16 +28,19 @@ module.exports = new Module({
 
         function renderHead() {
             if(!head) return;
+           
             var allNew = [].slice.call(head.firstElementChild.firstElementChild.cells),
                 allOld = [].slice.call(origHead.firstElementChild.cells);
             body.style.marginTop = inPx('-' + getHeaderHeight()); // if header resizes because of a text wrap
 
             iterate(allNew, function(i, neu){
                 let w = inPx(allOld[i].getBoundingClientRect().width);
-                neu.style.cssText = `width: ${w};
-                                     min-width: ${w};
-                                     max-width: ${w}`;
+                
+                neu.style.width = w;
+                neu.style['minWidth'] = w;
+                neu.style['maxWidth'] = w;
             });
+            _this.trigger('headerRendered');
         }
         function renderFoot() {
             if (!foot) return;
@@ -46,9 +51,10 @@ module.exports = new Module({
 
             iterate(allNew, function(i, neu){
                 let w = inPx(allOld[i].getBoundingClientRect().width);
-                neu.style.cssText = `width: ${w};
-                                     min-width: ${w};
-                                     max-width: ${w}`;
+                
+                neu.style.width = w;
+                neu.style['minWidth'] = w;
+                neu.style['maxWidth'] = w;
             });
         }
         try {
@@ -162,6 +168,9 @@ module.exports = new Module({
             		renderHead();
             		renderFoot();
             	},
+            	
+            	renderHead: renderHead,
+            	renderFoot: renderFoot,
 
                 /**
                  * revert all changes performed by this module

@@ -212,16 +212,13 @@ class Tablemodify {
     	this.clearDOM();
     	let fragment = document.createDocumentFragment();
 
-    	if (limit === Infinity || limit+offset > this.availableRows.length) {
+    	if (limit === Infinity || limit + offset > this.availableRows.length) {
     		limit = this.availableRows.length;
     	} else {
     		limit += offset;
     	}
-        /*
-    	for (; offset < limit; offset++) {
-    		fragment.appendChild(this.availableRows[offset]);
-    	}*/
-        while (this.availableRows[offset] !== undefined && offset < limit) {
+       
+        while (offset < this.availableRows.length && offset < limit) {
             fragment.appendChild(this.availableRows[offset]);
             offset++;
         }
@@ -247,7 +244,10 @@ class Tablemodify {
      * @return this for chaining
      */
     insertRows(data) {
-    	return this.clearDOM().appendRows(data);
+    	return this.clearDOM()
+    		.setAvailableRows([])
+    		.setHiddenRows([])
+    		.appendRows(data);
     }
 
     /**
@@ -257,16 +257,22 @@ class Tablemodify {
      */
     appendRows(data) {
     	if (typeof data === 'string') {
-	        this.DOM.innerHTML += data;
-        } else if (Array.isArray(data)) {
-            for (let i = 0; i < data.length; i++) {
-    			this.DOM.appendChild(data[i]);
-    		}
-    	}
-    	this.setAvailableRows([].slice.call(this.DOM))
-			.setHiddenRows([]);
-			
-		return this;
+	        this.DOM.innerHTML = data;
+	        data = [].slice.call(this.DOM.children);
+	    } 
+    	
+    	if (Array.isArray(data)) {
+        	let avail = this.getAvailableRows().concat(data, this.getHiddenRows());
+        	this.setAvailableRows(avail).setHiddenRows([]);
+        	
+        	if (this.coreSettings.usesExternalData) {
+        		this.actionPipeline.notify('__renderer');
+        	} else {
+        		this.reload();
+        	}
+        	
+        }
+    	return this;  
     }
 
     removeRows() {

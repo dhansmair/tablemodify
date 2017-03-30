@@ -67,18 +67,27 @@ class Controller {
 	}
 
 	getOffset() {
-		let val = this.number.value;
+		let val = parseInt(this.number.value);
 		let totalPages = this.getTotalPages();
 		if (isNaN(val) || (val < 1 && totalPages != 0)) {
 			this.setCurrentPageNumber(1);
 		} else if (val > totalPages) {
 			this.setCurrentPageNumber(totalPages);
 		}
+		
+		if (this.getCurrentPageNumber() <= 1) return 0;
+	
 		return parseInt(this.getCurrentPageNumber() - 1) * this.getLimit();
 	}
 
 	getLimit() {
-		return parseInt(this.limit.value);
+		let val = parseInt(this.limit.value);
+		
+		if (isNaN(val) || val < 1) {
+			this.limit.value = this.pager.limit;
+			return this.pager.limit;
+		}
+		return val;
 	}
 
 	getTotalPages() {
@@ -138,7 +147,7 @@ class Pager {
 		this.totalManually = parseInt(settings.totalManually);
 		this.controller = new Controller(settings.controller, this);
 
-		this.update();
+		//this.update();
 
 		try {
 			this.controller.setCurrentPageNumber(this.controller.getCurrentPageNumber());
@@ -198,7 +207,7 @@ module.exports = new Module({
 	name: 'pager',
 	defaultSettings: {
 		offset: 0,
-		limit: Infinity,
+		limit: 500,
 		totalManually: false,
 		controller: {
 			left: null,

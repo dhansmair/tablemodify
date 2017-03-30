@@ -3,11 +3,10 @@ div.tm-container {
   display: flex;
   -ms-flex-direction: column;
   flex-direction: column;
-  border: 1px solid #ccc;
   background-color: #F0F0F0;
-  overflow: hidden;
   box-sizing: border-box;
   height: 100%;
+  position: relative;
   /*
         styles for filter plugin
     */
@@ -85,6 +84,39 @@ div.tm-container.tm-filter tr.tm-filter-row td {
   padding: 0 !important;
   overflow: hidden;
   height: 0;
+  /*
+                span.tm-custom-checkbox {
+                    position:absolute;
+                    top:0;
+                    right:0;
+                    width:30px;
+                    height:100%;
+                    background-color:transparent;
+                    vertical-align:middle;
+                    text-align: center;
+
+                    input[type=checkbox] {
+                        visibility: hidden;
+
+                        &:checked + label {
+                            background: #666;
+                        }
+                    }
+                    
+                    label {
+                        position:absolute;
+                        border-radius:50px;
+                        width:18px;
+                        height:18px;
+                        top:5px;
+                        right:5px;
+                        background-color: @baseColor;
+                        border:3px solid @borderColor;
+                        transition:0.2s;
+                        cursor:pointer;
+                    }
+                }
+                */
 }
 div.tm-container.tm-filter tr.tm-filter-row td div.tm-input-div {
   position: absolute;
@@ -108,32 +140,63 @@ div.tm-container.tm-filter tr.tm-filter-row td div.tm-input-div input[type=text]
 div.tm-container.tm-filter tr.tm-filter-row td div.tm-input-div:nth-last-child(1) > input {
   padding-right: 10px;
 }
-div.tm-container.tm-filter tr.tm-filter-row td span.tm-custom-checkbox {
+div.tm-container.tm-filter tr.tm-filter-row td div.tm-filter-option-icon {
   position: absolute;
   top: 0;
   right: 0;
   width: 30px;
-  height: 100%;
-  background-color: transparent;
-  vertical-align: middle;
-  text-align: center;
-  /* styles of the dot hovering the original checkbox */
-}
-div.tm-container.tm-filter tr.tm-filter-row td span.tm-custom-checkbox input[type=checkbox] {
-  visibility: hidden;
-}
-div.tm-container.tm-filter tr.tm-filter-row td span.tm-custom-checkbox input[type=checkbox]:checked + label {
-  background: #666;
-}
-div.tm-container.tm-filter tr.tm-filter-row td span.tm-custom-checkbox label {
-  position: absolute;
-  border-radius: 50px;
-  width: 18px;
-  height: 18px;
-  top: 5px;
-  right: 5px;
-  background-color: white;
-  border: 3px solid #cccccc;
-  transition: 0.2s;
+  height: 30px;
+  background-position: 7px center;
+  background-repeat: no-repeat;
+  background-size: 80%;
   cursor: pointer;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAABIAAAASABGyWs+AAAACXZwQWcAAAAeAAAAHgD4T+E9AAAAbElEQVRIx2NgGAWjYBRQCTCSo2ni0jVe//8zzWBgYGBgZPyXkR8dso1UM1jIsfj/f6aZDAwMMkhsWVLNYKIkuCgBZFnMyPgvnYGB4TEDA8NjKHsUEASjqZpuYDRV0w2Mpmq6gdFUPQpGwdAHAKhxNhlin4HHAAAAAElFTkSuQmCC');
+}
+div.tm-container.tm-filter tr.tm-filter-row td div.tm-filter-option-icon.tm-filter-active {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAABIAAAASABGyWs+AAAACXZwQWcAAAAeAAAAHgD4T+E9AAAAZUlEQVRIx2NgGAWjYBRQCTCSoymldIMXw3+GGVATMuZ0B2wj1QwWspz7n2EmAwODDBJbllQjmMgOKwoBeRYzMqQzMDA8ZmBgeAxljwKCYDRV0w2Mpmq6gdFUTTcwmqpHwSgY+gAAhG4kGUKc1KYAAAAASUVORK5CYII=');
+}
+div.tm-container.tm-filter tr.tm-filter-row td div.tm-filter-optionpanel {
+  position: absolute;
+  border: 1px solid #ccc;
+  border-top: none;
+  top: 30px;
+  left: 0;
+  right: 0;
+  height: auto;
+  min-width: 250px;
+  background-color: white;
+  display: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+div.tm-container.tm-filter tr.tm-filter-row td div.tm-filter-optionpanel .tm-filter-optionpanel-title {
+  height: 20px;
+  padding: 0px 4px;
+  vertical-align: center;
+  margin-right: 20px;
+  float: left;
+  overflow: hidden;
+}
+div.tm-container.tm-filter tr.tm-filter-row td div.tm-filter-optionpanel .tm-filter-optionpanel-closeButton {
+  cursor: pointer;
+  float: right;
+  width: 20px;
+  height: 20px;
+  border-left: 1px solid #ccc;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAABIAAAASABGyWs+AAAACXZwQWcAAAAeAAAAHgD4T+E9AAAAsklEQVRIx+2TTQ7CIBBGP/Q2HqbuTMAj2Du0vYKhR7AkrMT70XHRNhkXJBR/FnXekgzzmMkHIAjC39K70PQuNKX3VamUgHZu0F70sfu6mEnjfLQvka8ScymBzlMDdSuRZ4tfJiVlalN5ALDD4wRFw1p5ljglXSiR73LE4/TASAp6kfJU16bypKABxLEwsEmu/n7gG7AukHWB+JfiNR9ZdXLtE5Lqjaaa87NUv1MjCMJ2eAKiw5EQ45kdIgAAAABJRU5ErkJggg==');
+}
+div.tm-container.tm-filter tr.tm-filter-row td div.tm-filter-optionpanel .tm-filter-optionpanel-content {
+  clear: both;
+  border-top: 1px solid #ccc;
+  padding: 4px;
+  overflow: hidden;
+}
+div.tm-container.tm-filter-open tr.tm-filter-row {
+  height: 30px;
+}
+div.tm-container.tm-filter-open tr.tm-filter-row td {
+  overflow: visible;
 }
