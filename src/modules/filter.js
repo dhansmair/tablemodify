@@ -139,6 +139,7 @@ class OptionHandler {
 	
 	open() {
 		this.panel.style.display = 'block';
+		this.relatingCell.style.overflow = 'visible';
 		this.isVisible = true;	
 		
 		let cellOffset = this.relatingCell.offsetLeft;
@@ -154,6 +155,7 @@ class OptionHandler {
 	
 	close() {
 		this.panel.style.display = 'none';
+		this.relatingCell.style.overflow = 'hidden';
 		this.isVisible = false;
 		countOpen--;
 	}
@@ -542,20 +544,23 @@ class Controller {
                 
             	input.onfocus = (e) => {
             		row.style.height = FILTER_HEIGHT;
+            		this.openRow();
                 };
+                
                 input.onblur = (e) => {
                     row.style.removeProperty('height');
-                    if (e.target.value.trim() == '') {
-            			_this.run();
-            		}
+                    this.closeRow();    	
                 };
             });
         } else {
-            row.style.height = FILTER_HEIGHT;    
+            row.style.height = FILTER_HEIGHT;   
+            
+            input.onfocus = () => {
+            	this.openRow();
+            };
+            
             input.onblur = (e) => {
-                if (e.target.value.trim() == '') {
-        			_this.run();
-        		}
+            	this.closeRow();    	
             };
         }
 
@@ -580,15 +585,15 @@ class Controller {
         };
         
         this.tHead.onmouseleave = (e) => {
-        	if (countOpen === 0) {
-        		this.closeRow();    	
-        	}
+        	this.closeRow();    	
         };
           
         row.addEventListener('transitionend', () => {			
-			if (hasClass(this.tm.container, 'tm-filter-open')) {
+			if (row.clientHeight > 5) {
 				this.tm.headWrap.style.overflow = 'visible';
-			} 
+			} else {
+				this.tm.headWrap.style.overflow = 'hidden';
+			}
 		});
  
         // insert toolbar row into tHead
@@ -598,14 +603,18 @@ class Controller {
 	}
 	
 	openRow() {
-		let _this = this, t;
+		
 		addClass(this.tm.container, 'tm-filter-open');
 		return this;
 	}
 	
 	closeRow() {
-		this.tm.headWrap.style.overflow = 'hidden';
-		removeClass(this.tm.container, 'tm-filter-open');
+		
+		if (countOpen === 0 && document.activeElement.tagName != 'INPUT') {
+			
+			removeClass(this.tm.container, 'tm-filter-open');   	
+    	}
+		
 		return this;
 	}
 	

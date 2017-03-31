@@ -791,6 +791,7 @@ var OptionHandler = function () {
 		key: 'open',
 		value: function open() {
 			this.panel.style.display = 'block';
+			this.relatingCell.style.overflow = 'visible';
 			this.isVisible = true;
 
 			var cellOffset = this.relatingCell.offsetLeft;
@@ -807,6 +808,7 @@ var OptionHandler = function () {
 		key: 'close',
 		value: function close() {
 			this.panel.style.display = 'none';
+			this.relatingCell.style.overflow = 'hidden';
 			this.isVisible = false;
 			countOpen--;
 		}
@@ -1306,20 +1308,23 @@ var Controller = function () {
 
 				input.onfocus = function (e) {
 					row.style.height = FILTER_HEIGHT;
+					_this11.openRow();
 				};
+
 				input.onblur = function (e) {
 					row.style.removeProperty('height');
-					if (e.target.value.trim() == '') {
-						_this.run();
-					}
+					_this11.closeRow();
 				};
 			});
 		} else {
 			row.style.height = FILTER_HEIGHT;
+
+			input.onfocus = function () {
+				_this11.openRow();
+			};
+
 			input.onblur = function (e) {
-				if (e.target.value.trim() == '') {
-					_this.run();
-				}
+				_this11.closeRow();
 			};
 		}
 
@@ -1343,14 +1348,14 @@ var Controller = function () {
 		};
 
 		this.tHead.onmouseleave = function (e) {
-			if (countOpen === 0) {
-				_this11.closeRow();
-			}
+			_this11.closeRow();
 		};
 
 		row.addEventListener('transitionend', function () {
-			if (hasClass(_this11.tm.container, 'tm-filter-open')) {
+			if (row.clientHeight > 5) {
 				_this11.tm.headWrap.style.overflow = 'visible';
+			} else {
+				_this11.tm.headWrap.style.overflow = 'hidden';
 			}
 		});
 
@@ -1363,16 +1368,19 @@ var Controller = function () {
 	_createClass(Controller, [{
 		key: 'openRow',
 		value: function openRow() {
-			var _this = this,
-			    t = void 0;
+
 			addClass(this.tm.container, 'tm-filter-open');
 			return this;
 		}
 	}, {
 		key: 'closeRow',
 		value: function closeRow() {
-			this.tm.headWrap.style.overflow = 'hidden';
-			removeClass(this.tm.container, 'tm-filter-open');
+
+			if (countOpen === 0 && document.activeElement.tagName != 'INPUT') {
+
+				removeClass(this.tm.container, 'tm-filter-open');
+			}
+
 			return this;
 		}
 	}, {
