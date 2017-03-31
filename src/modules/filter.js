@@ -1,4 +1,4 @@
-const {addClass, removeClass, iterate, info, error, replaceIdsWithIndices, extend2} = require('../utils.js');
+const {addClass, removeClass, hasClass, iterate, info, error, replaceIdsWithIndices, extend2} = require('../utils.js');
 const Module = require('./module.js');
 const FILTER_HEIGHT = '30px';
 
@@ -518,6 +518,9 @@ class Controller {
 		this.model = new Model(tm, this, settings);
 		this.tHead = tm.head ? tm.head.tHead : tm.origHead;
 		
+		this.optionHandlers = [];
+		
+		
 		let _this = this;
 		// create the toolbar row
         let num = this.tHead.firstElementChild.cells.length,
@@ -536,8 +539,9 @@ class Controller {
             // keep filter row visible if an input is focused
         	
             [].slice.call(row.querySelectorAll('input')).forEach((input) => { // it seems like in IE11 .forEach only works on real arrays
-                input.onfocus = (e) => {
-                    row.style.height = FILTER_HEIGHT;
+                
+            	input.onfocus = (e) => {
+            		row.style.height = FILTER_HEIGHT;
                 };
                 input.onblur = (e) => {
                     row.style.removeProperty('height');
@@ -570,22 +574,7 @@ class Controller {
         	}
         	
         }
-        
-        row.onclick = (e) => {
-        	
-            const cell = getCell(e),
-                  target = e.target;
-
-            if (target.nodeName == 'SPAN' || target.nodeName == 'LABEL') {
-                // checkbox click
-                let checkbox = cell.querySelector('input[type=checkbox]');
-                checkbox.checked = !checkbox.checked;
-                this.run();
-            } else if (target.nodeName == 'INPUT') {
-                target.select();
-            }
-        }
-        
+       
         this.tHead.onmouseenter = (e) => {
         	this.openRow();
         };
@@ -595,8 +584,13 @@ class Controller {
         		this.closeRow();    	
         	}
         };
-        
-     
+          
+        row.addEventListener('transitionend', () => {			
+			if (hasClass(this.tm.container, 'tm-filter-open')) {
+				this.tm.headWrap.style.overflow = 'visible';
+			} 
+		});
+ 
         // insert toolbar row into tHead
         this.tHead.appendChild(row);
         this.row = row;
@@ -606,15 +600,11 @@ class Controller {
 	openRow() {
 		let _this = this, t;
 		addClass(this.tm.container, 'tm-filter-open');
-		clearTimeout(t);
-		t = window.setTimeout(() => {
-			_this.tm.headWrap.style['overflow'] = 'visible';
-		}, 500);
 		return this;
 	}
 	
 	closeRow() {
-		this.tm.headWrap.style['overflow'] = 'hidden';
+		this.tm.headWrap.style.overflow = 'hidden';
 		removeClass(this.tm.container, 'tm-filter-open');
 		return this;
 	}
@@ -662,7 +652,6 @@ class Controller {
     		opts = cell.tmFilterOptionHandler.getOptions();
     	}
     	
-   
     	return opts;
     }
 	

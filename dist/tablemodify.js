@@ -627,6 +627,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _require = require('../utils.js'),
     addClass = _require.addClass,
     removeClass = _require.removeClass,
+    hasClass = _require.hasClass,
     iterate = _require.iterate,
     info = _require.info,
     error = _require.error,
@@ -1282,6 +1283,8 @@ var Controller = function () {
 		this.model = new Model(tm, this, settings);
 		this.tHead = tm.head ? tm.head.tHead : tm.origHead;
 
+		this.optionHandlers = [];
+
 		var _this = this;
 		// create the toolbar row
 		var num = this.tHead.firstElementChild.cells.length,
@@ -1300,6 +1303,7 @@ var Controller = function () {
 
 			[].slice.call(row.querySelectorAll('input')).forEach(function (input) {
 				// it seems like in IE11 .forEach only works on real arrays
+
 				input.onfocus = function (e) {
 					row.style.height = FILTER_HEIGHT;
 				};
@@ -1334,21 +1338,6 @@ var Controller = function () {
 			};
 		}
 
-		row.onclick = function (e) {
-
-			var cell = getCell(e),
-			    target = e.target;
-
-			if (target.nodeName == 'SPAN' || target.nodeName == 'LABEL') {
-				// checkbox click
-				var checkbox = cell.querySelector('input[type=checkbox]');
-				checkbox.checked = !checkbox.checked;
-				_this11.run();
-			} else if (target.nodeName == 'INPUT') {
-				target.select();
-			}
-		};
-
 		this.tHead.onmouseenter = function (e) {
 			_this11.openRow();
 		};
@@ -1358,6 +1347,12 @@ var Controller = function () {
 				_this11.closeRow();
 			}
 		};
+
+		row.addEventListener('transitionend', function () {
+			if (hasClass(_this11.tm.container, 'tm-filter-open')) {
+				_this11.tm.headWrap.style.overflow = 'visible';
+			}
+		});
 
 		// insert toolbar row into tHead
 		this.tHead.appendChild(row);
@@ -1371,16 +1366,12 @@ var Controller = function () {
 			var _this = this,
 			    t = void 0;
 			addClass(this.tm.container, 'tm-filter-open');
-			clearTimeout(t);
-			t = window.setTimeout(function () {
-				_this.tm.headWrap.style['overflow'] = 'visible';
-			}, 500);
 			return this;
 		}
 	}, {
 		key: 'closeRow',
 		value: function closeRow() {
-			this.tm.headWrap.style['overflow'] = 'hidden';
+			this.tm.headWrap.style.overflow = 'hidden';
 			removeClass(this.tm.container, 'tm-filter-open');
 			return this;
 		}
