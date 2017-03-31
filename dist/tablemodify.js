@@ -736,22 +736,34 @@ var OptionHandler = function () {
 		var titlePanel = document.createElement('div');
 		var contentPanel = document.createElement('div');
 		var closeButton = document.createElement('div');
+		var actionButton = document.createElement('div');
 
 		this.titlePanel = titlePanel;
 		this.contentPanel = contentPanel;
 		this.closeButton = closeButton;
+		this.actionButton = actionButton;
 
 		this.panel.appendChild(titlePanel);
 		this.panel.appendChild(closeButton);
 		this.panel.appendChild(contentPanel);
+		this.panel.appendChild(actionButton);
 
 		addClass(titlePanel, 'tm-filter-optionpanel-title');
 		addClass(closeButton, 'tm-filter-optionpanel-closeButton');
 		addClass(contentPanel, 'tm-filter-optionpanel-content');
 		addClass(this.panel, 'tm-filter-optionpanel');
+		addClass(actionButton, 'tm-filter-optionpanel-actionButton');
+
+		closeButton.setAttribute('title', 'minimieren');
+		actionButton.setAttribute('title', 'anwenden');
 
 		closeButton.onclick = function () {
 			_this2.close();
+			_this2.relatingCell.querySelector('input').focus();
+		};
+
+		actionButton.onclick = function () {
+			_this2.tm.getModule('filter').notify();
 		};
 	}
 
@@ -779,6 +791,15 @@ var OptionHandler = function () {
 		value: function open() {
 			this.panel.style.display = 'block';
 			this.isVisible = true;
+
+			var cellOffset = this.relatingCell.offsetLeft;
+			var rowWidth = this.relatingCell.parentElement.clientWidth;
+			var panelWidth = this.panel.clientWidth;
+
+			if (cellOffset + panelWidth > rowWidth) {
+				this.panel.style.left = rowWidth - cellOffset - panelWidth - 20 + 'px';
+			}
+
 			countOpen++;
 		}
 	}, {
@@ -851,11 +872,11 @@ var OptionHandlerNumeric = function (_OptionHandler2) {
 		var id = 'handler-' + unique();
 
 		if (options.comparator) {
-			_this4.contentPanel.innerHTML += '<div><input type=\'radio\' name=\'' + id + '\' value=\'comparator\' checked/><span>Vergleichsoperation:\n\t\t\t<select class=\'tm-filter-option-comparator\'>\n\t\t\t\t<option selected>=</option>\n\t\t\t\t<option>&lt;</option>\n\t\t\t\t<option>&gt;</option>\n\t\t\t\t<option>&lt;=</option>\n\t\t\t\t<option>&gt;=</option>\n\t\t\t</select></span>\n\t\t\t</div>';
+			_this4.contentPanel.innerHTML += '<div><span><input type=\'radio\' name=\'' + id + '\' value=\'comparator\' checked/></span>\n\t\t\t<span>Vergleichsoperation:</span><span>\n\t\t\t<select class=\'tm-filter-option-comparator\'>\n\t\t\t\t<option selected>=</option>\n\t\t\t\t<option>&lt;</option>\n\t\t\t\t<option>&gt;</option>\n\t\t\t\t<option>&lt;=</option>\n\t\t\t\t<option>&gt;=</option>\n\t\t\t</select></span>\n\t\t\t</div>';
 		}
 
 		if (options.range) {
-			_this4.contentPanel.innerHTML += '<div><input type=\'radio\' name=\'' + id + '\' value=\'range\'/>Zahlenbereich:\n\t\t\t<input type=\'text\' placeholder=\'obere Grenze\' class=\'tm-filter-range-value\' />\n\t\t\t\n\t\t\t</span>\n\t\t\t</div>';
+			_this4.contentPanel.innerHTML += '<div><span><input type=\'radio\' name=\'' + id + '\' value=\'range\'/></span>\n\t\t\t<span>Zahlenbereich:</span>\n\t\t\t<span><input type=\'text\' placeholder=\'obere Grenze\' class=\'tm-filter-range-value\' /></span>\n\t\t\t</div>';
 		}
 
 		return _this4;
@@ -1269,14 +1290,10 @@ var Controller = function () {
 		    timeout = void 0;
 
 		for (var i = 0; i < num; i++) {
-			var enabled = this.getIsEnabled(i);
-			var cs = this.getIsCaseSensitive(i);
-
 			var colSettings = this.getColumnSettings(i);
 
 			row.appendChild(cellFactory.produce(colSettings));
 		}
-		addClass(row, 'tm-filter-row');
 
 		if (settings.autoCollapse) {
 			// keep filter row visible if an input is focused
@@ -1288,10 +1305,18 @@ var Controller = function () {
 				};
 				input.onblur = function (e) {
 					row.style.removeProperty('height');
+					if (e.target.value.trim() == '') {
+						_this.run();
+					}
 				};
 			});
 		} else {
 			row.style.height = FILTER_HEIGHT;
+			input.onblur = function (e) {
+				if (e.target.value.trim() == '') {
+					_this.run();
+				}
+			};
 		}
 
 		// bind listeners
@@ -1337,6 +1362,7 @@ var Controller = function () {
 		// insert toolbar row into tHead
 		this.tHead.appendChild(row);
 		this.row = row;
+		addClass(row, 'tm-filter-row');
 	}
 
 	_createClass(Controller, [{
@@ -1347,14 +1373,14 @@ var Controller = function () {
 			addClass(this.tm.container, 'tm-filter-open');
 			clearTimeout(t);
 			t = window.setTimeout(function () {
-				_this.tm.headWrap.style.overflow = 'visible';
+				_this.tm.headWrap.style['overflow'] = 'visible';
 			}, 500);
 			return this;
 		}
 	}, {
 		key: 'closeRow',
 		value: function closeRow() {
-			this.tm.headWrap.style.overflow = 'hidden';
+			this.tm.headWrap.style['overflow'] = 'hidden';
 			removeClass(this.tm.container, 'tm-filter-open');
 			return this;
 		}
@@ -1368,26 +1394,6 @@ var Controller = function () {
 		value: function getFilters() {
 			return this.model.getFilters();
 		}
-	}, {
-		key: 'getIsEnabled',
-		value: function getIsEnabled(i) {
-			return this.getColumnSetting(i, 'enabled');
-		}
-	}, {
-		key: 'getIsCaseSensitive',
-		value: function getIsCaseSensitive(i) {
-			return this.getColumnSetting(i, 'caseSensitive');
-		}
-	}, {
-		key: 'getColumnSetting',
-		value: function getColumnSetting(i, setting) {
-			var cols = this.settings.columns;
-			if (cols.hasOwnProperty(i) && cols[i].hasOwnProperty(setting)) {
-				// a custom value was set
-				return cols[i][setting];
-			}
-			return cols.all[setting];
-		}
 
 		/**
    * returns specific settings for one column
@@ -1399,10 +1405,26 @@ var Controller = function () {
 			var cols = this.settings.columns;
 
 			if (cols.hasOwnProperty(i)) {
-				return extend2(cols[i], cols.all);
+				var ret = extend2(cols[i], cols.all);
+
+				if (ret.options && ret.type == 'string') {
+					delete ret.options.range;
+					delete ret.options.comparator;
+				} else if (ret.options && (ret.type == 'numeric' || ret.type == 'date')) {
+					delete ret.options.cs;
+					delete ret.options.matching;
+				}
+
+				return ret;
 			}
+
 			return cols.all;
 		}
+
+		/**
+   * returns options of a filter, like if its matching, case-sensitive, comparator etc.
+   */
+
 	}, {
 		key: 'getOptions',
 		value: function getOptions(i) {
@@ -1412,6 +1434,7 @@ var Controller = function () {
 			if (cell.hasOwnProperty('tmFilterOptionHandler')) {
 				opts = cell.tmFilterOptionHandler.getOptions();
 			}
+
 			return opts;
 		}
 	}, {
@@ -1432,7 +1455,7 @@ var Controller = function () {
 						index: i,
 						pattern: input.value.trim()
 					}, _this.getOptions(i));
-					console.log(filter);
+
 					filters.push(filter);
 				}
 			});
@@ -1453,7 +1476,6 @@ module.exports = new Module({
 		columns: {
 			all: {
 				enabled: true,
-				caseSensitive: true,
 				type: 'string'
 			}
 		}
@@ -1568,17 +1590,22 @@ module.exports = new Module({
                 var headerHeight = getHeaderHeight();
                 head = document.createElement('table');
                 headWrap = document.createElement('div');
+                var rightUpperCorner = document.createElement('div');
                 head.appendChild(origHead.cloneNode(true));
                 headWrap.appendChild(head);
                 container.insertBefore(headWrap, bodyWrap);
+                headWrap.appendChild(rightUpperCorner);
 
                 addClass(head, 'tm-head');
                 addClass(headWrap, 'tm-head-wrap');
+                addClass(rightUpperCorner, 'tm-head-rightCorner');
 
                 head.style.borderCollapse = borderCollapse;
                 origHead.style.visibility = 'hidden';
                 body.style.marginTop = inPx('-' + headerHeight);
                 headWrap.style.marginRight = inPx(scrollbarWidth);
+                rightUpperCorner.style.width = inPx(scrollbarWidth);
+                rightUpperCorner.style.right = inPx(-scrollbarWidth);
             }
             if (origFoot && settings.fixFooter) {
                 var footerHeight = getFooterHeight();

@@ -65,17 +65,22 @@ module.exports = new Module({
                 let headerHeight = getHeaderHeight();
                 head     = document.createElement('table');
                 headWrap = document.createElement('div');
+                let rightUpperCorner = document.createElement('div');
                 head.appendChild(origHead.cloneNode(true));
                 headWrap.appendChild(head);
                 container.insertBefore(headWrap, bodyWrap);
-
+                headWrap.appendChild(rightUpperCorner);
+                
                 addClass(head,     'tm-head');
                 addClass(headWrap, 'tm-head-wrap');
+                addClass(rightUpperCorner, 'tm-head-rightCorner');
 
                 head.style.borderCollapse   = borderCollapse;
                 origHead.style.visibility   = 'hidden';
                 body.style.marginTop        = inPx('-' + headerHeight);
                 headWrap.style.marginRight  = inPx(scrollbarWidth);
+                rightUpperCorner.style.width = inPx(scrollbarWidth);
+                rightUpperCorner.style.right = inPx(-scrollbarWidth);
             }
             if (origFoot && settings.fixFooter) {
                 let footerHeight = getFooterHeight();

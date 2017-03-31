@@ -7,10 +7,10 @@ div.tm-container {
     -ms-flex-direction: column;
     flex-direction: column;
     background-color:#F0F0F0;
-    //overflow:hidden;
+    overflow:hidden !important;
     box-sizing:border-box;
     height:100%;
-    position:relative;
+    //position:relative;
 
     * {
         box-sizing: border-box;
@@ -19,6 +19,7 @@ div.tm-container {
     div.tm-head-wrap {
         overflow:hidden;
         z-index:1;
+        position:relative;
         table.tm-head {
             -webkit-touch-callout: none; /* iOS Safari */
             -webkit-user-select: none;   /* Chrome/Safari/Opera */
@@ -75,6 +76,16 @@ div.tm-container {
             bottom:0;
             right:0;
         }
+
+		div.tm-head-rightCorner {
+			position:absolute;
+			top:0;
+			height:100%;
+			background-color: #F0F0F0;
+			z-index:0;
+			border-left:1px solid white;
+		}
+
 
     }
 
@@ -158,11 +169,13 @@ div.tm-container {
 					display:none;
 					z-index:9999;
 					overflow:hidden;
+					text-align:left;
 					
 					.tm-filter-optionpanel-title {
 						height:20px;
+						line-height:20px;
 						padding:0px 4px;
-						vertical-align:center;
+					
 						margin-right:20px;
 						float:left;
 						overflow:hidden;
@@ -186,7 +199,34 @@ div.tm-container {
 						border-top:1px solid #ccc;
 						padding:4px;
 						overflow:hidden;
+						
+						span {
+							display:inline-block;
+						}
+						
+						span:nth-child(2) {
+							
+						}
+						
+						span:nth-child(3) {
+							
+							input {
+								width:100%;
+							}
+	
+						}
+						
 					}
+					
+					.tm-filter-optionpanel-actionButton {
+						width:20px;
+						height:20px;
+						cursor:pointer;
+						float:right;
+						background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAABIAAAASABGyWs+AAAACXZwQWcAAAAeAAAAHgD4T+E9AAAA10lEQVRIx+3WPQ6CMBiA4bfigfQEbBo9Ba5KnHRkYsQJ0VXPoRujLtzDeIY6aCIY/j5QXPquhT60aQAwmX6UKhpwvEB/Azj661yj968V90s2YwE6em3L8uCvozoTOt5mnr6v6DqraCCJT9eBPb4BU2AytEf3JD5fJGjZw1plE0lwCVoJ18WlaC24Cm+CguBUH/3VHpQLKA3b94jeAUqCiuA3np8EFcPfzMAGzksDzLzA7RhWLqA1hG1wMZx6kaAh7HDFWbxT+ANv9KfS6lS3xVv3/EKZTNkeUjtw1IsGzB0AAAAASUVORK5CYII=');
+						background-size: 100%;
+					}
+					
 				}
 
 				/*
