@@ -1,20 +1,22 @@
 const Module = require('./module.js');
-const {addClass, error, extend2, delay} = require('../utils.js');
+const {addClass, info, error, extend2, delay} = require('../utils.js');
+
+let tm;
 
 class Controller {
 	constructor(sets, pager) {
 		let _this = this;
-		extend2(this, sets);
+		this.pager = pager;
 
-		Object.keys(this).forEach((key) => {
-			if (this[key] == null) {
+		//extend2(this, sets);
+
+		Object.keys(sets).forEach((key) => {
+			if (sets[key] == null) {
 				throw new Exception(key + ' setting must be set!');
 			} else {
-				this[key] = document.querySelector(this[key]);
+				_this[key] = document.querySelector(sets[key]);
 			}
 		});
-
-		this.pager = pager;
 
 		this.left.addEventListener('click', () => {
 			let val = _this.getCurrentPageNumber() - 1;
@@ -74,15 +76,15 @@ class Controller {
 		} else if (val > totalPages) {
 			this.setCurrentPageNumber(totalPages);
 		}
-		
+
 		if (this.getCurrentPageNumber() <= 1) return 0;
-	
+
 		return parseInt(this.getCurrentPageNumber() - 1) * this.getLimit();
 	}
 
 	getLimit() {
 		let val = parseInt(this.limit.value);
-		
+
 		if (isNaN(val) || val < 1) {
 			this.limit.value = this.pager.limit;
 			return this.pager.limit;
@@ -96,7 +98,7 @@ class Controller {
 		if (this.pager.totalManually && this.pager.totalManually >= 0) {
 			total = this.pager.totalManually;
 		} else {
-			total = this.pager.tm.countAvailableRows();
+			total = tm.countAvailableRows();
 		}
 
 		return Math.ceil(total / this.getLimit());
@@ -119,11 +121,11 @@ class Controller {
 
 	updateTotalPages() {
 		if (this.total != null) {
-			this.total.innerHTML = this.pager.tm.getTerm('PAGER_PAGENUMBER_SEPARATOR') + this.getTotalPages() + ' ';
+			this.total.innerHTML = tm.getTerm('PAGER_PAGENUMBER_SEPARATOR') + this.getTotalPages() + ' ';
 		}
 		return this;
 	}
-	
+
 	updatePageNumber() {
 		let totalPages = this.getTotalPages();
 		if (this.getCurrentPageNumber() > totalPages) {
@@ -140,14 +142,11 @@ class Controller {
 }
 
 class Pager {
-	constructor(tm, settings) {
-		this.tm = tm;
+	constructor(settings) {
 		this.offset = parseInt(settings.offset);
 		this.limit = parseInt(settings.limit);
 		this.totalManually = parseInt(settings.totalManually);
 		this.controller = new Controller(settings.controller, this);
-
-		//this.update();
 
 		try {
 			this.controller.setCurrentPageNumber(this.controller.getCurrentPageNumber());
@@ -159,8 +158,8 @@ class Pager {
 	 * main method run(): performs change
 	 */
 	run() {
-		if (this.tm.beforeUpdate('pager')) {
-			this.tm.actionPipeline.notify('pager', {
+		if (tm.beforeUpdate('pager')) {
+			tm.actionPipeline.notify('pager', {
 				offset: this.getOffset(),
 				limit: this.getLimit()
 			});
@@ -219,11 +218,15 @@ module.exports = new Module({
 	},
 	initializer: function(settings) {
 		try {
-			let instance = new Pager(this, settings); // this = tablemodify
-			addClass(this.container, 'tm-pager');
+			tm = this;
+
+			let instance = new Pager(settings);
+			addClass(tm.domElements.container, 'tm-pager');
 
 			// initialize the pager internal values
 			instance.update();
+
+			info("module pager loaded");
 
 			return {
 				instance: instance,

@@ -93,11 +93,11 @@ div.tm-container {
         styles for filter plugin
     */
     &.tm-filter {
-		
+
         thead:hover > tr.tm-filter-row {
             height:30px;
         }
-		
+
         tr.tm-filter-row {
             position:relative;
             overflow:hidden;
@@ -136,9 +136,9 @@ div.tm-container {
                         padding-right: 10px;
                     }
                 }
-                
-                
-                
+
+
+
                 div.tm-filter-option-icon {
                 	position:absolute;
                 	top:0;
@@ -167,57 +167,57 @@ div.tm-container {
 					min-width:250px;
 					background-color:white;
 					display:none;
-					z-index:9999;
+					z-index:999;
 					overflow:hidden;
 					text-align:left;
-					
+
 					.tm-filter-optionpanel-title {
 						height:20px;
 						line-height:20px;
 						padding:0px 4px;
-					
+
 						margin-right:20px;
 						float:left;
 						overflow:hidden;
 					}
-					
+                    /*
 					.tm-filter-optionpanel-closeButton {
 						cursor:pointer;
 						float:right;
 						width:20px;
 						height:20px;
 						border-left:1px solid #ccc;
-						
+
 						background-repeat:no-repeat;
 						background-position:center;
 						background-size:100%;
 						background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAABIAAAASABGyWs+AAAACXZwQWcAAAAeAAAAHgD4T+E9AAAAsklEQVRIx+2TTQ7CIBBGP/Q2HqbuTMAj2Du0vYKhR7AkrMT70XHRNhkXJBR/FnXekgzzmMkHIAjC39K70PQuNKX3VamUgHZu0F70sfu6mEnjfLQvka8ScymBzlMDdSuRZ4tfJiVlalN5ALDD4wRFw1p5ljglXSiR73LE4/TASAp6kfJU16bypKABxLEwsEmu/n7gG7AukHWB+JfiNR9ZdXLtE5Lqjaaa87NUv1MjCMJ2eAKiw5EQ45kdIgAAAABJRU5ErkJggg==');
-					}
-					
+					}*/
+
 					.tm-filter-optionpanel-content {
 						clear:both;
 						border-top:1px solid #ccc;
 						padding:4px;
 						overflow:hidden;
-						
+
 						span {
 							display:inline-block;
 						}
-						
+
 						span:nth-child(2) {
-							
+
 						}
-						
+
 						span:nth-child(3) {
-							
+
 							input {
 								width:100%;
 							}
-	
+
 						}
-						
+
 					}
-					
+
 					.tm-filter-optionpanel-actionButton {
 						width:20px;
 						height:20px;
@@ -226,60 +226,39 @@ div.tm-container {
 						background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAABIAAAASABGyWs+AAAACXZwQWcAAAAeAAAAHgD4T+E9AAAA10lEQVRIx+3WPQ6CMBiA4bfigfQEbBo9Ba5KnHRkYsQJ0VXPoRujLtzDeIY6aCIY/j5QXPquhT60aQAwmX6UKhpwvEB/Azj661yj968V90s2YwE6em3L8uCvozoTOt5mnr6v6DqraCCJT9eBPb4BU2AytEf3JD5fJGjZw1plE0lwCVoJ18WlaC24Cm+CguBUH/3VHpQLKA3b94jeAUqCiuA3np8EFcPfzMAGzksDzLzA7RhWLqA1hG1wMZx6kaAh7HDFWbxT+ANv9KfS6lS3xVv3/EKZTNkeUjtw1IsGzB0AAAAASUVORK5CYII=');
 						background-size: 100%;
 					}
-					
+
 				}
-
-				/*
-                span.tm-custom-checkbox {
-                    position:absolute;
-                    top:0;
-                    right:0;
-                    width:30px;
-                    height:100%;
-                    background-color:transparent;
-                    vertical-align:middle;
-                    text-align: center;
-
-                    input[type=checkbox] {
-                        visibility: hidden;
-
-                        &:checked + label {
-                            background: #666;
-                        }
-                    }
-                    
-                    label {
-                        position:absolute;
-                        border-radius:50px;
-                        width:18px;
-                        height:18px;
-                        top:5px;
-                        right:5px;
-                        background-color: @baseColor;
-                        border:3px solid @borderColor;
-                        transition:0.2s;
-                        cursor:pointer;
-                    }
-                }
-                */
             }
         }
     }
 
 	&.tm-filter-open {
-	
+
 		div.tm-head-wrap {
-			//overflow:visible !important;
+            
 		}
-		
-		
+
 		tr.tm-filter-row {
 			height:30px;
+            overflow: visible;
 			td {
-				overflow:visible;
+
+                div.tm-filter-optionpanel {
+                    display:none;
+                }
+
+                &.tm-filter-optionpanel-open {
+                    overflow: visible;
+
+                    div.tm-filter-optionpanel {
+                        display:block;
+                    }
+
+                    div.tm-filter-option-icon {
+                        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAABIAAAASABGyWs+AAAACXZwQWcAAAAeAAAAHgD4T+E9AAAAsklEQVRIx+2TTQ7CIBBGP/Q2HqbuTMAj2Du0vYKhR7AkrMT70XHRNhkXJBR/FnXekgzzmMkHIAjC39K70PQuNKX3VamUgHZu0F70sfu6mEnjfLQvka8ScymBzlMDdSuRZ4tfJiVlalN5ALDD4wRFw1p5ljglXSiR73LE4/TASAp6kfJU16bypKABxLEwsEmu/n7gG7AukHWB+JfiNR9ZdXLtE5Lqjaaa87NUv1MjCMJ2eAKiw5EQ45kdIgAAAABJRU5ErkJggg==');
+                    }
+                }
 			}
 		}
 	}
-
-
 }

@@ -38,6 +38,22 @@ exports.wrap = function(el, wrapper) {
     wrapper.appendChild(el);
     return wrapper;
 }
+
+/**
+ *  get index of an HTML-element,
+ * for example the index of a cell in the row
+ */
+exports.elementIndex = function(node) {
+    try {
+        let index = 0;
+        while ( (node = node.previousElementSibling) ) {
+            index++;
+        }
+        return index;
+    } catch(e) {
+        return -1;
+    }
+}
 /**
  * Extended version of the "extend"-Function. Supports multiple sources,
  * extends deep recursively.
@@ -59,6 +75,8 @@ exports.extend2 = function extend2(destination, ...sources) {
     }
     return destination;
 }
+
+// DEPRECATED; REMOVE SOON AND REPLACE EVERYWHERE
 exports.extend = function extend(d, s) {
     Object.keys(d).forEach(function(key) {
         if(!s.hasOwnProperty(key)) {
@@ -98,6 +116,8 @@ exports.setCss = function(el, styles) {
 }
 exports.getCss = function(el, style) { return window.getComputedStyle(el, null)[style];}
 exports.inPx = function(c) { return c + 'px';}
+
+// DEPRECATED; REMOVE SOON AND REPLACE EVERYWHERE
 // iterate over a set of elements and call function for each one
 exports.iterate = (elems, func) => {
   if (typeof elems === 'object') {
@@ -115,16 +135,6 @@ exports.iterate = (elems, func) => {
       }
   }
 }
-
-exports.getUniqueId = (function(){
-    var unique = 0;
-
-    return function() {
-        var id = 'tm-unique-' + unique;
-        unique++;
-        return id;
-    };
-}());
 
 exports.isNonEmptyString = function(str) {
     return typeof str === "string" && str.trim().length > 0;
@@ -149,6 +159,7 @@ let getProp = exports.getProperty = (obj, ...props) => {
 }
 exports.hasProp = (obj, ...props) => getProp(obj, ...props) !== undefined;
 
+// DEPRECATED
 exports.delay = (() => {
 	let ms = 400, t;
 
@@ -181,3 +192,30 @@ exports.replaceIdsWithIndices = (columns) => {
     });
     return columns;
 }
+
+// fastest way to clone an array 
+exports.cloneArray = function(arr) {
+    var ret = [], i = arr.length;
+    while (i--) ret[i] = arr[i];
+    return ret;
+}
+
+
+// Returns a function, that, as long as it continues to be invoked, will not
+// be triggered. The function will be called after it stops being called for
+// N milliseconds. If `immediate` is passed, trigger the function on the
+// leading edge, instead of the trailing.
+exports.debounce = function(func, wait, immediate) {
+	var timeout;
+	return function() {
+		var context = this, args = arguments;
+		var later = function() {
+			timeout = null;
+			if (!immediate) func.apply(context, args);
+		};
+		var callNow = immediate && !timeout;
+		clearTimeout(timeout);
+		timeout = setTimeout(later, wait);
+		if (callNow) func.apply(context, args);
+	};
+};

@@ -2,95 +2,61 @@ const Module = require('./module.js');
 const {inPx, iterate, setCss, addClass, removeClass,
        getCss, getScrollbarWidth, info, error} = require('../utils.js');
 
-module.exports = new Module({
-    name: "fixed",
-    defaultSettings: {
-        fixHeader:false,
-        fixFooter:false
-    },
-    initializer: function(settings) {
-    	
-        // set up
-        let head,
-            foot,
-            headWrap,
-            footWrap,
-            _this = this,
-            container = this.container,
-            body = this.body,
-            bodyWrap = this.bodyWrap,
-            origHead = this.origHead,
-            origFoot = this.origFoot,
-            scrollbarWidth = getScrollbarWidth();
+let tm, scrollbarWidth;
 
-        function getHeaderHeight() { return origHead.clientHeight;};
-        function getFooterHeight() { return origFoot.clientHeight;};
-
-        function renderHead() {
-            if(!head) return;
-           
-            var allNew = [].slice.call(head.firstElementChild.firstElementChild.cells),
-                allOld = [].slice.call(origHead.firstElementChild.cells);
-            body.style.marginTop = inPx('-' + getHeaderHeight()); // if header resizes because of a text wrap
-
-            iterate(allNew, function(i, neu){
-                let w = inPx(allOld[i].getBoundingClientRect().width);
-                
-                neu.style.width = w;
-                neu.style['minWidth'] = w;
-                neu.style['maxWidth'] = w;
-            });
-            _this.trigger('headerRendered');
-        }
-        function renderFoot() {
-            if (!foot) return;
-            var allNew = [].slice.call(foot.firstElementChild.firstElementChild.cells),
-                allOld = [].slice.call(origFoot.firstElementChild.cells);
-
-            bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + getFooterHeight() + 1)); // if footer resizes because of a text wrap
-
-            iterate(allNew, function(i, neu){
-                let w = inPx(allOld[i].getBoundingClientRect().width);
-                
-                neu.style.width = w;
-                neu.style['minWidth'] = w;
-                neu.style['maxWidth'] = w;
-            });
-        }
+class Fixed {
+    constructor(settings) {
         try {
-            addClass(container, 'tm-fixed');
-            let borderCollapse = getCss(body, 'border-collapse');
+            // set up
+            let headTable,
+                bodyTable = tm.domElements.table,
+                footTable,
+
+                headWrap,
+                tableWrap =  tm.domElements.tableWrap,
+                footWrap,
+
+                origHead =  tm.domElements.origHead,
+                origFoot =  tm.domElements.origFoot,
+                _this = this,
+
+                container = tm.domElements.container,
+                borderCollapse = getCss(tm.domElements.table, 'border-collapse');
+                scrollbarWidth = getScrollbarWidth();
 
             if (origHead && settings.fixHeader) {
-                let headerHeight = getHeaderHeight();
-                head     = document.createElement('table');
-                headWrap = document.createElement('div');
+                let headerHeight = this.getHeaderHeight();
+                headTable = document.createElement('table');
+                headWrap  = document.createElement('div');
                 let rightUpperCorner = document.createElement('div');
-                head.appendChild(origHead.cloneNode(true));
-                headWrap.appendChild(head);
-                container.insertBefore(headWrap, bodyWrap);
+                headTable.appendChild(origHead.cloneNode(true));
+                headWrap.appendChild(headTable);
+                container.insertBefore(headWrap, tableWrap);
                 headWrap.appendChild(rightUpperCorner);
-                
-                addClass(head,     'tm-head');
+
+                addClass(headTable, 'tm-head');
                 addClass(headWrap, 'tm-head-wrap');
                 addClass(rightUpperCorner, 'tm-head-rightCorner');
 
-                head.style.borderCollapse   = borderCollapse;
-                origHead.style.visibility   = 'hidden';
-                body.style.marginTop        = inPx('-' + headerHeight);
+                headTable.style.borderCollapse = borderCollapse;
+                origHead.style.visibility = 'hidden';
+                bodyTable.style.marginTop = inPx('-' + headerHeight);
                 headWrap.style.marginRight  = inPx(scrollbarWidth);
                 rightUpperCorner.style.width = inPx(scrollbarWidth);
                 rightUpperCorner.style.right = inPx(-scrollbarWidth);
+
+                tm.domElements.headWrap = headWrap;
+                tm.domElements.head = headTable.tHead;
             }
             if (origFoot && settings.fixFooter) {
-                let footerHeight = getFooterHeight();
-                foot     = document.createElement('table');
-                footWrap = document.createElement('div');
-                foot.appendChild(origFoot.cloneNode(true));
+                let footerHeight = this.getFooterHeight();
+                footTable = document.createElement('table');
+                footWrap  = document.createElement('div');
+                footTable.appendChild(origFoot.cloneNode(true));
                 footWrap.appendChild(foot);
                 container.appendChild(footWrap);
 
-                addClass(foot,     'tm-foot');
+                addClass(footTable, 'tm-foot');
                 addClass(footWrap, 'tm-foot-wrap');
 
                 // add DIVs to origFoot cells so its height can be set to 0px
@@ -98,123 +64,187 @@ module.exports = new Module({
                     cell.innerHTML = '<div class="tm-fixed-helper-wrapper">' + cell.innerHTML + '</div>';
                 });
 
-                foot.style.borderCollapse   = borderCollapse;
+                footTable.style.borderCollapse   = borderCollapse;
                 origFoot.style.visibility   = 'hidden';
-                bodyWrap.style.overflowX    = 'scroll';
-                bodyWrap.style.marginBottom = inPx('-' + (scrollbarWidth + footerHeight));
+                tableWrap.style.overflowX    = 'scroll';
+                tableWrap.style.marginBottom = inPx('-' + (scrollbarWidth + footerHeight));
                 footWrap.style.marginRight  = inPx(scrollbarWidth);
+
+                tm.domElements.footWrap = footWrap;
+                tm.domElements.foot = foot.tFoot;
             }
 
             // add event listeners
-            if (head) {
-                window.addEventListener('resize', renderHead);
+            if (headTable) {
+                window.addEventListener('resize', () => {
+                    _this.renderHead();
+                });
             }
 
-            if (foot) {
-                window.addEventListener('resize', renderFoot);
+            if (footTable) {
+                window.addEventListener('resize', () => {
+                    _this.renderFoot();
+                });
             }
 
-            if (head && foot) {
-                bodyWrap.addEventListener('scroll', function() {
+            if (headTable && footTable) {
+                tableWrap.addEventListener('scroll', function() {
                     window.requestAnimationFrame(function() {
-                        head.style.transform = 'translateX(-'+bodyWrap.scrollLeft+'px)';
-                        footWrap.scrollLeft = bodyWrap.scrollLeft;
+                        headTable.style.transform = 'translateX(-'+tableWrap.scrollLeft+'px)';
+                        footWrap.scrollLeft = tableWrap.scrollLeft;
                     }, false);
                 });
                 footWrap.addEventListener('scroll', function() {
                     window.requestAnimationFrame(function() {
-                        head.style.transform = 'translateX(-'+footWrap.scrollLeft+'px)';
-                        bodyWrap.scrollLeft = footWrap.scrollLeft;
+                        headTable.style.transform = 'translateX(-'+footWrap.scrollLeft+'px)';
+                        tableWrap.scrollLeft = footWrap.scrollLeft;
                     });
                 }, false);
 
-            } else if (head && !foot) {
+            } else if (headTable && !footTable) {
 
-                bodyWrap.addEventListener('scroll', function() {
+                tableWrap.addEventListener('scroll', function() {
                     window.requestAnimationFrame(function() {
-                        head.style.marginLeft = inPx('-' + bodyWrap.scrollLeft);
+                        headTable.style.marginLeft = inPx('-' + tableWrap.scrollLeft);
                     });
                 });
 
-            } else if (!head && foot) {
+            } else if (!headTable && footTable) {
 
                 footWrap.addEventListener('scroll', function() {
                     window.requestAnimationFrame(function() {
-                        bodyWrap.scrollLeft = footWrap.scrollLeft;
+                        tableWrap.scrollLeft = footWrap.scrollLeft;
                     });
                 });
-                bodyWrap.addEventListener('scroll', function() {
+                tableWrap.addEventListener('scroll', function() {
                     window.requestAnimationFrame(function() {
-                        footWrap.scrollLeft = bodyWrap.scrollLeft;
+                        footWrap.scrollLeft = tableWrap.scrollLeft;
                     });
                 });
             }
 
             setTimeout(() => {
                 // nötig, weil der Browser zum rendern manchmal eine gewisse Zeit braucht
-                renderHead();
-                renderFoot();
+                this.renderHead();
+                this.renderFoot();
             }, 50);
             setTimeout(() => {
                 // nötig, weil der Browser zum rendern manchmal eine gewisse Zeit braucht
-                renderHead();
-                renderFoot();
+                this.renderHead();
+                this.renderFoot();
             }, 500);
 
-            this.head = head;
-            this.foot = foot;
+            this.headTable = headTable;
+            this.footTable = footTable;
             this.headWrap = headWrap;
             this.footWrap = footWrap;
+
             info('module fixed loaded');
-
-            return {
-
-            	notify: () => {
-            		renderHead();
-            		renderFoot();
-            	},
-            	
-            	renderHead: renderHead,
-            	renderFoot: renderFoot,
-
-                /**
-                 * revert all changes performed by this module
-                 * implementation might not be 100% correct yet
-                 */
-                unset: () => {
-                    const INITIAL = 'initial';
-                    try {
-                        removeClass(container, 'tm-fixed');
-                        if (headWrap) {
-                            container.removeChild(headWrap);
-                            origHead.style.visibility = INITIAL;
-                            body.style.marginTop = 0;
-                        }
-                        if (footWrap) {
-                            container.removeChild(footWrap);
-                            origFoot.style.visibility = INITIAL;
-                            bodyWrap.style.overflowX = INITIAL;
-                            bodyWrap.style.marginBottom = INITIAL;
-
-                            // remove footer helper wrappers
-                            let wrappers = origFoot.querySelectorAll('div.tm-fixed-helper-wrapper');
-
-                            [].slice.call(wrappers).forEach((wrapper) => {
-                                wrapper.outerHTML = wrapper.innerHTML;
-                            });
-                        }
-
-                        window.removeEventListener('resize', renderHead);
-                        window.removeEventListener('resize', renderFoot);
-                        body.removeEventListener('tmFixedForceRendering', renderHead);
-                    } catch(e) {
-                        error(e);
-                    }
-                }
-            };
-
         } catch(e) {
-            error(e);
+            console.warn(e)
         }
+    }
+
+    getHeaderHeight() {
+        return tm.domElements.origHead.clientHeight;
+    }
+
+    getFooterHeight() {
+        return tm.domElements.origFoot.clientHeight;
+    }
+
+    renderHead() {
+        if(!this.headTable) return;
+
+        var allNew = [].slice.call(this.headTable.firstElementChild.firstElementChild.cells),
+            allOld = [].slice.call(tm.domElements.origHead.firstElementChild.cells);
+        tm.domElements.table.style.marginTop = inPx('-' + this.getHeaderHeight()); // if header resizes because of a text wrap
+
+        iterate(allNew, function(i, neu){
+            let w = inPx(allOld[i].getBoundingClientRect().width);
+
+            neu.style.width = w;
+            neu.style['minWidth'] = w;
+            neu.style['maxWidth'] = w;
+        });
+    }
+
+    renderFoot() {
+        if (!this.footTable) return;
+        var allNew = [].slice.call(this.footTable.firstElementChild.firstElementChild.cells),
+            allOld = [].slice.call(tm.domElements.origFoot.firstElementChild.cells);
+
+        tm.domElements.tableWrap.style.marginBottom = inPx('-' + (scrollbarWidth + this.getFooterHeight() + 1)); // if footer resizes because of a text wrap
+
+        iterate(allNew, function(i, neu){
+            let w = inPx(allOld[i].getBoundingClientRect().width);
+
+            neu.style.width = w;
+            neu.style['minWidth'] = w;
+            neu.style['maxWidth'] = w;
+        });
+    }
+}
+
+module.exports = new Module({
+    name: "fixed",
+    defaultSettings: {
+        fixHeader:false,
+        fixFooter:false
+    },
+    initializer: function(settings) {
+        tm = this;
+
+        addClass(tm.domElements.container, 'tm-fixed');
+
+        scrollbarWidth = getScrollbarWidth();
+        let instance = new Fixed(settings);
+
+        return {
+
+        	notify: () => {
+        		instance.renderHead();
+        		instance.renderFoot();
+        	},
+
+        	renderHead: instance.renderHead,
+        	renderFoot: instance.renderFoot,
+
+            /**
+             * revert all changes performed by this module
+             * implementation might not be 100% correct yet
+             */
+             /*
+            unset: () => {
+                const INITIAL = 'initial';
+                try {
+                    removeClass(container, 'tm-fixed');
+                    if (headWrap) {
+                        container.removeChild(headWrap);
+                        origHead.style.visibility = INITIAL;
+                        body.style.marginTop = 0;
+                    }
+                    if (footWrap) {
+                        container.removeChild(footWrap);
+                        origFoot.style.visibility = INITIAL;
+                        tableWrap.style.overflowX = INITIAL;
+                        tableWrap.style.marginBottom = INITIAL;
+
+                        // remove footer helper wrappers
+                        let wrappers = origFoot.querySelectorAll('div.tm-fixed-helper-wrapper');
+
+                        [].slice.call(wrappers).forEach((wrapper) => {
+                            wrapper.outerHTML = wrapper.innerHTML;
+                        });
+                    }
+
+                    window.removeEventListener('resize', renderHead);
+                    window.removeEventListener('resize', renderFoot);
+                    body.removeEventListener('tmFixedForceRendering', renderHead);
+                } catch(e) {
+                    error(e);
+                }
+            }*/
+        };
     }
 });

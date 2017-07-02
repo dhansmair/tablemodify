@@ -4,22 +4,34 @@ const Module = require('./modules/module.js');
 const Language = require('./language.js');
 const ActionPipeline = require('./actionPipeline.js');
 const EventSystem = require('./eventSystem.js');
-const {error, warn, isNonEmptyString, iterate, extend, hasClass, addClass, removeClass, getUniqueId, tableFactory} = require('./utils.js');
+const {error, warn, isNonEmptyString, iterate, extend, hasClass, addClass, removeClass, tableFactory, cloneArray} = require('./utils.js');
+
+// used to create a unique id for each Tablemodify-instance
+const getUniqueId = (function(){
+    var unique = 0;
+
+    return function() {
+        var id = 'tm-unique-' + unique;
+        unique++;
+        return id;
+    };
+}());
+
 
 class Tablemodify {
     constructor(selector, coreSettings) {
         extend(config.coreDefaults, coreSettings);
-        let containerId, oldBodyParent, _this = this, body = document.querySelector(selector); // must be a table
+        let containerId, oldTableParent, _this = this, table = document.querySelector(selector); // must be a table
 
         // ------------- ERROR PREVENTION ---------------------------
         // check if table is valid
-        if (!body || body.nodeName !== 'TABLE') {
+        if (!table || table.nodeName !== 'TABLE') {
             error('there is no <table> with selector ' + selector);
             return null;
         }
 
         // check if Tm hasn't already been called for this table
-        if (hasClass(body, 'tm-body')) {
+        if (hasClass(table, 'tm-body')) {
             warn('the table ' + selector + ' is already initialized.');
             return null;
         }
@@ -49,47 +61,60 @@ class Tablemodify {
         	}
         };
 
-        this.bodySelector = selector;
-        oldBodyParent = body.parentElement;
+        this.tableSelector = selector;
+        oldTableParent = table.parentElement;
 
         this.columnCount = 0;
-        this.calculateColumnCount(body);
+        this.calculateColumnCount(table);
 
         this.currentLanguage = coreSettings.language;
 
-        body.outerHTML =
+        table.outerHTML =
                     `<div class='tm-container'>
                         <style class='tm-custom-style'></style>
                         <div class='tm-body-wrap'>
-                            ${body.outerHTML}
+                            ${table.outerHTML}
                         </div>
                     </div>`;
 
-        this.container = oldBodyParent.querySelector('.tm-container');
+        this.domElements = {
+            container: oldTableParent.querySelector('.tm-container'),
+            stylesheet: null,
+            table: null,
 
-        body = this.container.querySelector('table'); // important! reload body variable
+            head: null,
+            body: null,
+            foot: null,
 
-        this.body = body;
-        this.bodyWrap = body.parentElement;
-        this.stylesheet = this.bodyWrap.previousElementSibling;
+            headWrap: null,
+            tableWrap: null,
+            footWrap: null,
 
-        this.origHead = body.tHead;
-        this.origFoot = body.tFoot;
+            origHead: null,
+            origFoot: null
+        };
+
+        table = this.domElements.container.querySelector('table'); // important! reload body variable
+        this.domElements.table = table;
+        this.domElements.tableWrap = table.parentElement;
+        this.domElements.stylesheet = this.domElements.tableWrap.previousElementSibling;
+        this.domElements.head = table.tHead;
+        this.domElements.body = table.tBodies[0];
+        this.domElements.foot = table.tFoot;
+        this.domElements.origHead = table.tHead;
+        this.domElements.origFoot = table.tFoot;
 
         // add optional id to container
-        this.container.id = containerId;
+        this.domElements.container.id = containerId;
         this.containerId  = containerId;
 
         // add theme class to container
-        addClass(this.container, ('tm-theme-' + coreSettings.theme));
-        addClass(body, 'tm-body');
+        addClass(this.domElements.container, ('tm-theme-' + coreSettings.theme));
+        addClass(table, 'tm-body');
 
-        // the tBody, contains all visible rows in the table
-        this.DOM = this.body.tBodies[0];
-        // contains all tr-nodes that are not displayed at the moment
-        this.hiddenRows = [];
+        this.allRows = [].slice.call(this.domElements.body.rows);
         // an array containing references to all available tr elements. They are not necessarily displayed in the DOM
-        this.availableRows = [].slice.call(this.DOM.rows);
+        this.availableRows = cloneArray(this.allRows);
 
         this.actionPipeline = new ActionPipeline(this);
         this.eventSystem = new EventSystem(this);
@@ -97,22 +122,22 @@ class Tablemodify {
 
         // call all modules
         if (coreSettings.modules) {
-            // interface for modules
-            iterate(coreSettings.modules, function(moduleName, moduleSettings) {
-                let module = Tablemodify.modules[moduleName],
-                    moduleReturn;
-                if (module) {
+            Object.keys(Tablemodify.modules).forEach((moduleName) => {
+
+                if (coreSettings.modules.hasOwnProperty(moduleName)) { // activate module?
+                    let module = Tablemodify.modules[moduleName],
+                        moduleSettings = coreSettings.modules[moduleName],
+                        moduleReturn;
                     moduleReturn = module.getModule(_this, moduleSettings);
-                } else {
-                    warn('Module' + moduleName + ' not registered!');
-                }
-                if (moduleReturn !== undefined) {
-                    if (_this.activeModules[moduleName] === undefined) {
-                        // define ret as a property of the Tablemodify instance.
-                        // now you can access it later via tm.modulename
-                        _this.activeModules[moduleName] = moduleReturn;
-                    } else {
-                        error('module name ' + moduleName + ' causes a collision and is not allowed, please choose another one!');
+
+                    if (moduleReturn !== undefined) {
+                        if (_this.activeModules[moduleName] === undefined) {
+                            // define ret as a property of the Tablemodify instance.
+                            // now you can access it later via tm.modulename
+                            _this.activeModules[moduleName] = moduleReturn;
+                        } else {
+                            error('module name ' + moduleName + ' causes a collision and is not allowed, please choose another one!');
+                        }
                     }
                 }
             });
@@ -141,7 +166,7 @@ class Tablemodify {
      */
     appendStyles(text) {
         if (text.trim().length > 0) {
-            this.stylesheet.appendChild(document.createTextNode(text.trim()));
+            this.domElements.stylesheet.appendChild(document.createTextNode(text.trim()));
         }
         return this;
     }
@@ -161,17 +186,10 @@ class Tablemodify {
     }
 
     /**
-     *  get array of references to the hidden rows
-     */
-    getHiddenRows() {
-    	return this.hiddenRows;
-    }
-
-    /**
      *  get array of references to all rows, both hidden and visible
      */
     getAllRows() {
-    	return this.availableRows.concat(this.hiddenRows);
+    	return this.allRows;
     }
 
     /**
@@ -185,11 +203,10 @@ class Tablemodify {
     /**
      * setter
      */
-    setHiddenRows(arr) {
-    	this.hiddenRows = arr;
+    setAllRows(arr) {
+        this.allRows = arr;
         return this;
     }
-
     /**
      * returns number of available rows
      */
@@ -201,8 +218,15 @@ class Tablemodify {
      * returns number of hidden rows
      */
     countHiddenRows() {
-    	return this.hiddenRows.length;
+    	return this.allRows.length - this.availableRows.length;
     }
+
+    /*
+     * returns number of all rows
+     */
+     countAllRows() {
+         return this.allRows.length
+     }
 
     /**
      * show all the rows that the param rowArray contains (as references).
@@ -217,13 +241,13 @@ class Tablemodify {
     	} else {
     		limit += offset;
     	}
-       
+
         while (offset < this.availableRows.length && offset < limit) {
             fragment.appendChild(this.availableRows[offset]);
             offset++;
         }
-        
-    	this.DOM.appendChild(fragment);
+
+    	this.domElements.body.appendChild(fragment);
     	return this;
     }
 
@@ -232,8 +256,9 @@ class Tablemodify {
      * @return this for chaining
      */
     clearDOM() {
-    	while (this.DOM.firstChild) {
-    		this.DOM.removeChild(this.DOM.firstChild);
+        let body = this.domElements.body;
+    	while (body.firstChild) {
+    		body.removeChild(body.firstChild);
     	}
     	return this;
     }
@@ -245,8 +270,7 @@ class Tablemodify {
      */
     insertRows(data) {
     	return this.clearDOM()
-    		.setAvailableRows([])
-    		.setHiddenRows([])
+    		.setAllRows([])
     		.appendRows(data);
     }
 
@@ -257,28 +281,28 @@ class Tablemodify {
      */
     appendRows(data) {
     	if (typeof data === 'string') {
-	        this.DOM.innerHTML = data;
-	        data = [].slice.call(this.DOM.children);
-	    } 
-    	
+	        this.domElements.body.innerHTML = data;
+	        data = [].slice.call(this.domElements.body.children);
+	    }
+
     	if (Array.isArray(data)) {
-        	let avail = this.getAvailableRows().concat(data, this.getHiddenRows());
-        	this.setAvailableRows(avail).setHiddenRows([]);
-        	
+            let all = this.getAllRows().concat(data);
+
+            this.setAllRows(all);
+
         	if (this.coreSettings.usesExternalData) {
         		this.actionPipeline.notify('__renderer');
         	} else {
         		this.reload();
         	}
-        	
+
         }
-    	return this;  
+    	return this;
     }
 
     removeRows() {
         this.clearDOM()
-            .setHiddenRows([])
-            .setAvailableRows([])
+            .setAllRows([])
             .reload();
     }
 
@@ -313,7 +337,7 @@ class Tablemodify {
                 }
                 tr.appendChild(td);
             }
-            this.availableRows.push(tr);
+            this.allRows.push(tr);
         }
         this.reload();
         return this;
@@ -368,7 +392,7 @@ class Tablemodify {
      * @return {number} index if it exists, null otherwise
      */
     id2index(tmId) {
-    	let cell = this.container.querySelector('thead > tr > *[tm-id='+tmId+']');
+    	let cell = this.domElements.container.querySelector('thead > tr > *[tm-id='+tmId+']');
         if (!cell) return null;
         return [].indexOf.call(cell.parentNode.children, cell);
     }
@@ -380,7 +404,7 @@ class Tablemodify {
      */
     index2id(index) {
     	index++;
-    	let cell = this.container.querySelector('thead > tr:first-of-type > *:nth-of-type('+index+')');
+    	let cell = this.domElements.container.querySelector('thead > tr:first-of-type > *:nth-of-type('+index+')');
         if (!cell) return null;
         return cell.getAttribute('tm-id');
     }
@@ -464,13 +488,14 @@ class Tablemodify {
         reset all loaded modules of instance
         and unset instance afterwards
     */
+    /*
     static _destroy(instance) {
         try {
             if (!instance || !instance instanceof Tablemodify) throw new Error('not a Tablemodify-object');
             if (!instance.activeModules) throw new Error('instance has no property activeModules');
 
             let container = instance.container;
-            let table = instance.body;
+            let table = instance.table;
 
             iterate(instance.activeModules, (moduleName, module) => {
                 // revert all changes performed by this module. Module itself is responsible for correct reversion
@@ -490,26 +515,42 @@ class Tablemodify {
             console.warn(e);
         }
     }
+    */
 }
 
+// order is important! modules will be initialized in this order
 Tablemodify.modules = {
     columnStyles: require('./modules/columnStyles.js'),
-    filter: require('./modules/filter.js'),
     fixed: require('./modules/fixed.js'),
+    filter: require('./modules/filter.js'),
     sorter: require('./modules/sorter.js'),
-    pager: require('./modules/pager.js'),
-    zebra: require('./modules/zebra.js')
+    pager: require('./modules/pager.js')//,
+    //resizer: require('./modules/resizer.js')
 };
 
 Tablemodify.languages = {
     en: new Language('en', {
         FILTER_PLACEHOLDER: 'type filter here',
         FILTER_CASESENSITIVE: 'case-sensitive',
+        FILTER_MATCHING: 'matching',
+        FILTER_COMPARATOR: 'comparator',
+        FILTER_RANGE: 'range',
+        FILTER_RANGE_LIMIT: 'upper limit',
+        FILTER_TITLE_STRING: 'string search',
+        FILTER_TITLE_NUMERIC: 'numeric search',
+        FILTER_TITLE_DATE: 'date search',
         PAGER_PAGENUMBER_SEPARATOR: ' / '
     }),
     de: new Language('de', {
         FILTER_PLACEHOLDER: 'Filter eingeben',
-        FILTER_CASESENSITIVE: 'Gro�- und Kleinschreibung unterscheiden',
+        FILTER_CASESENSITIVE: 'Gro&szlig;- und Kleinschreibung unterscheiden',
+        FILTER_MATCHING: 'Genaue &Uuml;bereinstimmung',
+        FILTER_COMPARATOR: 'Vergleichsoperator',
+        FILTER_RANGE: 'Zahlenbereich',
+        FILTER_RANGE_LIMIT: 'obere Grenze',
+        FILTER_TITLE_STRING: 'Filter nach Zeichenketten',
+        FILTER_TITLE_NUMERIC: 'Numerischer Filter',
+        FILTER_TITLE_DATE: 'Datumsfilter',
         PAGER_PAGENUMBER_SEPARATOR: ' / '
     })
 };

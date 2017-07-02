@@ -1,16 +1,17 @@
 const {error} = require('./utils.js');
 /*
- findet eine �nderung statt, wird sie dem jeweils n�chsten aktiven Modul in der Hierarchie gemeldet.
+ findet eine Änderung statt, wird sie dem jeweils nächsten aktiven Modul in der Hierarchie gemeldet.
  */
 const RELOAD = '__reload',
 	  FILTER = 'filter',
 	  SORTER = 'sorter',
 	  PAGER  = 'pager',
 	  RENDERER = '__renderer',
-	  FIXED  = 'fixed';
+	  FIXED  = 'fixed',
+	  RESIZER = 'resizer'
 
 // order is super important and must not be changed!!!
-const hierarchy = [RELOAD, FILTER, SORTER, PAGER, RENDERER, FIXED];
+const hierarchy = [RELOAD, FILTER, SORTER, PAGER, RENDERER, RESIZER, FIXED]
 
 /**
  * tm always holds exactly one ActionPipeline instance.
@@ -27,7 +28,7 @@ module.exports = class ActionPipeline {
 	 * only called once in tablemodify.js
 	 */
 	constructor(tm) {
-		this.tm = tm;
+		this.tm = tm
 	}
 
 	/**
@@ -36,22 +37,22 @@ module.exports = class ActionPipeline {
 	 * @param {object} msg: optional, can be used to pass information to the successor
 	 */
 	notify(sender, msg) {
-		this.tm.trigger('action', sender);
+		this.tm.trigger('action', sender)
 		try {
-			let receiver = this._getSuccessor(sender);
-			if (receiver != null) receiver.notify(msg);
+			let receiver = this.getSuccessor(sender)
+			if (receiver != null) receiver.notify(msg)
 		} catch(e) {
-			error(e);
+			error(e)
 		}
 	}
 
-	_getSuccessor(sender) {
-		let i = hierarchy.indexOf(sender) + 1;
-		if (i === 0) return null;
+	getSuccessor(sender) {
+		let i = hierarchy.indexOf(sender) + 1
+		if (i === 0) return null
 
 		for (; i < hierarchy.length; i++) {
-			let name = hierarchy[i];
-			if (this.tm.activeModules.hasOwnProperty(name)) return this.tm.activeModules[name];
+			let name = hierarchy[i]
+			if (this.tm.activeModules.hasOwnProperty(name)) return this.tm.activeModules[name]
 		}
 	}
-};
+}

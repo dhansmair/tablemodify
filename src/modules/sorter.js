@@ -1,6 +1,6 @@
 const Module = require('./module.js');
 const dateUtils = require('../dateUtils.js');
-const {addClass, isFn, errorThrow, hasProp, log, warn, error,
+const {addClass, isFn, errorThrow, hasProp, log, info, warn, error,
        isBool, isNonEmptyString,
        iterate, removeClass, extend2, isObject, replaceIdsWithIndices} = require('../utils.js');
 
@@ -9,6 +9,8 @@ function getValue(tr, i) {return tr.cells[i].textContent.trim().toLowerCase();}
 const FIRST_ENABLED_CELL = 'firstEnabled';
 const SORT_ORDER_ASC = 'asc';
 const SORT_ORDER_DESC = 'desc';
+
+let tm;
 
 /**
  * The Parser class encapsulates compare functions for the sorting functionality
@@ -63,7 +65,7 @@ class Parser {
 }
 
 class Sorter {
-    constructor(tableModify, settings) {
+    constructor(settings) {
         //Set initial values
         extend2(this, {
             ready: true,
@@ -74,12 +76,11 @@ class Sorter {
 
         settings.columns = replaceIdsWithIndices(settings.columns);
         //Store a reference to the tablemodify instance
-        this.tm = tableModify;
 
         this.sortColumns = settings.columns;
         //Array of structure [[col_index_1, true | false], [col_index_2, true | false], ...]
         this.currentOrders = [];
-        this.headCells = this.tm.head ? [].slice.call(this.tm.head.firstElementChild.firstElementChild.cells) : [].slice.call(this.tm.body.tHead.firstElementChild.cells);
+        this.headCells = [].slice.call(tm.domElements.head.firstElementChild.cells);
 
         iterate(settings.customParsers, (name, func) => {
             this.parsers[name] = new Parser(func);
@@ -92,7 +93,7 @@ class Sorter {
             if (this.getIsEnabled(i)) {
                 addClass(cell, 'sortable');
                 cell.addEventListener('click', (e) => {
-                    if (e.shiftKey && settings.enableMultisort) {
+                    if (e.ctrlKey && settings.enableMultisort) {
                         this.manageMulti(i);
                     } else {
                         this.manage(i);
@@ -109,7 +110,7 @@ class Sorter {
             initOrder = initOrder === SORT_ORDER_ASC;
             //if special value first_enabled is provided, search for first searchable column
             if (initIndex === FIRST_ENABLED_CELL) {
-                let colCount = this.tm.getColumnCount();
+                let colCount = tm.getColumnCount();
                 for (let i = 0; i < colCount; ++i) {
                     if (this.getIsEnabled(i)) {
                         initIndex = i;
@@ -213,13 +214,13 @@ class Sorter {
      * @returns this for method chaining
      */
     sort() {
-    	if (this.tm.beforeUpdate('sorter')) {
+    	if (tm.beforeUpdate('sorter')) {
     		let orders = this.currentOrders,
         	maxDepth = orders.length - 1,
         	parsers = this.getParsers();
 
 	        if (orders.length !== 0) {
-	        	let sorted = this.tm.getAvailableRows().sort((a, b) => {
+	        	let sorted = tm.getAvailableRows().sort((a, b) => {
 	                let compareResult = 0, curDepth = 0;
 	                while (compareResult === 0 && curDepth <= maxDepth) {
 	                    let index = orders[curDepth][0];
@@ -230,9 +231,9 @@ class Sorter {
 	                return orders[curDepth][1] ? compareResult : -compareResult;
 	            });
 
-	            this.tm.setAvailableRows(sorted);
+	            tm.setAvailableRows(sorted);
 	        }
-	        this.tm.actionPipeline.notify('sorter');
+	        tm.actionPipeline.notify('sorter');
     	}
         return this;
     }
@@ -244,7 +245,7 @@ class Sorter {
      */
     renderSortingArrows() {
         // remove current sorting classes
-        iterate(this.tm.container.querySelectorAll('.sort-up, .sort-down'), (i, cell) => {
+        iterate(tm.domElements.container.querySelectorAll('.sort-up, .sort-down'), (i, cell) => {
             removeClass(cell, 'sort-up');
             removeClass(cell, 'sort-down');
         });
@@ -271,16 +272,11 @@ class Sorter {
     manage(colIndex, multiSort, order) {
 
     	if (typeof colIndex == 'string' && isNaN(parseInt(colIndex))) {
-    		let i = this.tm.id2index(colIndex);
+    		let i = tm.id2index(colIndex);
 
     		if (i != null) colIndex = i;
     	}
 
-    	/*
-        if (!this.getIsEnabled(colIndex)) {
-            warn(`Tried to sort by non-sortable column index ${colIndex}`);
-            return this;
-        }*/
         if (!isBool(order)) {
             if (this.hasOrder(colIndex)) {
                 order = !this.getOrder(colIndex);
@@ -380,31 +376,7 @@ Sorter.prototype.parsers = {
         }
     }, {
         preset: dateUtils.DATE_GERMAN
-    }),
-    /*
-        german days of the week
-    */
-    daysOfTheWeek: function(a, b) {
-        function getIndex(str) {
-            var i = -1, l = days.length - 1;
-            while (l > -1 && i === -1) {
-                i = days[l].indexOf(str);
-                l--;
-            }
-            return i;
-        }
-
-        var days = [
-            // german
-            ['mo', 'di', 'mi', 'do', 'fr', 'sa', 'so'],
-            ['montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag'],
-            // english
-            ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
-            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-        ];
-
-        return getIndex(b.toLowerCase()) - getIndex(a.toLowerCase());
-    }
+    })
 }
 
 module.exports = new Module({
@@ -422,8 +394,12 @@ module.exports = new Module({
         customParsers: {}
     },
     initializer: function(settings) {
-        let instance = new Sorter(this, settings);
-        addClass(this.container, 'tm-sorter');
+        tm = this;
+
+        let instance = new Sorter(settings);
+        addClass(tm.domElements.container, 'tm-sorter');
+
+        info("module sorter loaded");
 
         return {
         	instance: instance,
