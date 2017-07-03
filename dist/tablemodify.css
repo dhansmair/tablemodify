@@ -51,6 +51,9 @@ div.tm-container div.tm-body-wrap table.tm-body {
   min-width: 100%;
   border-style: hidden;
 }
+div.tm-container div.tm-body-wrap table.tm-body tbody {
+  transition: 0.1s;
+}
 div.tm-container div.tm-foot-wrap {
   overflow-x: auto;
   overflow-y: hidden;

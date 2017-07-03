@@ -56,10 +56,16 @@ class Tablemodify {
         		notify: (msg = {}) => {
         			let offset = msg.offset || 0,
         				limit = msg.limit || Infinity;
-            		_this.render(limit, offset).actionPipeline.notify('__renderer');
+            		_this.render(limit, offset)
         		}
         	}
         };
+
+        if (coreSettings.transition === 'fade') {
+            this.render = this._transitionedRender
+        } else {
+            this.render = this._standardRender
+        }
 
         this.tableSelector = selector;
         oldTableParent = table.parentElement;
@@ -142,6 +148,9 @@ class Tablemodify {
                 }
             });
         }
+
+        // initialisation completed, now start first reload
+        this.actionPipeline.notify('__reload')
     }
     /**
      * calculate number of columns. Usually only called at the initialisation
@@ -228,12 +237,16 @@ class Tablemodify {
          return this.allRows.length
      }
 
+     render() {
+         throw new Exception('an error occured! tablemodify is not able to render the table')
+     }
+
     /**
      * show all the rows that the param rowArray contains (as references).
      * used by filter module
      */
-    render(limit = Infinity, offset = 0) {
-    	this.clearDOM();
+    _standardRender(limit = Infinity, offset = 0) {
+        this.clearDOM();
     	let fragment = document.createDocumentFragment();
 
     	if (limit === Infinity || limit + offset > this.availableRows.length) {
@@ -248,7 +261,24 @@ class Tablemodify {
         }
 
     	this.domElements.body.appendChild(fragment);
+        this.actionPipeline.notify('__renderer')
     	return this;
+    }
+
+    _transitionedRender(limit = Infinity, offset = 0) {
+        let func = () => {
+            this.domElements.body.removeEventListener('transitionend', func)
+            this._standardRender(limit, offset)
+            this.domElements.body.style.opacity = 1
+        }
+        this.domElements.body.addEventListener('transitionend', func)
+        this.domElements.body.style.opacity = 0.3
+
+        setTimeout(() => {
+            this.domElements.body.style.opacity = 1
+        }, 2000)
+
+        return this
     }
 
     /**

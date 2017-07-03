@@ -1,7 +1,7 @@
 const Module = require('./module.js');
 const {addClass, info, error, extend2, delay} = require('../utils.js');
 
-let tm;
+let tm, timeout;
 
 class Controller {
 	constructor(sets, pager) {
@@ -23,7 +23,6 @@ class Controller {
 
 			if (val > 0) {
 				_this.setCurrentPageNumber(val);
-
 				delay(() => {
 					_this.pager.update().run();
 				});
@@ -35,7 +34,6 @@ class Controller {
 
 			if (val <= _this.getTotalPages()) {
 				_this.setCurrentPageNumber(val);
-
 				delay(() => {
 					_this.pager.update().run();
 				});
@@ -56,7 +54,6 @@ class Controller {
 
 		this.limit.addEventListener('change', () => {
 			let val = _this.limit.value;
-			console.log(val);
 			if (isNaN(val) || val < 1) {
 				_this.limit.value = 1;
 			}
@@ -130,7 +127,8 @@ class Controller {
 		let totalPages = this.getTotalPages();
 		if (this.getCurrentPageNumber() > totalPages) {
 			this.setCurrentPageNumber(totalPages);
-			this.pager.update().run();
+
+			//this.pager.update().run();
 		}
 		return this;
 	};
@@ -159,10 +157,10 @@ class Pager {
 	 */
 	run() {
 		if (tm.beforeUpdate('pager')) {
-			tm.actionPipeline.notify('pager', {
-				offset: this.getOffset(),
-				limit: this.getLimit()
-			});
+				tm.actionPipeline.notify('pager', {
+					offset: this.getOffset(),
+					limit: this.getLimit()
+				});
 		}
 		return this;
 	}
@@ -224,7 +222,7 @@ module.exports = new Module({
 			addClass(tm.domElements.container, 'tm-pager');
 
 			// initialize the pager internal values
-			instance.update();
+			//instance.update();
 
 			info("module pager loaded");
 

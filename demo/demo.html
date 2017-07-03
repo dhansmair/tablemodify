@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <title>Tablemodify.js</title>
+    <link href="https://fonts.googleapis.com/css?family=Muli" rel="stylesheet">  
+    <link rel='stylesheet' href='demo.css' />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+    <link rel='stylesheet' href='../dist/themes/bootstrap.css' />
+    <link rel='stylesheet' href='../dist/tablemodify.css' />
+
+    <script src='../dist/tablemodify.min.js'></script>
+    <script src="demo.js"></script>
+    <script src='demoTable.js'></script>
+    <script>
+        var search, menue;
+        hljs.initHighlightingOnLoad();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            menue = new Menue(document.querySelector('nav'))
+            search = new Search(document.getElementById('search'), menue)
+
+        })
+
+    </script>
+
+
+</head>
+<body>
+    <aside>
+        <header>
+            tablemodify.js
+        </header>
+        <div id='placeholder'>
+            <input id='search' type='text' placeholder="search..."/>
+        </div>
+        <nav>
+            <a class='s1' href='#intro'>Introduction</a>
+            <a class='s1' href='#demo'>Demos</a>
+            <a class='s1' href='#setup'>Setup</a>
+            <a class='s1' href='#modules'>Modules</a>
+            <a class='s2' href='#module-sorter'>Sorter</a>
+            <a class='s2' href='#module-pager'>Pager</a>
+            <a class='s2' href='#module-filter'>Filter</a>
+            <a class='s2' href='#module-fixed'>Fixed</a>
+            <a class='s2' href='#module-columnStyles'>ColumnStyles</a>
+            <a class='s2' href='#module-resizer'>Resizer</a>
+            <a class='s1' href='#themes'>Themes</a>
+            <a class='s2' href='#theme-blank'>Blank</a>
+            <a class='s2' href='#theme-bootstrap'>Bootstrap</a>
+            <a class='s2' href='#theme-default'>Default</a>
+        </nav>
+        <footer>
+            &copy; 2017 David Hansmair
+        </footer>
+    </aside>
+    <main>
+        <div id='quicknav'>
+            <a href=# target='blank'>view on Github</a>
+        </div>
+        <section id='intro'>
+            <h1>Intro</h1>
+            <article>
+                tablemodify is a javascript-plugin which boosts your html tables with awesome style and functionalities!
+                <br />It is written in plain js, so no jQuery is required.
+                Tm is based on a core Tablemodify-object which can be extended by several modules.
+                There are some modules defined by default or you could even write your own if you wish to.
+                <br /><br />
+                Browser support: supported by all major browsers (IE11, Firefox, Opera, Chrome, Safari).
+                <br />
+                the current version is 0.9.4
+            </article>
+        </section>
+        <section id='demo'>
+            <h1>Demo</h1>
+            <article>
+                <div class='controller'>
+                    <span id='pager-left'>&#9665;</span>
+                    <input id='pager-pagenumber' value='1' />
+                    <span id='pager-total'></span>
+                    <span id='pager-right'>&#9655;</span>
+                    rows per page: <input id='pager-limit' value='100' size='3' />
+                </div>
+                <table id="test">
+                    <thead>
+                        <tr>
+                            <th>first name</th>
+                            <th>last name</th>
+                            <th>birthday</th>
+                            <th>score</th>
+                            <th>favourite pet</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+                add random rows: <input id='number-inserts' value="100" size="6"/><button id='number-add'>add</button><button id='number-remove'>clear</button>
+                <br />
+                <br />
+                the demo shows the modules 'pager', 'sorter', 'filter', 'fixed' and 'columnStyles' in action.
+            </article>
+        </section>
+        <section id='setup'>
+            <h1>Setup</h1>
+            <article>
+                david
+                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                <pre>
+                    <code class="js">
+                        console.log('hello');
+                    </code>
+                </pre>
+            </article>
+        </section>
+        <section id='modules'>
+            <h1>Modules</h1>
+            <article>
+                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+            </article>
+            <article>
+                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+            </article>
+            <article>
+                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+            </article>
+            <article>
+                david
+                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+            </article>
+            <article>
+                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+            </article>
+        </section>
+        <section id='themes'>
+            <h1>Themes</h1>
+            <article>
+                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+            </article>
+
+        </section>
+    </main>
+</body>
+</html>

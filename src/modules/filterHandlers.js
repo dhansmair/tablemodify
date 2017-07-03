@@ -171,9 +171,11 @@ class StringHandler extends Handler {
 	}
 
     update() {
+		let pattern = this.relatingCell.querySelector('.tm-input-div > input').value.trim() || null
+
         this.cs = this.contentPanel.querySelector('input.tm-cs').checked
         this.matching = this.contentPanel.querySelector('input.tm-matching').checked
-        this.pattern = this.relatingCell.querySelector('.tm-input-div > input').value.trim() || null
+        this.pattern = (pattern == null || this.cs) ? pattern : pattern.toLowerCase()
     }
 
     matches(tester) {

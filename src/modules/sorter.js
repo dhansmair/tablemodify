@@ -105,9 +105,11 @@ class Sorter {
 
         // try to sort by initial sorting
         if (settings.initialColumn !== false) {
-            let initIndex = settings.initialColumn;
-            let initOrder = settings.initialOrder;
+            let initIndex = settings.initialColumn,
+                initOrder = settings.initialOrder;
+
             initOrder = initOrder === SORT_ORDER_ASC;
+
             //if special value first_enabled is provided, search for first searchable column
             if (initIndex === FIRST_ENABLED_CELL) {
                 let colCount = tm.getColumnCount();
@@ -118,8 +120,9 @@ class Sorter {
                     }
                 }
             }
+
             if (this.getIsEnabled(initIndex)) {
-                this.manage(initIndex, false, initOrder);
+                this.setOrAddOrder(initIndex, initOrder).renderSortingArrows()
             }
         }
     }

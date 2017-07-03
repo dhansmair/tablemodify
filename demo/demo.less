@@ -1,0 +1,179 @@
+// "out":true
+
+@padding: 20px;
+@color1: #B95835;
+@color2: darkcyan;
+@color1b: darken(@color1, 15%);
+@font: Muli;
+* {
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+
+}
+
+button {
+    //font-family: @font;
+    background-color: @color1;
+    color:white;
+    margin:5px;
+    padding:10px;
+    border-radius:5px;
+    border: none;
+    cursor:pointer;
+
+    &:hover {
+        background-color: lighten(@color1, 10%)
+    }
+
+    &:active {
+
+    }
+}
+
+html {
+    height:100%;
+    body {
+        display: flex;
+        flex-flow: row;
+        height:100%;
+
+        // texturing
+        font-family:@font;
+        font-size: 1em;
+        line-height: 1.3em;
+        color:#222222;
+
+        aside, main {
+            overflow-y: auto;
+        }
+
+        aside {
+            flex:1;
+            max-width:300px;
+            min-width:220px;
+            header {
+                height:100px;
+                line-height:60px;
+                font-size:1.2em;
+                padding:@padding;
+                color:@color2;
+                cursor:pointer;
+            }
+            #placeholder {
+
+
+                input#search {
+                    font-family:"Lucida Console", Monaco, monospace;
+                    line-height:40px;
+                    color:#ffffff;
+                    font-size:1em;
+
+                    background-color: #B95835;
+                    border:none;
+
+                    width:100%;
+                    height:40px;
+                    display: block;
+                    padding-left:@padding;
+                }
+
+            }
+            nav {
+                padding-top:10px;
+
+                a {
+                    display: block;
+                    height:40px;
+                    line-height:40px;
+                    padding-left:@padding;
+                    transition: 0.2s;
+                    text-decoration:none;
+                    color:black;
+
+                    &.s1 {
+
+                    }
+
+                    &.s2 {
+                        padding-left: 30px;
+                        color:@color2;
+                    }
+
+                    &:hover {
+                        cursor:pointer;
+                        background-color: @color2;;
+                        color:white;
+                    }
+                }
+
+            }
+            footer {
+                padding:@padding;
+                font-size:small;
+            }
+        }
+
+        main {
+            flex:4;
+            padding:@padding;
+            padding-top:50px;
+
+            position: relative;
+
+
+            #quicknav {
+                position:absolute;
+                top:0;
+                right:0;
+                font-size: 0.7em;
+                line-height:1em;
+                padding:5px;
+            }
+
+            section {
+                padding-top:30px;
+                margin-top:10px;
+                position:relative;
+                h1 {
+                    color:#B95835;
+                    //text-shadow:1px 1px #222222;
+                }
+
+                article {
+                    margin-top:@padding;
+
+
+
+                }
+                &#demo {
+
+                    div.controller {
+                        margin:0 auto 10px auto;
+                        font-family: courier;
+                        text-align: center;
+
+                        #pager-left, #pager-right {
+                            cursor:pointer;
+                        }
+                    }
+                    #meinContainer {
+                        margin:0 20px 20px;
+                        height:500px;
+                        border:1px solid #cccccc;
+
+                        font-family:courier;
+
+                        .sortable.sort-up, .sortable.sort-down {
+                            background-color:@color2;
+                            color:white;
+                        }
+                        .sortable:hover {
+                            background-color:lighten(@color2, 7%);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

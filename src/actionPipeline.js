@@ -37,7 +37,6 @@ module.exports = class ActionPipeline {
 	 * @param {object} msg: optional, can be used to pass information to the successor
 	 */
 	notify(sender, msg) {
-		this.tm.trigger('action', sender)
 		try {
 			let receiver = this.getSuccessor(sender)
 			if (receiver != null) receiver.notify(msg)

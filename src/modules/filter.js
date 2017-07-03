@@ -181,13 +181,12 @@ class Controller {
             timeout
 
         this.settings = settings
-        this.latestPanelZIndex = 1000
 
         this.headerHovered = false
         this.inputFocused = false
         this.tHead = tHead
         this.row = row
-        
+
         for (let i = 0; i < count; i++) {
             let bundle = cellFactory.create(this.getColumnSettings(i), i)
             row.appendChild(bundle.cell)
@@ -242,11 +241,7 @@ class Controller {
             // perform this change after the slide-up transition
             if (tm.domElements.headWrap) {
                 row.addEventListener('transitionend', () => {
-        			if (row.clientHeight > 5) {
-        				tm.domElements.headWrap.style.overflow = 'visible'
-        			} else {
-        				tm.domElements.headWrap.style.overflow = 'hidden'
-        			}
+        			tm.domElements.headWrap.style.overflow = (row.clientHeight > 5) ? 'visible' : 'hidden'
         		})
             }
 
@@ -257,7 +252,7 @@ class Controller {
             this.openRow()
         }
 
-        // bind listeners for typing to start the filter operation, after timeout or just on enter
+        // bind listeners for typing to start the filter operation after timeout
         if (settings.filterAfterTimeout && !isNaN(settings.filterAfterTimeout)) {
             row.addEventListener('keyup', (e) => {
                 clearTimeout(timeout)
@@ -265,11 +260,14 @@ class Controller {
                     _this.run()
                 }, settings.filterAfterTimeout)
             })
-        } else {
-            row.addEventListener('keyup', (e) => {
-                if (e.keyCode == 13) this.run() // enter
-            })
         }
+
+        // this will fire when:
+        // 1. radiobutton etc. in panel clicked / selectbox changed
+        // 2. filterAfterTimeout is false, detects enter-key presses
+        row.addEventListener('change', (e) => {
+            this.run()
+        })
 
         // insert toolbar row into tHead
         this.tHead.appendChild(row)

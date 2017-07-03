@@ -1,0 +1,131 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+button {
+  background-color: #B95835;
+  color: white;
+  margin: 5px;
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #ce7453;
+}
+html {
+  height: 100%;
+}
+html body {
+  display: flex;
+  flex-flow: row;
+  height: 100%;
+  font-family: Muli;
+  font-size: 1em;
+  line-height: 1.3em;
+  color: #222222;
+}
+html body aside,
+html body main {
+  overflow-y: auto;
+}
+html body aside {
+  flex: 1;
+  max-width: 300px;
+  min-width: 220px;
+}
+html body aside header {
+  height: 100px;
+  line-height: 60px;
+  font-size: 1.2em;
+  padding: 20px;
+  color: darkcyan;
+  cursor: pointer;
+}
+html body aside #placeholder input#search {
+  font-family: "Lucida Console", Monaco, monospace;
+  line-height: 40px;
+  color: #ffffff;
+  font-size: 1em;
+  background-color: #B95835;
+  border: none;
+  width: 100%;
+  height: 40px;
+  display: block;
+  padding-left: 20px;
+}
+html body aside nav {
+  padding-top: 10px;
+}
+html body aside nav a {
+  display: block;
+  height: 40px;
+  line-height: 40px;
+  padding-left: 20px;
+  transition: 0.2s;
+  text-decoration: none;
+  color: black;
+}
+html body aside nav a.s2 {
+  padding-left: 30px;
+  color: darkcyan;
+}
+html body aside nav a:hover {
+  cursor: pointer;
+  background-color: darkcyan;
+  color: white;
+}
+html body aside footer {
+  padding: 20px;
+  font-size: small;
+}
+html body main {
+  flex: 4;
+  padding: 20px;
+  padding-top: 50px;
+  position: relative;
+}
+html body main #quicknav {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.7em;
+  line-height: 1em;
+  padding: 5px;
+}
+html body main section {
+  padding-top: 30px;
+  margin-top: 10px;
+  position: relative;
+}
+html body main section h1 {
+  color: #B95835;
+}
+html body main section article {
+  margin-top: 20px;
+}
+html body main section#demo div.controller {
+  margin: 0 auto 10px auto;
+  font-family: courier;
+  text-align: center;
+}
+html body main section#demo div.controller #pager-left,
+html body main section#demo div.controller #pager-right {
+  cursor: pointer;
+}
+html body main section#demo #meinContainer {
+  margin: 0 20px 20px;
+  height: 500px;
+  border: 1px solid #cccccc;
+  font-family: courier;
+}
+html body main section#demo #meinContainer .sortable.sort-up,
+html body main section#demo #meinContainer .sortable.sort-down {
+  background-color: darkcyan;
+  color: white;
+}
+html body main section#demo #meinContainer .sortable:hover {
+  background-color: #00afaf;
+}

@@ -388,7 +388,6 @@ module.exports = function () {
 	_createClass(ActionPipeline, [{
 		key: 'notify',
 		value: function notify(sender, msg) {
-			this.tm.trigger('action', sender);
 			try {
 				var receiver = this.getSuccessor(sender);
 				if (receiver != null) receiver.notify(msg);
@@ -878,7 +877,6 @@ var Controller = function () {
             timeout = void 0;
 
         this.settings = settings;
-        this.latestPanelZIndex = 1000;
 
         this.headerHovered = false;
         this.inputFocused = false;
@@ -945,11 +943,7 @@ var Controller = function () {
             // perform this change after the slide-up transition
             if (tm.domElements.headWrap) {
                 row.addEventListener('transitionend', function () {
-                    if (row.clientHeight > 5) {
-                        tm.domElements.headWrap.style.overflow = 'visible';
-                    } else {
-                        tm.domElements.headWrap.style.overflow = 'hidden';
-                    }
+                    tm.domElements.headWrap.style.overflow = row.clientHeight > 5 ? 'visible' : 'hidden';
                 });
             }
         } else {
@@ -959,7 +953,7 @@ var Controller = function () {
             this.openRow();
         }
 
-        // bind listeners for typing to start the filter operation, after timeout or just on enter
+        // bind listeners for typing to start the filter operation after timeout
         if (settings.filterAfterTimeout && !isNaN(settings.filterAfterTimeout)) {
             row.addEventListener('keyup', function (e) {
                 clearTimeout(timeout);
@@ -967,11 +961,14 @@ var Controller = function () {
                     _this.run();
                 }, settings.filterAfterTimeout);
             });
-        } else {
-            row.addEventListener('keyup', function (e) {
-                if (e.keyCode == 13) _this2.run(); // enter
-            });
         }
+
+        // this will fire when:
+        // 1. radiobutton etc. in panel clicked / selectbox changed
+        // 2. filterAfterTimeout is false, detects enter-key presses
+        row.addEventListener('change', function (e) {
+            _this2.run();
+        });
 
         // insert toolbar row into tHead
         this.tHead.appendChild(row);
@@ -1317,9 +1314,11 @@ var StringHandler = function (_Handler) {
     }, {
         key: 'update',
         value: function update() {
+            var pattern = this.relatingCell.querySelector('.tm-input-div > input').value.trim() || null;
+
             this.cs = this.contentPanel.querySelector('input.tm-cs').checked;
             this.matching = this.contentPanel.querySelector('input.tm-matching').checked;
-            this.pattern = this.relatingCell.querySelector('.tm-input-div > input').value.trim() || null;
+            this.pattern = pattern == null || this.cs ? pattern : pattern.toLowerCase();
         }
     }, {
         key: 'matches',
@@ -1899,7 +1898,8 @@ var _require = require('../utils.js'),
     extend2 = _require.extend2,
     delay = _require.delay;
 
-var tm = void 0;
+var tm = void 0,
+    timeout = void 0;
 
 var Controller = function () {
 	function Controller(sets, pager) {
@@ -1923,7 +1923,6 @@ var Controller = function () {
 
 			if (val > 0) {
 				_this.setCurrentPageNumber(val);
-
 				delay(function () {
 					_this.pager.update().run();
 				});
@@ -1935,7 +1934,6 @@ var Controller = function () {
 
 			if (val <= _this.getTotalPages()) {
 				_this.setCurrentPageNumber(val);
-
 				delay(function () {
 					_this.pager.update().run();
 				});
@@ -1956,7 +1954,6 @@ var Controller = function () {
 
 		this.limit.addEventListener('change', function () {
 			var val = _this.limit.value;
-			console.log(val);
 			if (isNaN(val) || val < 1) {
 				_this.limit.value = 1;
 			}
@@ -2036,7 +2033,8 @@ var Controller = function () {
 			var totalPages = this.getTotalPages();
 			if (this.getCurrentPageNumber() > totalPages) {
 				this.setCurrentPageNumber(totalPages);
-				this.pager.update().run();
+
+				//this.pager.update().run();
 			}
 			return this;
 		}
@@ -2156,7 +2154,7 @@ module.exports = new Module({
 			addClass(tm.domElements.container, 'tm-pager');
 
 			// initialize the pager internal values
-			instance.update();
+			//instance.update();
 
 			info("module pager loaded");
 
@@ -2330,9 +2328,11 @@ var Sorter = function () {
 
         // try to sort by initial sorting
         if (settings.initialColumn !== false) {
-            var initIndex = settings.initialColumn;
-            var initOrder = settings.initialOrder;
+            var initIndex = settings.initialColumn,
+                initOrder = settings.initialOrder;
+
             initOrder = initOrder === SORT_ORDER_ASC;
+
             //if special value first_enabled is provided, search for first searchable column
             if (initIndex === FIRST_ENABLED_CELL) {
                 var colCount = tm.getColumnCount();
@@ -2343,8 +2343,9 @@ var Sorter = function () {
                     }
                 }
             }
+
             if (this.getIsEnabled(initIndex)) {
-                this.manage(initIndex, false, initOrder);
+                this.setOrAddOrder(initIndex, initOrder).renderSortingArrows();
             }
         }
     }
@@ -2798,10 +2799,16 @@ var Tablemodify = function () {
 
                     var offset = msg.offset || 0,
                         limit = msg.limit || Infinity;
-                    _this.render(limit, offset).actionPipeline.notify('__renderer');
+                    _this.render(limit, offset);
                 }
             }
         };
+
+        if (coreSettings.transition === 'fade') {
+            this.render = this._transitionedRender;
+        } else {
+            this.render = this._standardRender;
+        }
 
         this.tableSelector = selector;
         oldTableParent = table.parentElement;
@@ -2879,6 +2886,9 @@ var Tablemodify = function () {
                 }
             });
         }
+
+        // initialisation completed, now start first reload
+        this.actionPipeline.notify('__reload');
     }
     /**
      * calculate number of columns. Usually only called at the initialisation
@@ -2998,6 +3008,11 @@ var Tablemodify = function () {
         value: function countAllRows() {
             return this.allRows.length;
         }
+    }, {
+        key: 'render',
+        value: function render() {
+            throw new Exception('an error occured! tablemodify is not able to render the table');
+        }
 
         /**
          * show all the rows that the param rowArray contains (as references).
@@ -3005,8 +3020,8 @@ var Tablemodify = function () {
          */
 
     }, {
-        key: 'render',
-        value: function render() {
+        key: '_standardRender',
+        value: function _standardRender() {
             var limit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : Infinity;
             var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
@@ -3025,6 +3040,29 @@ var Tablemodify = function () {
             }
 
             this.domElements.body.appendChild(fragment);
+            this.actionPipeline.notify('__renderer');
+            return this;
+        }
+    }, {
+        key: '_transitionedRender',
+        value: function _transitionedRender() {
+            var _this2 = this;
+
+            var limit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : Infinity;
+            var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+            var func = function func() {
+                _this2.domElements.body.removeEventListener('transitionend', func);
+                _this2._standardRender(limit, offset);
+                _this2.domElements.body.style.opacity = 1;
+            };
+            this.domElements.body.addEventListener('transitionend', func);
+            this.domElements.body.style.opacity = 0.3;
+
+            setTimeout(function () {
+                _this2.domElements.body.style.opacity = 1;
+            }, 2000);
+
             return this;
         }
 
@@ -3147,7 +3185,7 @@ var Tablemodify = function () {
     }, {
         key: 'beforeUpdate',
         value: function beforeUpdate(moduleName) {
-            var _this2 = this;
+            var _this3 = this;
 
             // beforeUpdate method passed? Just go on if not.
             if (!this.coreSettings.hasOwnProperty('beforeUpdate')) return true;
@@ -3155,8 +3193,8 @@ var Tablemodify = function () {
             // collect all necessary data
             var infos = {};
             ['sorter', 'filter', 'pager'].forEach(function (name) {
-                if (_this2.isActive(name)) {
-                    infos[name] = _this2.getModule(name).getStats();
+                if (_this3.isActive(name)) {
+                    infos[name] = _this3.getModule(name).getStats();
                 }
             });
 
