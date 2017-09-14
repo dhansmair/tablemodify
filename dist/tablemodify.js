@@ -189,7 +189,8 @@
         d.isPm = true;
       }
     }],
-    ZZ: [/[\+\-]\d\d:?\d\d/, function (d, v) {
+    ZZ: [/([\+\-]\d\d:?\d\d|Z)/, function (d, v) {
+      if (v === 'Z') v = '+00:00';
       var parts = (v + '').match(/([\+\-]|\d\d)/gi), minutes;
 
       if (parts) {
@@ -210,7 +211,7 @@
 
   // Some common format strings
   fecha.masks = {
-    'default': 'ddd MMM DD YYYY HH:mm:ss',
+    default: 'ddd MMM DD YYYY HH:mm:ss',
     shortDate: 'M/D/YY',
     mediumDate: 'MMM D, YYYY',
     longDate: 'MMMM D, YYYY',
@@ -411,7 +412,7 @@ module.exports = function () {
 	return ActionPipeline;
 }();
 
-},{"./utils.js":15}],3:[function(require,module,exports){
+},{"./utils.js":16}],3:[function(require,module,exports){
 'use strict';
 
 exports.debug = false;
@@ -563,7 +564,7 @@ module.exports = function () {
     return Language;
 }();
 
-},{"./utils.js":15}],7:[function(require,module,exports){
+},{"./utils.js":16}],7:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -633,7 +634,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":15,"./module.js":11}],8:[function(require,module,exports){
+},{"../utils.js":16,"./module.js":12}],8:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -641,220 +642,166 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var _require = require('../utils.js'),
+    hasClass = _require.hasClass,
     addClass = _require.addClass,
     removeClass = _require.removeClass,
-    hasClass = _require.hasClass,
-    iterate = _require.iterate,
-    info = _require.info,
-    error = _require.error,
-    replaceIdsWithIndices = _require.replaceIdsWithIndices,
     extend2 = _require.extend2,
-    cloneArray = _require.cloneArray,
-    isNonEmptyString = _require.isNonEmptyString,
-    debounce = _require.debounce;
+    isNumber = _require.isNumber,
+    log = _require.log,
+    info = _require.info,
+    error = _require.error;
 
 var Module = require('./module.js');
 var HandlerFactory = require('./filterHandlers.js');
 
-var FILTER_HEIGHT = '30px';
-
 var tm = void 0;
 
-/*
-    @TODO:
-    implemented shortcuts like <,>, = etc for numerics. Filter with regex.
-    now test it for correct behaviour.
+var HandlerList = function () {
+    function HandlerList() {
+        _classCallCheck(this, HandlerList);
 
-    comparator:
-    /^(\s)*(<|>|=|<=|>=)(\s)*[+-]?[0-9]+(\s)*$/.test(" >= -500")
-
-    range:
-    /^(\s)*[+-]?[0-9]+(\s)*-(\s)*[+-]?[0-9]+(\s)*$/.test("-1 - -5")
-*/
-
-// for call-by-reference passing to the filterHandler.js file.
-// this has to be accessible from filterHandler AND this file.
-var semaphor = {
-    val: 0,
-    up: function up() {
-        this.val++;
-    },
-    down: function down() {
-        this.val--;
-    }
-};
-
-function isPatternInput(el) {
-    return hasClass(el.parentElement, 'tm-input-div');
-}
-
-/**
- *   Factory class to produce filter cells
- */
-
-var CellFactory = function () {
-    function CellFactory() {
-        _classCallCheck(this, CellFactory);
-
-        var placeholder = tm.getTerm('FILTER_PLACEHOLDER'),
-            caseSensitive = tm.getTerm('FILTER_CASESENSITIVE');
-
-        this.handlerFactory = new HandlerFactory(tm, semaphor);
-        // option icon
-        this.optionIcon = document.createElement('div');
-        this.cell = document.createElement('td');
-        this.cell.innerHTML = '<div class=\'tm-input-div\'><input type=\'text\' placeholder=\'' + placeholder + '\' /></div>';
-
-        addClass(this.optionIcon, 'tm-filter-option-icon');
+        this.list = [];
+        this.limit = 1;
     }
 
-    /**
-     * decide if the cell should have an option dropdown
-     * @param {object} options -
-     * @return {boolean} - options visible or not?
-     */
-
-
-    _createClass(CellFactory, [{
-        key: '_optionsVisible',
-        value: function _optionsVisible(options) {
-            if (!options) return false;
-            var keys = Object.keys(options);
-            for (var i = 0; i < keys.length; i++) {
-                if (options[keys[i]]) return true;
-            }
-            return false;
+    _createClass(HandlerList, [{
+        key: 'setLimit',
+        value: function setLimit(val) {
+            this.limit = val;
         }
-        /**
-         *  create a pair of cell and handler
-         *  @param {object} colSettings - information about which features the panel should provide
-         *  @param {number} i - index of the cell
-         *  @return {object} - looks like: {cell: <cell HTML-element>, handler: <handler object>}
-         */
-
     }, {
-        key: 'create',
-        value: function create(colSettings, i) {
-            if (!colSettings.enabled) return document.createElement('td');
-
-            var ret = {},
-                cell = this.cell.cloneNode(true);
-            ret.cell = cell;
-
-            // attach option pane to the cell
-            if (this._optionsVisible(colSettings.options)) {
-                var optionIcon = this.optionIcon.cloneNode('true');
-                cell.appendChild(optionIcon);
-
-                var handler = this.handlerFactory.create(colSettings.type, colSettings.options);
-                handler.index = i;
-                // append handler HTML-elements to the cell
-                handler.setRelatingCell(cell);
-                ret.handler = handler;
+        key: 'countShown',
+        value: function countShown() {
+            return this.list.length;
+        }
+    }, {
+        key: 'hideAll',
+        value: function hideAll() {
+            while (this.list.length > 0) {
+                this.setInActive(this.list[0]);
+            }
+        }
+    }, {
+        key: 'setActive',
+        value: function setActive(handler) {
+            if (this.list.length === 0) {
+                addClass(tm.domElements.container, 'tm-filter-open');
             }
 
-            return ret;
+            var index = this.list.indexOf(handler);
+            if (index !== -1) this.list.splice(index, 1);
+            if (this.list.length == this.limit) {
+                var odd = this.list.shift();
+                odd.hide();
+            }
+            this.list.push(handler);
+            handler.show();
+            this._setZIndices();
+        }
+    }, {
+        key: 'setInActive',
+        value: function setInActive(handler) {
+            var index = this.list.indexOf(handler);
+            if (index !== -1) {
+                this.list.splice(index, 1);
+                handler.hide();
+                this._setZIndices();
+            }
+
+            if (this.list.length === 0) {
+                removeClass(tm.domElements.container, 'tm-filter-open');
+            }
+        }
+    }, {
+        key: '_setZIndices',
+        value: function _setZIndices() {
+            var offset = 10;
+            for (var i = 0; i < this.list.length; i++) {
+                this.list[i].setZIndex(offset + i);
+            }
         }
     }]);
 
-    return CellFactory;
+    return HandlerList;
 }();
 
+var handlerList = new HandlerList();
+
+var defaultStringSettings = {
+    enabled: true,
+    type: 'string',
+    options: {
+        cs: false,
+        matching: false
+    }
+},
+    defaultNumericSettings = {
+    enabled: true,
+    type: 'numeric',
+    options: {
+        comparator: true,
+        range: true
+    }
+};
+
 var Model = function () {
-    function Model(controller, settings) {
+    function Model() {
         _classCallCheck(this, Model);
 
-        this.controller = controller;
-        this.handlers = [];
+        this.evaluators = null;
     }
 
-    /**
-     *  setter for handlers. called by the controller, only once
-     *  @param {array} handlers
-     *  @return {Model} this - for chaining
-     */
-
-
     _createClass(Model, [{
-        key: 'setHandlers',
-        value: function setHandlers(handlers) {
-            this.handlers = handlers;
-            return this;
+        key: 'setEvaluators',
+        value: function setEvaluators(evaluators) {
+            this.evaluators = evaluators;
         }
-
-        /**
-         *  divide and conquer - tell all handlers to update it's settings from the view.
-         *  @return {Model} this - for chaining
-         */
-
-    }, {
-        key: 'updateHandlers',
-        value: function updateHandlers() {
-            this.handlers.forEach(function (handler) {
-                if (handler != null) handler.update();
-            });
-            return this;
-        }
-
-        /**
-         * only needed when beforeUpdate-function exists. It collects all necessary information from the handlers.
-         * @return {array} stats - collection of all options of the active handlers
-         */
-
     }, {
         key: 'getStats',
         value: function getStats() {
             var ret = [];
-            this.handlers.forEach(function (handler) {
-                var stats = handler.getOptions();
-                if (handler.isActive()) ret.push(stats);
-            });
+            for (var i = 0; i < this.evaluators.length; i++) {
+                var evaluator = this.evaluators[i];
+                if (evaluator.isActive()) {
+                    var stats = evaluator.getStats();
+                    ret.push(stats);
+                }
+            }
             return ret;
         }
-
-        /**
-         * MAIN METHOD OF THIS CLASS.
-         * Executes the filtering operation, works directly on the data of the Tablemodify-instance (imperative style).
-         * @return {Model} this - for chaining
-         */
-
     }, {
         key: 'filter',
         value: function filter() {
             if (tm.beforeUpdate('filter')) {
-                this.updateHandlers();
                 var all = tm.getAllRows(),
                     matching = void 0,
-                    activeHandlers = this.handlers.filter(function (handler) {
-                    return handler.isActive();
+                    activeEvaluators = this.evaluators.filter(function (evaluator) {
+                    return evaluator.isActive();
                 });
 
-                if (activeHandlers.length === 0) {
-                    // no filtering at all
+                if (activeEvaluators.length === 0) {
                     tm.setAvailableRows(all);
                 } else {
-                    var maxDeph = activeHandlers.length;
+                    var maxDeph = activeEvaluators.length;
 
                     matching = all.filter(function (row) {
                         var deph = 0,
                             matches = true;
 
                         while (matches && deph < maxDeph) {
-                            var handler = activeHandlers[deph],
-                                j = handler.index,
-                                cellContent = row.cells[j].textContent;
-                            matches = handler.matches(cellContent);
+                            var evaluator = activeEvaluators[deph],
+                                i = evaluator.index,
+                                cellContent = row.cells[i].textContent;
+                            matches = evaluator.evaluate(cellContent);
                             deph++;
                         }
                         return matches;
                     });
-
                     tm.setAvailableRows(matching);
                 }
-
                 tm.actionPipeline.notify('filter'); // tell successor that an action took place
-                return this;
             }
+            return this;
         }
     }]);
 
@@ -867,167 +814,161 @@ var Controller = function () {
 
         _classCallCheck(this, Controller);
 
-        // create cells and cellHandlers
-        var cellFactory = new CellFactory(),
-            _this = this,
+        // attribute
+        this.settings = settings;
+        this.handlers = [];
+        this.model = new Model();
+        handlerList.setLimit(settings.maxPanelsOpen);
+
+        // basic setup
+        var _this = this,
+            timeout = void 0,
             tHead = tm.domElements.head,
             count = tHead.firstElementChild.children.length,
             row = document.createElement('tr'),
-            handlers = [],
-            timeout = void 0;
-
-        this.settings = settings;
-
-        this.headerHovered = false;
-        this.inputFocused = false;
-        this.tHead = tHead;
-        this.row = row;
-
-        var _loop = function _loop(i) {
-            var bundle = cellFactory.create(_this2.getColumnSettings(i), i);
-            row.appendChild(bundle.cell);
-
-            if (bundle.handler) {
-                // this listener has to be added from outside the handlerFactory to be able to call run()
-                bundle.handler.actionButton.addEventListener('click', function () {
-                    _this2.run();
-                });
-                bundle.cell.querySelector('div.tm-filter-option-icon').addEventListener('click', function () {
-                    bundle.handler.clicked();
-                });
-            }
-
-            handlers.push(bundle.handler || null);
-        };
-
-        for (var i = 0; i < count; i++) {
-            _loop(i);
-        }
-
-        this.model = new Model(this, settings);
-        this.model.setHandlers(handlers);
-
-        addClass(row, 'tm-filter-row');
-
+            handlerFactory = new HandlerFactory(tm, this, handlerList);
         tHead.appendChild(row);
-
-        if (settings.autoCollapse) {
-            // keep filter row opened if an input is focused
-            tHead.addEventListener('focusin', function (e) {
-                if (isPatternInput(e.originalTarget || e.target)) {
-                    _this2.inputFocused = true;
-                    _this2.openRow();
-                }
-            });
-
-            // release forced open row
-            tHead.addEventListener('focusout', function (e) {
-                if (isPatternInput(e.originalTarget || e.target)) {
-                    _this2.inputFocused = false;
-                    _this2.closeRow();
-                }
-            });
-
-            // slide-up and slide-down on hover and blur
-            this.tHead.addEventListener('mouseenter', function () {
-                _this2.headerHovered = true;
-                _this2.openRow();
-            });
-
-            this.tHead.addEventListener('mouseleave', function () {
-                _this2.headerHovered = false;
-                _this2.closeRow();
-            });
-
-            // if header is fixed, also change the overflow-property of headWrap.
-            // perform this change after the slide-up transition
-            if (tm.domElements.headWrap) {
-                row.addEventListener('transitionend', function () {
-                    tm.domElements.headWrap.style.overflow = row.clientHeight > 5 ? 'visible' : 'hidden';
-                });
-            }
-        } else {
-            // keep filter row always open
-            row.style.height = FILTER_HEIGHT;
-            if (tm.domElements.headWrap) tm.domElements.headWrap.style.overflow = 'visible';
-            this.openRow();
-        }
-
-        // bind listeners for typing to start the filter operation after timeout
-        if (settings.filterAfterTimeout && !isNaN(settings.filterAfterTimeout)) {
-            row.addEventListener('keyup', function (e) {
-                clearTimeout(timeout);
-                timeout = setTimeout(function () {
-                    _this.run();
-                }, settings.filterAfterTimeout);
-            });
-        }
-
-        // this will fire when:
-        // 1. radiobutton etc. in panel clicked / selectbox changed
-        // 2. filterAfterTimeout is false, detects enter-key presses
-        row.addEventListener('change', function (e) {
-            _this2.run();
-        });
-
-        // insert toolbar row into tHead
-        this.tHead.appendChild(row);
-
         addClass(row, 'tm-filter-row');
+
+        if (!settings.autoCollapse) {
+            addClass(tm.domElements.container, 'tm-filter-keep-open');
+        }
+
+        // settings aufbereiten
+        var colSettings = settings.columns;
+        Object.keys(colSettings).forEach(function (key) {
+            if (key == 'all') return;
+            if (colSettings.hasOwnProperty(key) && isNaN(key)) {
+                var index = tm.id2index(key);
+
+                if (index != null) {
+                    index = index.toString();
+                    colSettings[index] = colSettings[key];
+                    delete colSettings[key];
+                }
+            }
+        });
+        this.columnSettings = colSettings;
+        // zellen generieren
+        var fragment = document.createDocumentFragment();
+        for (var i = 0; i < count; i++) {
+            fragment.appendChild(document.createElement('td'));
+        }
+        row.appendChild(fragment);
+        this.row = row;
+        // zellen mit funktionalität ausstatten
+        var cells = [].slice.call(row.children);
+        var evaluators = [];
+        for (var _i = 0; _i < cells.length; _i++) {
+            var cell = cells[_i],
+                _settings = this.getColumnSettings(_i),
+                handler = null;
+
+            if (_settings.enabled) {
+                handler = handlerFactory.create(_settings, _i, cell);
+                evaluators.push(handler.getEvaluator());
+            }
+            this.handlers.push(handler);
+        }
+
+        this.model.setEvaluators(evaluators);
+
+        tm.on('handlerChange', function (e) {
+            if (e === 'manuell') {
+                _this2.run();
+            } else if (e.type == 'keyup' && e.key == 'Enter') {
+                _this2.run();
+            } else if (e.type == 'keyup' && isNumber(settings.filterAfterTimeout)) {
+                clearTimeout(timeout);
+                timeout = window.setTimeout(function () {
+                    _this2.run();
+                }, settings.filterAfterTimeout);
+            } else if (e.type === 'change' && !(e.target.nodeName === 'INPUT' && e.target.type === 'text')) {
+                _this2.run();
+            }
+        });
     }
 
     _createClass(Controller, [{
-        key: 'openRow',
-        value: function openRow() {
+        key: 'setOpen',
+        value: function setOpen() {
             addClass(tm.domElements.container, 'tm-filter-open');
-            this.row.style.height = FILTER_HEIGHT;
-            return this;
         }
     }, {
-        key: 'closeRow',
-        value: function closeRow() {
-            if (semaphor.val === 0 && !this.headerHovered && !this.inputFocused) {
+        key: 'setClosed',
+        value: function setClosed() {
+            if (semaphor.val === 0) {
                 removeClass(tm.domElements.container, 'tm-filter-open');
-                this.row.style.removeProperty('height');
             }
-            return this;
         }
 
         /**
-         * returns specific settings for one column
-         * @TODO improve!!
+         *  method MUST return correct setting for a passed index!
+         * @return {object} settings
          */
 
     }, {
         key: 'getColumnSettings',
         value: function getColumnSettings(i) {
-            var cols = this.settings.columns;
+            i = i.toString();
+            var settings = void 0;
 
-            if (cols.hasOwnProperty(i)) {
-                var ret = extend2(cols[i], cols.all);
-
-                if (ret.options && ret.type == 'string') {
-                    delete ret.options.range;
-                    delete ret.options.comparator;
-                } else if (ret.options && (ret.type == 'numeric' || ret.type == 'date')) {
-                    delete ret.options.cs;
-                    delete ret.options.matching;
-                }
-
-                return ret;
+            if (this.columnSettings.hasOwnProperty(i)) {
+                settings = extend2(this.columnSettings[i], this.columnSettings.all);
+            } else {
+                settings = this.columnSettings.all;
             }
 
-            return cols.all;
+            switch (settings.type) {
+                case 'numeric':
+                    extend2(settings, defaultNumericSettings);
+                    delete settings.options.cs;
+                    delete settings.options.matching;
+                    break;
+                default:
+                    // string is default
+                    extend2(settings, defaultStringSettings);
+                    delete settings.options.comparator;
+                    delete settings.options.range;
+            }
+            return settings;
         }
+
+        /**
+         * only needed when beforeUpdate-function exists. It collects all necessary information from the handlers.
+         * @return {array} stats - collection of all options of the active handlers
+         */
+
     }, {
         key: 'getStats',
         value: function getStats() {
             return this.model.getStats();
         }
+
+        /**
+         * MAIN METHOD OF THIS CLASS.
+         * Executes the filtering operation, works directly on the data of the Tablemodify-instance (imperative style).
+         * @return {Model} this - for chaining
+         */
+
     }, {
         key: 'run',
         value: function run() {
             this.model.filter();
+            // highlight all active handlers
+            var oneOpen = false;
+            this.handlers.forEach(function (handler) {
+                if (handler !== null && handler.checkIfActive()) {
+                    oneOpen = true;
+                }
+            });
+
+            if (!oneOpen && this.settings.autoCollapse) {
+                removeClass(tm.domElements.container, 'tm-filter-keep-open');
+            } else {
+                addClass(tm.domElements.container, 'tm-filter-keep-open');
+            }
+            return this;
         }
     }]);
 
@@ -1038,11 +979,13 @@ module.exports = new Module({
     name: "filter",
     defaultSettings: {
         autoCollapse: true,
+        maxPanelsOpen: 3,
         filterAfterTimeout: 500,
         columns: {
             all: {
                 enabled: true,
-                type: 'string'
+                type: 'string',
+                options: {}
             }
         }
     },
@@ -1072,7 +1015,7 @@ module.exports = new Module({
     }
 });
 
-},{"../utils.js":15,"./filterHandlers.js":9,"./module.js":11}],9:[function(require,module,exports){
+},{"../utils.js":16,"./filterHandlers.js":10,"./module.js":12}],9:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1084,149 +1027,284 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var _require = require('../utils.js'),
-    elementIndex = _require.elementIndex,
-    isNonEmptyString = _require.isNonEmptyString,
-    addClass = _require.addClass,
-    removeClass = _require.removeClass;
-
-var tm = void 0,
-    semaphor = void 0;
-
-var unique = function () {
-    var c = 0;
-    return function () {
-        c++;
-        return c;
-    };
-}();
-
-// this value gets incremented when a panel is clicked and the panels z-Index is set to it.
-// this guarantees that the latest interesting panel is always on top layer
-var latestZIndex = 5000;
-
+    isNumber = _require.isNumber;
 /**
- * general Handler class
+ *
+ *
  */
 
-var Handler = function () {
-    function Handler() {
-        var _this2 = this;
-
-        _classCallCheck(this, Handler);
-
-        this.pattern = '';
-        this.index = null;
-
-        // create Panel
-        this.panel = document.createElement('div');
-
-        var _this = this,
-            titlePanel = document.createElement('div'),
-            contentPanel = document.createElement('div'),
-            actionButton = document.createElement('div');
-
-        this.titlePanel = titlePanel;
-        this.contentPanel = contentPanel;
-        this.actionButton = actionButton;
-
-        this.panel.appendChild(titlePanel);
-        this.panel.appendChild(contentPanel);
-        this.panel.appendChild(actionButton);
-
-        addClass(titlePanel, 'tm-filter-optionpanel-title');
-        addClass(contentPanel, 'tm-filter-optionpanel-content');
-        addClass(this.panel, 'tm-filter-optionpanel');
-        addClass(actionButton, 'tm-filter-optionpanel-actionButton');
-
-        actionButton.setAttribute('title', 'anwenden');
-
-        // this event is just for the look and therefore the listener is added here
-        this.panel.addEventListener('click', function () {
-            _this2.movePanelToTheTop();
-        });
+var Evaluator = function () {
+    function Evaluator() {
+        _classCallCheck(this, Evaluator);
     }
 
-    _createClass(Handler, [{
-        key: 'movePanelToTheTop',
-        value: function movePanelToTheTop() {
-            this.panel.style.zIndex = latestZIndex++;
-            return this;
+    _createClass(Evaluator, [{
+        key: 'contructor',
+        value: function contructor() {}
+
+        // required functions
+
+    }, {
+        key: 'update',
+        value: function update(handler) {
+            throw new Error('function update() has to be overwritten');
         }
     }, {
-        key: 'setRelatingCell',
-        value: function setRelatingCell(cell) {
-            this.relatingCell = cell;
-            cell.appendChild(this.panel);
-            return this;
+        key: 'evaluate',
+        value: function evaluate() {
+            throw new Error('function evaluate() has to be overwritten');
         }
     }, {
-        key: 'setTitle',
-        value: function setTitle(string) {
-            this.panel.children[0].innerHTML = string;
-            return this;
+        key: 'getStats',
+        value: function getStats() {
+            throw new Error('function getStats() has to be overwritten');
         }
     }, {
-        key: 'appendContent',
-        value: function appendContent(string) {
-            this.contentPanel.innerHTML += string;
-            return this;
+        key: 'isActive',
+        value: function isActive() {
+            throw new Error('function isActive() has to be overwritten');
         }
-    }, {
-        key: 'clicked',
-        value: function clicked() {
-            if (this.isVisible) {
-                this.close();
+    }]);
+
+    return Evaluator;
+}();
+
+var StringEvaluator = function (_Evaluator) {
+    _inherits(StringEvaluator, _Evaluator);
+
+    function StringEvaluator(index) {
+        _classCallCheck(this, StringEvaluator);
+
+        var _this = _possibleConstructorReturn(this, (StringEvaluator.__proto__ || Object.getPrototypeOf(StringEvaluator)).call(this));
+
+        _this.index = index;
+        _this.pattern = null;
+        _this.cs = false;
+        _this.matching = false;
+        return _this;
+    }
+
+    _createClass(StringEvaluator, [{
+        key: 'setPattern',
+        value: function setPattern(val) {
+            if (typeof val == 'string' || val === null) {
+                this.pattern = val;
             } else {
-                this.open();
+                throw new Error('parameter is not a string');
+            }
+            return this;
+        }
+    }, {
+        key: 'setCS',
+        value: function setCS(bool) {
+            if (typeof bool == 'boolean') {
+                this.cs = bool;
+            } else {
+                throw new Error('parameter is not a boolean');
+            }
+            return this;
+        }
+    }, {
+        key: 'setMatching',
+        value: function setMatching(bool) {
+            if (typeof bool == 'boolean') {
+                this.matching = bool;
+            } else {
+                throw new Error('parameter is not a boolean');
+            }
+            return this;
+        }
+    }, {
+        key: 'update',
+        value: function update(handler) {
+            this.setPattern(handler.getPattern()).setCS(handler.getCS()).setMatching(handler.getMatching());
+            return this;
+        }
+    }, {
+        key: 'evaluate',
+        value: function evaluate(val) {
+            var pattern = this.pattern;
+
+            if (!this.cs) {
+                val = val.toLowerCase();
+                pattern = pattern.toLowerCase();
+            }
+
+            if (this.matching) {
+                return val === pattern;
+            } else {
+                return val.indexOf(pattern) !== -1;
             }
         }
     }, {
-        key: 'open',
-        value: function open() {
-            this.isVisible = true;
-            semaphor.up();
-
-            var cellOffset = this.relatingCell.offsetLeft,
-                rowWidth = this.relatingCell.parentElement.clientWidth,
-                panelWidth = this.panel.clientWidth;
-
-            if (cellOffset + panelWidth > rowWidth) {
-                this.panel.style.left = rowWidth - cellOffset - panelWidth - 20 + 'px';
-            }
-
-            addClass(this.relatingCell, 'tm-filter-optionpanel-open');
-            this.movePanelToTheTop();
+        key: 'getStats',
+        value: function getStats() {
+            return {
+                type: 'string',
+                index: this.index,
+                pattern: this.pattern,
+                cs: this.cs,
+                matching: this.matching
+            };
         }
     }, {
-        key: 'close',
-        value: function close() {
-            this.isVisible = false;
-            semaphor.down();
-            removeClass(this.relatingCell, 'tm-filter-optionpanel-open');
-            this.panel.style.removeProperty('zIndex');
+        key: 'isActive',
+        value: function isActive() {
+            return this.pattern != null && this.pattern.length > 0;
+        }
+    }]);
+
+    return StringEvaluator;
+}(Evaluator);
+
+/**
+ *
+ *
+ */
+
+
+var NumericEvaluator = function (_Evaluator2) {
+    _inherits(NumericEvaluator, _Evaluator2);
+
+    function NumericEvaluator(index) {
+        _classCallCheck(this, NumericEvaluator);
+
+        var _this2 = _possibleConstructorReturn(this, (NumericEvaluator.__proto__ || Object.getPrototypeOf(NumericEvaluator)).call(this));
+
+        _this2.index = index;
+        _this2.mode = 'comparator'; // comparator or range
+        _this2.comparator = '=';
+        _this2.pattern = null;
+        _this2.minVal = null;
+        _this2.maxVal = null;
+
+        _this2.evaluate = _this2._evaluateComparator;
+        _this2._comparatorFunction = NumericEvaluator.operatorString2Function(_this2.operator);
+        return _this2;
+    }
+
+    _createClass(NumericEvaluator, [{
+        key: 'setMode',
+        value: function setMode(mode) {
+            if (mode === 'comparator') {
+                this.mode = mode;
+                this.evaluate = this._evaluateComparator;
+            } else if (mode === 'range') {
+                this.mode = mode;
+                this.evaluate = this._evaluateRange;
+            } else {
+                throw new Error('wrong mode specified');
+            }
+            return this;
+        }
+    }, {
+        key: 'setComparator',
+        value: function setComparator(op) {
+            this.comparator = op;
+            this._comparatorFunction = NumericEvaluator.operatorString2Function(op);
+            return this;
+        }
+    }, {
+        key: 'setPattern',
+        value: function setPattern(val) {
+            if (val === null || val === '') {
+                this.pattern = null;
+            } else {
+                val = parseFloat(val);
+                if (isNumber(val)) {
+                    this.pattern = val;
+                } else {
+                    throw new Error('no number passed for pattern');
+                }
+            }
+            return this;
+        }
+    }, {
+        key: 'setMinVal',
+        value: function setMinVal(val) {
+            if (val === null || val === '') {
+                this.minVal = null;
+            } else {
+                val = parseFloat(val);
+                if (isNumber(val)) {
+                    this.minVal = val;
+                } else {
+                    throw new Error('no number passed for minVal');
+                }
+            }
+            return this;
+        }
+    }, {
+        key: 'setMaxVal',
+        value: function setMaxVal(val) {
+            if (val === null || val === '') {
+                this.maxVal = null;
+            } else {
+                val = parseFloat(val);
+                if (isNumber(val)) {
+                    this.maxVal = val;
+                } else {
+                    throw new Error('no number passed for minVal');
+                }
+            }
+            return this;
+        }
+    }, {
+        key: 'update',
+        value: function update(handler) {
+            this.setMode(handler.getMode()).setComparator(handler.getComparator()).setPattern(handler.getPattern()).setMinVal(handler.getMinVal()).setMaxVal(handler.getMaxVal());
+            return this;
+        }
+    }, {
+        key: 'evaluate',
+        value: function evaluate(val) {
+            throw new Error('an error occured. this function must never be called');
+        }
+    }, {
+        key: '_evaluateRange',
+        value: function _evaluateRange(val) {
+            return (this.minVal === null || val >= this.minVal) && (this.maxVal === null || val <= this.maxVal);
+        }
+    }, {
+        key: '_evaluateComparator',
+        value: function _evaluateComparator(val) {
+            return this._comparatorFunction(val, this.pattern);
+        }
+    }, {
+        key: 'getStats',
+        value: function getStats() {
+            if (this.mode == 'comparator') {
+                return {
+                    type: 'numeric',
+                    index: this.index,
+                    mode: 'comparator',
+                    comparator: this.comparator,
+                    pattern: this.pattern
+                };
+            } else {
+                return {
+                    type: 'numeric',
+                    index: this.index,
+                    mode: 'range',
+                    minVal: this.minVal,
+                    maxVal: this.maxVal
+                };
+            }
+        }
+    }, {
+        key: 'isActive',
+        value: function isActive() {
+            if (this.mode == 'comparator') {
+                return this.pattern != null;
+            } else {
+                return this.minVal != null || this.maxVal != null;
+            }
         }
 
         /**
          * used to transform an operator-String into a function
          */
 
-    }, {
-        key: 'getOptions',
-
-
-        // these are overwritten:
-        value: function getOptions() {}
-    }, {
-        key: 'matches',
-        value: function matches(value) {}
-    }, {
-        key: 'update',
-        value: function update() {}
-    }, {
-        key: 'isActive',
-        value: function isActive() {
-            return true;
-        }
     }], [{
         key: 'operatorString2Function',
         value: function operatorString2Function(operatorString) {
@@ -1255,292 +1333,22 @@ var Handler = function () {
         }
     }]);
 
-    return Handler;
-}();
-
-/**
-* Handler class for Strings
-*   OPTIONS:
-*   cs
-*   matching
-*/
-
-
-var StringHandler = function (_Handler) {
-    _inherits(StringHandler, _Handler);
-
-    function StringHandler(settings) {
-        _classCallCheck(this, StringHandler);
-
-        // create View for stringHandler
-        var _this3 = _possibleConstructorReturn(this, (StringHandler.__proto__ || Object.getPrototypeOf(StringHandler)).call(this));
-
-        var titleString = tm.getTerm('FILTER_TITLE_STRING'),
-            csString = tm.getTerm('FILTER_CASESENSITIVE'),
-            matchingString = tm.getTerm('FILTER_MATCHING');
-
-        _this3.setTitle(titleString);
-
-        if (settings.cs) {
-            _this3.appendContent('<div><input type=\'checkbox\' class=\'tm-cs\'/><span>' + csString + '</span></div>');
-        }
-
-        if (settings.matching) {
-            _this3.appendContent('<div><input type=\'checkbox\' class=\'tm-matching\'/><span>' + matchingString + '</span></div>');
-        }
-
-        // options for this handler
-        _this3.pattern = '';
-        _this3.cs = true;
-        _this3.matching = true;
-        return _this3;
-    }
-
-    // get current settings of this handler
-
-
-    _createClass(StringHandler, [{
-        key: 'getOptions',
-        value: function getOptions() {
-            this.update();
-            return {
-                type: 'string',
-                index: this.index,
-                pattern: this.pattern,
-                matching: this.matching,
-                cs: this.cs
-            };
-        }
-    }, {
-        key: 'update',
-        value: function update() {
-            var pattern = this.relatingCell.querySelector('.tm-input-div > input').value.trim() || null;
-
-            this.cs = this.contentPanel.querySelector('input.tm-cs').checked;
-            this.matching = this.contentPanel.querySelector('input.tm-matching').checked;
-            this.pattern = pattern == null || this.cs ? pattern : pattern.toLowerCase();
-        }
-    }, {
-        key: 'matches',
-        value: function matches(tester) {
-            var pattern = this.pattern;
-
-            if (!this.cs) {
-                tester = tester.toLowerCase();
-            }
-
-            if (this.matching) {
-                return tester === pattern;
-            } else {
-                return tester.indexOf(pattern) !== -1;
-            }
-        }
-    }, {
-        key: 'isActive',
-        value: function isActive() {
-            return isNonEmptyString(this.pattern);
-        }
-    }]);
-
-    return StringHandler;
-}(Handler);
-
-/**
- * Handler class for numerics
- */
-
-
-var NumericHandler = function (_Handler2) {
-    _inherits(NumericHandler, _Handler2);
-
-    function NumericHandler(settings) {
-        _classCallCheck(this, NumericHandler);
-
-        var _this4 = _possibleConstructorReturn(this, (NumericHandler.__proto__ || Object.getPrototypeOf(NumericHandler)).call(this));
-
-        var titleString = tm.getTerm('FILTER_TITLE_NUMERIC'),
-            comparatorString = tm.getTerm('FILTER_COMPARATOR'),
-            rangeString = tm.getTerm('FILTER_RANGE'),
-            rangeLimitString = tm.getTerm('FILTER_RANGE_LIMIT');
-
-        // DOM
-        _this4.setTitle(titleString);
-
-        var id = 'handler-' + unique();
-
-        if (settings.comparator) {
-            _this4.appendContent('<div><span><input type=\'radio\' name=\'' + id + '\' value=\'comparator\' checked/></span>\n\t\t\t<span>' + comparatorString + ':</span><span>\n\t\t\t<select class=\'tm-filter-option-comparator\'>\n\t\t\t\t<option selected>=</option>\n\t\t\t\t<option>&lt;</option>\n\t\t\t\t<option>&gt;</option>\n\t\t\t\t<option>&lt;=</option>\n\t\t\t\t<option>&gt;=</option>\n\t\t\t</select></span>\n\t\t\t</div>');
-        }
-
-        if (settings.range) {
-            _this4.appendContent('<div><span><input type=\'radio\' name=\'' + id + '\' value=\'range\'/></span>\n\t\t\t<span>' + rangeString + ':</span>\n\t\t\t<span><input type=\'text\' placeholder=\'' + rangeLimitString + '\' class=\'tm-filter-range-value\' /></span>\n\t\t\t</div>');
-        }
-
-        // default options for this handler, will be overwritten
-        _this4.option = 'comparator';
-        _this4.value = '=';
-        _this4.pattern = 0;
-
-        // default internal comparator function, gets overwritten when update is called
-        _this4._internalComparatorFunction = function () {
-            throw new Exception("this must never be called");
-        };
-        return _this4;
-    }
-
-    _createClass(NumericHandler, [{
-        key: 'getOptions',
-        value: function getOptions() {
-            this.update();
-            return {
-                type: 'numeric',
-                index: this.index,
-                pattern: this.pattern, // numeric value
-                option: this.option, // range or comparator
-                value: this.value // =, <, >, <=, >= (comparator) or numeric value
-            };
-        }
-    }, {
-        key: 'update',
-        value: function update() {
-            var _this5 = this;
-
-            var pattern = this.relatingCell.querySelector('.tm-input-div > input').value.trim(),
-                comparatorRegex = /^(\s)*(<|>|=|<=|>=)(\s)*[+-]?[0-9]+(\s)*$/,
-                rangeRegex = /^(\s)*[+-]?[0-9]+(\s)*((bis)|-)(\s)*[+-]?[0-9]+(\s)*$/;
-
-            // check for pattern
-            if (comparatorRegex.test(pattern)) {
-                console.info('comparator pattern detected! (But this feature is not implemented yed...)');
-
-                // split pattern and fill values
-                var arr = pattern.match(/(<=|>=|<|>|=|[+-]?[0-9]+)/g);
-
-                if (arr.length == 2) {
-                    this.option = "comparator";
-                    this.value = arr[0];
-                    this.pattern = arr[1];
-                } else {
-                    throw new Exception("regex went wrong!");
-                }
-            } else if (rangeRegex.test(pattern)) {
-                console.info("range pattern detected!");
-
-                var _arr = pattern.match(/[+-]?[0-9]+/g);
-
-                if (_arr.length == 2) {
-                    this.option = "range";
-                    this.value = _arr[0];
-                    this.pattern = _arr[1];
-                } else {
-                    throw new Exception("regex went wrong!");
-                }
-            } else {
-                // update option, value, pattern
-                var radio = this.contentPanel.querySelector('input[type=radio]:checked'),
-                    val = void 0;
-                if (radio.value == 'comparator') {
-                    var select = this.contentPanel.querySelector('select');
-                    val = select.options[select.selectedIndex].textContent;
-                } else {
-                    val = parseFloat(this.contentPanel.querySelector('input.tm-filter-range-value').value);
-                }
-
-                this.option = radio.value;
-                this.value = val;
-                this.pattern = pattern.length > 0 ? parseFloat(pattern) : null;
-            }
-
-            // update comparator function
-            if (this.option === 'comparator') {
-
-                var c = Handler.operatorString2Function(this.value);
-                this._internalComparatorFunction = function (num) {
-                    return c(num, _this5.pattern);
-                };
-            } else if (this.option === 'range') {
-                this._internalComparatorFunction = function (num) {
-                    return num <= _this5.pattern && num >= _this5.value || num >= _this5.pattern && num <= _this5.value;
-                };
-            }
-        }
-    }, {
-        key: 'matches',
-        value: function matches(value) {
-            return this._internalComparatorFunction(parseFloat(value));
-        }
-    }, {
-        key: 'isActive',
-        value: function isActive() {
-            return this.pattern !== null && !isNaN(this.pattern);
-        }
-    }]);
-
-    return NumericHandler;
-}(Handler);
-
-/**
- * Handler class for dates
- * NOT COMPLETELY IMPLEMENTED YET
- + @TODO IMPLEMENT
- */
-
-
-var DateHandler = function (_StringHandler) {
-    _inherits(DateHandler, _StringHandler);
-
-    function DateHandler(settings) {
-        _classCallCheck(this, DateHandler);
-
-        var _this6 = _possibleConstructorReturn(this, (DateHandler.__proto__ || Object.getPrototypeOf(DateHandler)).call(this, settings));
-
-        var titleString = tm.getTerm('FILTER_TITLE_DATE');
-
-        _this6.setTitle(titleString);
-        console.info("DateHandlers are not fully implemented yet! using StringHandler instead...");
-        return _this6;
-    }
-
-    //getOptions() {}
-    //update() {}
-
-    /**
-     * method matches
-     * only this method differs from NumericHandler
-     */
-    //matches(value) {}
-
-    //isActive() {
-    //	return this.pattern !== null
-    //}
-
-
-    return DateHandler;
-}(StringHandler);
-
-/**
- *    export class Factory, handlers itself are not directly accessible
- */
-
+    return NumericEvaluator;
+}(Evaluator);
 
 module.exports = function () {
-    function Factory(tmInstance, s) {
+    function Factory() {
         _classCallCheck(this, Factory);
-
-        tm = tmInstance;
-        semaphor = s;
     }
 
     _createClass(Factory, [{
         key: 'create',
-        value: function create(type, settings) {
+        value: function create(type, index) {
             switch (type) {
-                case 'date':
-                    return new DateHandler(settings);
                 case 'numeric':
-                    return new NumericHandler(settings);
-                default:
-                    return new StringHandler(settings);
+                    return new NumericEvaluator(index);
+                case 'string':
+                    return new StringEvaluator(index);
             }
         }
     }]);
@@ -1548,7 +1356,468 @@ module.exports = function () {
     return Factory;
 }();
 
-},{"../utils.js":15}],10:[function(require,module,exports){
+},{"../utils.js":16}],10:[function(require,module,exports){
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _require = require('../utils.js'),
+    isNumber = _require.isNumber,
+    hasClass = _require.hasClass,
+    addClass = _require.addClass,
+    removeClass = _require.removeClass;
+
+var EvaluatorFactory = require('./filterEvaluators.js');
+
+var tm = void 0,
+    filterController = void 0,
+    handlerList = void 0;
+var evaluatorFactory = new EvaluatorFactory();
+var unique = function () {
+	var c = 0;
+	return function () {
+		c++;
+		return c;
+	};
+}();
+
+var Handler = function () {
+	function Handler(settings, index, cell) {
+		var _this2 = this;
+
+		_classCallCheck(this, Handler);
+
+		var _this = this;
+		this.index = index;
+		this.cell = cell;
+		this.evaluator = null;
+		this.isVisible = false;
+
+		this.cell.innerHTML = '\n            <div class=\'tm-filter-div\'></div>\n            <div class=\'tm-filter-icon\'></div>\n            <div class=\'tm-filter-panel\'>\n\t\t\t\t<div class=\'tm-filter-panel-triangle\'></div>\n                <div class=\'tm-filter-panel-title\'></div>\n                <div class=\'tm-filter-panel-content\'></div>\n\t\t\t\t<div class=\'tm-filter-panel-discard\'></div>\n            </div>';
+		this.div = this.cell.querySelector('tm-filter-div');
+		this.icon = this.cell.querySelector('.tm-filter-icon');
+		this.discardIcon = this.cell.querySelector('.tm-filter-panel-discard');
+		this.discardIcon.title = tm.getTerm('FILTER_DISCARD');
+		this.panel = this.cell.querySelector('.tm-filter-panel');
+		this.content = this.cell.querySelector('.tm-filter-panel-content');
+
+		if (settings.beautify && typeof settings.beautify == 'function') {
+			this.beautify = function (val) {
+				try {
+					return settings.beautify(val);
+				} catch (e) {
+					return false;
+				}
+			};
+		} else {
+			this.beautify = function (val) {
+				return val;
+			};
+		}
+
+		// add event Listeners
+		this.icon.addEventListener('click', function (e) {
+			if (_this2.isVisible) {
+				handlerList.setInActive(_this2);
+			} else {
+				handlerList.setActive(_this2);
+			}
+		});
+		this.discardIcon.addEventListener('click', function (e) {
+			[].slice.call(_this2.panel.querySelectorAll('input[type="text"]')).forEach(function (input) {
+				input.value = '';
+			});
+			_this2.evaluator.update(_this2);
+			// force reload
+			_this2.notifyController('manuell');
+			handlerList.setInActive(_this2);
+			e.stopPropagation();
+		});
+
+		this.panel.addEventListener('click', function (e) {
+			handlerList.setActive(_this2);
+		});
+
+		this.panel.addEventListener('change', function (e) {
+			_this2.evaluator.update(_this2);
+			_this2.notifyController(e);
+		}, false);
+
+		this.panel.addEventListener('keyup', function (e) {
+			_this2.evaluator.update(_this2);
+			_this2.notifyController(e);
+		}, false);
+	}
+
+	_createClass(Handler, [{
+		key: 'hide',
+		value: function hide() {
+			if (this.isVisible) {
+				removeClass(this.icon, 'tm-filter-icon-open');
+				this.panel.style.display = 'none';
+				this.isVisible = false;
+			}
+		}
+	}, {
+		key: 'show',
+		value: function show() {
+			if (!this.isVisible) {
+				addClass(this.icon, 'tm-filter-icon-open');
+				this.panel.style.display = 'block';
+
+				var td = this.panel.parentElement,
+				    tr = td.parentElement,
+				    rowWidth = tr.clientWidth,
+				    panelWidth = this.panel.clientWidth,
+				    cellOffset = td.offsetLeft;
+
+				if (cellOffset + panelWidth + 20 > rowWidth) {
+					addClass(this.panel, 'tm-filter-panel-rightaligned');
+				}
+
+				this.isVisible = true;
+			}
+		}
+	}, {
+		key: 'checkIfActive',
+		value: function checkIfActive() {
+			if (this.evaluator.isActive()) {
+				addClass(this.cell, 'tm-filter-active');
+				this.discardIcon.style.display = 'block';
+				return true;
+			} else {
+				removeClass(this.cell, 'tm-filter-active');
+				this.discardIcon.style.display = 'none';
+				return false;
+			}
+		}
+	}, {
+		key: 'setTitle',
+		value: function setTitle(str) {
+			this.panel.querySelector('.tm-filter-panel-title').innerHTML = str;
+		}
+	}, {
+		key: 'setZIndex',
+		value: function setZIndex(val) {
+			this.panel.style.zIndex = val;
+			return this;
+		}
+	}, {
+		key: 'setContent',
+		value: function setContent(str) {
+			var replace = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+			var content = this.panel.querySelector('.tm-filter-panel-content');
+
+			if (replace) {
+				while (content.firstChild) {
+					content.removeChild(content.firstChild);
+				}
+			}
+
+			if ((typeof str === 'undefined' ? 'undefined' : _typeof(str)) == 'object') {
+				content.appendChild(str);
+			} else if (typeof str == 'string') {
+				content.innerHTML += str;
+			}
+			return this;
+		}
+	}, {
+		key: 'getEvaluator',
+		value: function getEvaluator() {
+			return this.evaluator;
+		}
+	}, {
+		key: 'notifyController',
+		value: function notifyController(param) {
+			tm.trigger('handlerChange', param);
+		}
+	}]);
+
+	return Handler;
+}();
+
+var StringHandler = function (_Handler) {
+	_inherits(StringHandler, _Handler);
+
+	function StringHandler(settings, index, cell) {
+		_classCallCheck(this, StringHandler);
+
+		var _this3 = _possibleConstructorReturn(this, (StringHandler.__proto__ || Object.getPrototypeOf(StringHandler)).call(this, settings, index, cell));
+
+		var _this = _this3,
+		    options = settings.options;
+
+		_this3.evaluator = evaluatorFactory.create('string', index);
+		_this3.setTitle(tm.getTerm('FILTER_TITLE_STRING'));
+		addClass(_this3.panel, 'tm-filter-stringpanel');
+		var fragment = document.createDocumentFragment();
+		var div = document.createElement('div');
+		var input = document.createElement('input');
+		input.type = 'text';
+		_this3.patternInput = input;
+		div.appendChild(input);
+		fragment.appendChild(div);
+
+		if (options.cs) {
+			div = document.createElement('div');
+			input = document.createElement('input');
+			input.type = 'checkbox';
+			input.value = 'cs';
+			div.appendChild(input);
+			div.innerHTML += tm.getTerm('FILTER_CASESENSITIVE');
+			_this3.csCheckbox = input;
+			fragment.appendChild(div);
+		}
+		if (options.matching) {
+			div = document.createElement('div');
+			input = document.createElement('input');
+			input.type = 'checkbox';
+			input.value = 'matching';
+			div.appendChild(input);
+			div.innerHTML += tm.getTerm('FILTER_MATCHING');
+			_this3.matchingCheckbox = input;
+			fragment.appendChild(div);
+		}
+		_this3.setContent(fragment);
+
+		_this3.panel.addEventListener('change', function (e) {
+			var el = e.target;
+			if (el.nodeName === 'INPUT' && el.type === 'checkbox' && _this3.patternInput.value == '') {
+				e.stopPropagation();
+			}
+		}, true);
+
+		return _this3;
+	}
+
+	_createClass(StringHandler, [{
+		key: 'getPattern',
+		value: function getPattern() {
+			var pattern = this.patternInput.value;
+			if (pattern === '') {
+				return null;
+			} else {
+				return this.beautify(pattern);
+			}
+		}
+	}, {
+		key: 'getCS',
+		value: function getCS() {
+			if (this.hasOwnProperty('csCheckbox')) {
+				return this.csCheckbox.checked;
+			} else {
+				return false;
+			}
+		}
+	}, {
+		key: 'getMatching',
+		value: function getMatching() {
+			if (this.hasOwnProperty('matchingCheckbox')) {
+				return this.matchingCheckbox.checked;
+			} else {
+				return false;
+			}
+		}
+	}]);
+
+	return StringHandler;
+}(Handler);
+
+var NumericHandler = function (_Handler2) {
+	_inherits(NumericHandler, _Handler2);
+
+	function NumericHandler(settings, index, cell) {
+		_classCallCheck(this, NumericHandler);
+
+		var _this4 = _possibleConstructorReturn(this, (NumericHandler.__proto__ || Object.getPrototypeOf(NumericHandler)).call(this, settings, index, cell));
+
+		var options = settings.options;
+
+		if (!settings.beautify) {
+			_this4.beautify = function (val) {
+				return parseFloat(val);
+			};
+		}
+
+		_this4.evaluator = evaluatorFactory.create('numeric', index);
+		_this4.setTitle(tm.getTerm('FILTER_TITLE_NUMERIC'));
+		addClass(_this4.panel, 'tm-filter-numericpanel');
+
+		_this4.comparatorElement = document.createElement('div');
+		_this4.rangeElement = document.createElement('div');
+		_this4.controllerElement = document.createElement('div');
+		addClass(_this4.comparatorElement, 'tm-filter-comparator-input');
+		addClass(_this4.rangeElement, 'tm-filter-range-input');
+
+		// comparator element
+		var fragment = document.createDocumentFragment();
+		var select = document.createElement('select');
+		select.innerHTML = '\n\t\t\t<option selected>=</option>\n\t\t\t<option>&lt;</option>\n\t\t\t<option>&gt;</option>\n\t\t\t<option>&lt;=</option>\n\t\t\t<option>&gt;=</option>';
+		addClass(select, 'tm-filter-option-comparator');
+		fragment.appendChild(select);
+		_this4.comparatorSelect = select;
+		var input = document.createElement('input');
+		addClass(input, 'tm-filter-pattern');
+		input.type = 'text';
+		input.placeholder = tm.getTerm('FILTER_PLACEHOLDER');
+		fragment.appendChild(input);
+		_this4.patternInput = input;
+		_this4.comparatorElement.appendChild(fragment);
+
+		// range element
+		input = document.createElement('input');
+		input.type = 'text';
+		input.placeholder = 'von';
+		addClass(input, 'tm-filter-minVal');
+		fragment.appendChild(input);
+		_this4.minValInput = input;
+		var span = document.createElement('span');
+		span.innerHTML = '-';
+		fragment.appendChild(span);
+		input = document.createElement('input');
+		input.type = 'text';
+		input.placeholder = 'bis';
+		addClass(input, 'tm-filter-maxVal');
+		fragment.appendChild(input);
+		_this4.maxValInput = input;
+		_this4.rangeElement.appendChild(fragment);
+
+		// controller element
+		var id = 'handler-' + unique();
+
+		_this4.controllerElement.innerHTML = '<div><input type=\'radio\' name=\'' + id + '\' value=\'comparator\' checked />Vergleichsoperator</div>\n\t\t <div><input type=\'radio\' name=\'' + id + '\' value=\'range\' />Wertebereich</div>';
+
+		if (!options.range) {
+			// only enable comparator -> at least one must be set
+			_this4.setContent(_this4.comparatorElement);
+			_this4._mode = 'comparator';
+		} else if (!options.comparator) {
+			// only enable range
+			_this4.setContent(_this4.rangeElement);
+			_this4._mode = 'range';
+		} else {
+			// enable both
+			_this4.setContent(_this4.comparatorElement).setContent(_this4.controllerElement, false);
+			_this4._mode = 'comparator';
+		}
+
+		_this4.panel.addEventListener('change', function (e) {
+			var el = e.target;
+			if (el.tagName === 'SELECT' && _this4.patternInput.value === '') {
+				e.stopPropagation();
+			} else if (el.tagName === 'INPUT' && el.type === 'radio') {
+				_this4.setMode(el.value);
+				if (_this4.isAllEmpty()) e.stopPropagation();
+			}
+		}, true);
+		return _this4;
+	}
+
+	_createClass(NumericHandler, [{
+		key: 'getMode',
+		value: function getMode() {
+			return this._mode;
+		}
+	}, {
+		key: 'getComparator',
+		value: function getComparator() {
+			if (this.comparatorSelect) {
+				return this.comparatorSelect.value;
+			} else {
+				return '=';
+			}
+		}
+	}, {
+		key: '_getAnyInputValue',
+		value: function _getAnyInputValue(type) {
+			var val = this[type].value;
+			val = this.beautify(val);
+			if (!isNumber(val)) {
+				return null;
+			} else {
+				return val;
+			}
+		}
+	}, {
+		key: 'getPattern',
+		value: function getPattern() {
+			return this._getAnyInputValue('patternInput');
+		}
+	}, {
+		key: 'getMinVal',
+		value: function getMinVal() {
+			return this._getAnyInputValue('minValInput');
+		}
+	}, {
+		key: 'getMaxVal',
+		value: function getMaxVal() {
+			return this._getAnyInputValue('maxValInput');
+		}
+	}, {
+		key: 'isAllEmpty',
+		value: function isAllEmpty() {
+			return this.getPattern() === null && this.getMinVal() === null && this.getMaxVal() === null;
+		}
+	}, {
+		key: 'setMode',
+		value: function setMode(mode) {
+			var panel = this.panel;
+			if (mode == 'comparator') {
+				this.content.replaceChild(this.comparatorElement, panel.querySelector('div.tm-filter-range-input'));
+				this._mode = mode;
+				//this.evaluator.setMode(mode)
+			} else if (mode == 'range') {
+				this.content.replaceChild(this.rangeElement, panel.querySelector('div.tm-filter-comparator-input'));
+				this._mode = mode;
+				//this.evaluator.setMode(mode)
+			} else {
+				throw new Exception('invalid mode value passed');
+			}
+		}
+	}]);
+
+	return NumericHandler;
+}(Handler);
+
+/**
+ *    export class Factory, handlers itself are not directly accessible
+ */
+
+
+module.exports = function () {
+	function Factory(tmInstance, fc, hl) {
+		_classCallCheck(this, Factory);
+
+		tm = tmInstance;
+		filterController = fc;
+		handlerList = hl;
+	}
+
+	_createClass(Factory, [{
+		key: 'create',
+		value: function create(settings, index, cell) {
+			switch (settings.type) {
+				case 'numeric':
+					return new NumericHandler(settings, index, cell);
+				default:
+					return new StringHandler(settings, index, cell);
+			}
+		}
+	}]);
+
+	return Factory;
+}();
+
+},{"../utils.js":16,"./filterEvaluators.js":9}],11:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1646,6 +1915,11 @@ var Fixed = function () {
             if (headTable) {
                 window.addEventListener('resize', function () {
                     _this.renderHead();
+                    if (tm.domElements.table.clientWidth > tm.domElements.tableWrap.clientWidth) {
+                        tm.domElements.tableWrap.style.overflowX = 'scroll';
+                    } else {
+                        tm.domElements.tableWrap.style.overflowX = 'auto';
+                    }
                 });
             }
 
@@ -1784,11 +2058,43 @@ module.exports = new Module({
             renderHead: instance.renderHead,
             renderFoot: instance.renderFoot
 
+            /**
+             * revert all changes performed by this module
+             * implementation might not be 100% correct yet
+             */
+            /*
+            unset: () => {
+               const INITIAL = 'initial';
+               try {
+                   removeClass(container, 'tm-fixed');
+                   if (headWrap) {
+                       container.removeChild(headWrap);
+                       origHead.style.visibility = INITIAL;
+                       body.style.marginTop = 0;
+                   }
+                   if (footWrap) {
+                       container.removeChild(footWrap);
+                       origFoot.style.visibility = INITIAL;
+                       tableWrap.style.overflowX = INITIAL;
+                       tableWrap.style.marginBottom = INITIAL;
+                         // remove footer helper wrappers
+                       let wrappers = origFoot.querySelectorAll('div.tm-fixed-helper-wrapper');
+                         [].slice.call(wrappers).forEach((wrapper) => {
+                           wrapper.outerHTML = wrapper.innerHTML;
+                       });
+                   }
+                     window.removeEventListener('resize', renderHead);
+                   window.removeEventListener('resize', renderFoot);
+                   body.removeEventListener('tmFixedForceRendering', renderHead);
+               } catch(e) {
+                   error(e);
+               }
+            }*/
         };
     }
 });
 
-},{"../utils.js":15,"./module.js":11}],11:[function(require,module,exports){
+},{"../utils.js":16,"./module.js":12}],12:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1882,7 +2188,7 @@ module.exports = function () {
     return Module;
 }();
 
-},{"../utils.js":15}],12:[function(require,module,exports){
+},{"../utils.js":16}],13:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -2183,7 +2489,7 @@ module.exports = new Module({
 	}
 });
 
-},{"../utils.js":15,"./module.js":11}],13:[function(require,module,exports){
+},{"../utils.js":16,"./module.js":12}],14:[function(require,module,exports){
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -2714,7 +3020,7 @@ module.exports = new Module({
     }
 });
 
-},{"../dateUtils.js":4,"../utils.js":15,"./module.js":11}],14:[function(require,module,exports){
+},{"../dateUtils.js":4,"../utils.js":16,"./module.js":12}],15:[function(require,module,exports){
 "use strict";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -3401,6 +3707,7 @@ Tablemodify.modules = {
 
 Tablemodify.languages = {
     en: new Language('en', {
+        FILTER_DISCARD: 'discard filter',
         FILTER_PLACEHOLDER: 'type filter here',
         FILTER_CASESENSITIVE: 'case-sensitive',
         FILTER_MATCHING: 'matching',
@@ -3413,9 +3720,10 @@ Tablemodify.languages = {
         PAGER_PAGENUMBER_SEPARATOR: ' / '
     }),
     de: new Language('de', {
+        FILTER_DISCARD: 'Eingabe verwerfen',
         FILTER_PLACEHOLDER: 'Filter eingeben',
-        FILTER_CASESENSITIVE: 'Gro&szlig;- und Kleinschreibung unterscheiden',
-        FILTER_MATCHING: 'Genaue &Uuml;bereinstimmung',
+        FILTER_CASESENSITIVE: 'Gro&szlig; - und Kleinschreibung unterscheiden',
+        FILTER_MATCHING: 'Exakte Suche',
         FILTER_COMPARATOR: 'Vergleichsoperator',
         FILTER_RANGE: 'Zahlenbereich',
         FILTER_RANGE_LIMIT: 'obere Grenze',
@@ -3430,11 +3738,11 @@ Tablemodify.Language = Language;
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
 // set version of Tablemodify
-Tablemodify.version = 'v0.9.5';
+Tablemodify.version = 'v0.9.6';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;
 
-},{"./actionPipeline.js":2,"./config.js":3,"./eventSystem.js":5,"./language.js":6,"./modules/columnStyles.js":7,"./modules/filter.js":8,"./modules/fixed.js":10,"./modules/module.js":11,"./modules/pager.js":12,"./modules/sorter.js":13,"./utils.js":15}],15:[function(require,module,exports){
+},{"./actionPipeline.js":2,"./config.js":3,"./eventSystem.js":5,"./language.js":6,"./modules/columnStyles.js":7,"./modules/filter.js":8,"./modules/fixed.js":11,"./modules/module.js":12,"./modules/pager.js":13,"./modules/sorter.js":14,"./utils.js":16}],16:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -3598,9 +3906,11 @@ var isObj = exports.isObject = function (o) {
 exports.isFn = function (f) {
     return typeof f === 'function';
 };
-
 exports.isBool = function (b) {
     return typeof b === 'boolean';
+};
+exports.isNumber = function (val) {
+    return typeof val == 'number' && !isNaN(val);
 };
 
 var getProp = exports.getProperty = function (obj) {
@@ -3661,7 +3971,7 @@ exports.replaceIdsWithIndices = function (columns) {
     return columns;
 };
 
-// fastest way to clone an array 
+// fastest way to clone an array
 exports.cloneArray = function (arr) {
     var ret = [],
         i = arr.length;
@@ -3690,4 +4000,4 @@ exports.debounce = function (func, wait, immediate) {
     };
 };
 
-},{"./config.js":3}]},{},[14]);
+},{"./config.js":3}]},{},[15]);

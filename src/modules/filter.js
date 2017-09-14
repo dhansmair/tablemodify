@@ -1,119 +1,249 @@
-const {addClass, removeClass, hasClass, iterate, info, error, replaceIdsWithIndices, extend2, cloneArray, isNonEmptyString, debounce} = require('../utils.js');
+const {hasClass, addClass, removeClass, extend2, isNumber, log, info, error} = require('../utils.js');
 const Module = require('./module.js');
 const HandlerFactory = require('./filterHandlers.js');
 
-const FILTER_HEIGHT = '30px';
+let tm
 
-let tm;
-
-/*
-    @TODO:
-    implemented shortcuts like <,>, = etc for numerics. Filter with regex.
-    now test it for correct behaviour.
-
-    comparator:
-    /^(\s)*(<|>|=|<=|>=)(\s)*[+-]?[0-9]+(\s)*$/.test(" >= -500")
-
-    range:
-    /^(\s)*[+-]?[0-9]+(\s)*-(\s)*[+-]?[0-9]+(\s)*$/.test("-1 - -5")
-*/
-
-// for call-by-reference passing to the filterHandler.js file.
-// this has to be accessible from filterHandler AND this file.
-let semaphor = {
-    val: 0,
-    up() {this.val++},
-    down() {this.val--}
-};
-
-function isPatternInput(el) {
-    return hasClass(el.parentElement, 'tm-input-div')
-}
-
-/**
- *   Factory class to produce filter cells
- */
-class CellFactory {
+class HandlerList {
     constructor() {
-        let placeholder = tm.getTerm('FILTER_PLACEHOLDER'),
-            caseSensitive = tm.getTerm('FILTER_CASESENSITIVE')
-
-        this.handlerFactory = new HandlerFactory(tm, semaphor)
-        // option icon
-        this.optionIcon = document.createElement('div')
-        this.cell = document.createElement('td')
-        this.cell.innerHTML = `<div class='tm-input-div'><input type='text' placeholder='${placeholder}' /></div>`
-
-        addClass(this.optionIcon, 'tm-filter-option-icon')
+        this.list = []
+        this.limit = 1
     }
 
-    /**
-     * decide if the cell should have an option dropdown
-     * @param {object} options -
-     * @return {boolean} - options visible or not?
-     */
-    _optionsVisible(options) {
-    	if (!options) return false
-    	let keys = Object.keys(options)
-    	for (let i = 0; i < keys.length; i++) {
-    		if (options[keys[i]]) return true
-    	}
-    	return false
+    setLimit(val) {
+        this.limit = val
     }
-    /**
-     *  create a pair of cell and handler
-     *  @param {object} colSettings - information about which features the panel should provide
-     *  @param {number} i - index of the cell
-     *  @return {object} - looks like: {cell: <cell HTML-element>, handler: <handler object>}
-     */
-    create(colSettings, i) {
-        if (!colSettings.enabled) return document.createElement('td')
 
-        let ret = {},
-            cell = this.cell.cloneNode(true)
-        ret.cell = cell
+    countShown() {
+        return this.list.length
+    }
 
-        // attach option pane to the cell
-        if (this._optionsVisible(colSettings.options)) {
-            let optionIcon = this.optionIcon.cloneNode('true')
-            cell.appendChild(optionIcon)
+    hideAll() {
+        while (this.list.length > 0)
+            this.setInActive(this.list[0])
+    }
 
-        	let handler = this.handlerFactory.create(colSettings.type, colSettings.options)
-            handler.index = i
-            // append handler HTML-elements to the cell
-            handler.setRelatingCell(cell);
-            ret.handler = handler
+    setActive(handler) {
+        if (this.list.length === 0) {
+            addClass(tm.domElements.container, 'tm-filter-open')
         }
 
-        return ret;
+        let index = this.list.indexOf(handler)
+        if (index !== -1) this.list.splice(index, 1)
+        if (this.list.length == this.limit) {
+            let odd = this.list.shift()
+            odd.hide()
+        }
+        this.list.push(handler)
+        handler.show()
+        this._setZIndices()
+    }
+
+    setInActive(handler) {
+        let index = this.list.indexOf(handler)
+        if (index !== -1) {
+            this.list.splice(index, 1)
+            handler.hide()
+            this._setZIndices()
+        }
+
+        if (this.list.length === 0) {
+            removeClass(tm.domElements.container, 'tm-filter-open')
+        }
+    }
+
+    _setZIndices() {
+        let offset = 10
+        for (let i = 0; i < this.list.length; i++) {
+            this.list[i].setZIndex(offset+i)
+        }
+    }
+}
+let handlerList = new HandlerList()
+
+let defaultStringSettings = {
+    enabled: true,
+    type: 'string',
+    options: {
+        cs: false,
+        matching: false
+    }
+},
+defaultNumericSettings = {
+    enabled: true,
+    type: 'numeric',
+    options: {
+        comparator: true,
+        range: true
     }
 }
 
 class Model {
-    constructor(controller, settings) {
-        this.controller = controller
+    constructor() {
+        this.evaluators = null
+    }
+
+    setEvaluators(evaluators) {
+        this.evaluators = evaluators
+    }
+
+    getStats() {
+        let ret = []
+        for (let i = 0; i < this.evaluators.length; i++) {
+            let evaluator = this.evaluators[i]
+            if (evaluator.isActive()) {
+                let stats = evaluator.getStats()
+                ret.push(stats)
+            }
+        }
+        return ret
+    }
+
+    filter() {
+        if (tm.beforeUpdate('filter')) {
+            let all = tm.getAllRows(),
+                matching,
+                activeEvaluators = this.evaluators.filter((evaluator) => {return evaluator.isActive()})
+
+            if (activeEvaluators.length === 0) {
+                tm.setAvailableRows(all)
+            } else {
+                const maxDeph = activeEvaluators.length
+
+                matching = all.filter((row) => {
+                    let deph = 0, matches = true
+
+                    while (matches && deph < maxDeph) {
+                        let evaluator = activeEvaluators[deph],
+                            i = evaluator.index,
+    	            		cellContent = row.cells[i].textContent
+                        matches = evaluator.evaluate(cellContent)
+    	            	deph++
+    	            }
+                    return matches
+                })
+                tm.setAvailableRows(matching)
+            }
+            tm.actionPipeline.notify('filter') // tell successor that an action took place
+        }
+        return this
+    }
+}
+
+
+class Controller {
+    constructor(settings) {
+        // attribute
+        this.settings = settings
         this.handlers = []
-    }
+        this.model = new Model()
+        handlerList.setLimit(settings.maxPanelsOpen)
 
-    /**
-     *  setter for handlers. called by the controller, only once
-     *  @param {array} handlers
-     *  @return {Model} this - for chaining
-     */
-    setHandlers(handlers) {
-        this.handlers = handlers
-        return this
-    }
+        // basic setup
+        let _this = this,
+            timeout,
+            tHead = tm.domElements.head,
+            count = tHead.firstElementChild.children.length,
+            row = document.createElement('tr'),
+            handlerFactory = new HandlerFactory(tm, this, handlerList)
+        tHead.appendChild(row)
+        addClass(row, 'tm-filter-row')
 
-    /**
-     *  divide and conquer - tell all handlers to update it's settings from the view.
-     *  @return {Model} this - for chaining
-     */
-    updateHandlers() {
-        this.handlers.forEach((handler) => {
-            if (handler != null) handler.update()
+        if (!settings.autoCollapse) {
+            addClass(tm.domElements.container, 'tm-filter-keep-open')
+        }
+
+        // settings aufbereiten
+        let colSettings = settings.columns
+        Object.keys(colSettings).forEach((key) => {
+            if (key == 'all') return;
+            if (colSettings.hasOwnProperty(key) && isNaN(key)) {
+                let index = tm.id2index(key)
+
+                if (index != null) {
+                    index = index.toString()
+                    colSettings[index] = colSettings[key]
+                    delete colSettings[key]
+                }
+            }
         })
-        return this
+        this.columnSettings = colSettings
+        // zellen generieren
+        let fragment = document.createDocumentFragment()
+        for (let i = 0; i < count; i++) {
+            fragment.appendChild(document.createElement('td'))
+        }
+        row.appendChild(fragment)
+        this.row = row
+        // zellen mit funktionalität ausstatten
+        let cells = [].slice.call(row.children)
+        let evaluators = []
+        for (let i = 0; i < cells.length; i++) {
+            let cell = cells[i],
+                settings = this.getColumnSettings(i),
+                handler = null
+
+            if (settings.enabled) {
+                handler = handlerFactory.create(settings, i, cell)
+                evaluators.push(handler.getEvaluator())
+            }
+            this.handlers.push(handler)
+        }
+
+        this.model.setEvaluators(evaluators)
+
+        tm.on('handlerChange', (e) => {
+            if (e === 'manuell') {
+                this.run()
+            } else if (e.type == 'keyup' && e.key == 'Enter') {
+                this.run()
+            } else if (e.type == 'keyup' && isNumber(settings.filterAfterTimeout)) {
+                clearTimeout(timeout)
+    			timeout = window.setTimeout(() => {
+    				this.run()
+    			}, settings.filterAfterTimeout)
+            } else if (e.type === 'change' && !(e.target.nodeName === 'INPUT' && e.target.type === 'text')) {
+                this.run()
+            }
+        })
+    }
+
+    setOpen() {
+        addClass(tm.domElements.container, 'tm-filter-open')
+    }
+
+    setClosed() {
+        if (semaphor.val === 0) {
+            removeClass(tm.domElements.container, 'tm-filter-open')
+        }
+    }
+
+    /**
+     *  method MUST return correct setting for a passed index!
+     * @return {object} settings
+     */
+    getColumnSettings(i) {
+        i = i.toString()
+        let settings
+
+        if (this.columnSettings.hasOwnProperty(i)) {
+            settings = extend2(this.columnSettings[i], this.columnSettings.all)
+        } else {
+            settings = this.columnSettings.all
+        }
+
+        switch(settings.type) {
+            case 'numeric':
+                extend2(settings, defaultNumericSettings)
+                delete settings.options.cs
+                delete settings.options.matching
+                break;
+            default: // string is default
+                extend2(settings, defaultStringSettings)
+                delete settings.options.comparator
+                delete settings.options.range
+        }
+        return settings
     }
 
     /**
@@ -121,12 +251,7 @@ class Model {
      * @return {array} stats - collection of all options of the active handlers
      */
     getStats() {
-        let ret = []
-        this.handlers.forEach((handler) => {
-            let stats = handler.getOptions()
-            if (handler.isActive()) ret.push(stats)
-        })
-        return ret
+        return this.model.getStats()
     }
 
     /**
@@ -134,210 +259,44 @@ class Model {
      * Executes the filtering operation, works directly on the data of the Tablemodify-instance (imperative style).
      * @return {Model} this - for chaining
      */
-    filter() {
-        if (tm.beforeUpdate('filter')) {
-            this.updateHandlers()
-            let all = tm.getAllRows(),
-                matching,
-                activeHandlers = this.handlers.filter((handler) => {return handler.isActive()})
-
-            if (activeHandlers.length === 0) {
-                // no filtering at all
-                tm.setAvailableRows(all)
-            } else {
-                const maxDeph = activeHandlers.length;
-
-                matching = all.filter((row) => {
-                    let deph = 0, matches = true;
-
-                    while (matches && deph < maxDeph) {
-                        let handler = activeHandlers[deph],
-                            j = handler.index,
-    	            		cellContent = row.cells[j].textContent
-                        matches = handler.matches(cellContent)
-    	            	deph++
-    	            }
-                    return matches
-                })
-
-                tm.setAvailableRows(matching)
-            }
-
-	        tm.actionPipeline.notify('filter') // tell successor that an action took place
-            return this
-        }
-    }
-}
-
-class Controller {
-    constructor(settings) {
-        // create cells and cellHandlers
-        let cellFactory = new CellFactory(),
-            _this = this,
-            tHead = tm.domElements.head,
-            count = tHead.firstElementChild.children.length,
-            row = document.createElement('tr'),
-            handlers = [],
-            timeout
-
-        this.settings = settings
-
-        this.headerHovered = false
-        this.inputFocused = false
-        this.tHead = tHead
-        this.row = row
-
-        for (let i = 0; i < count; i++) {
-            let bundle = cellFactory.create(this.getColumnSettings(i), i)
-            row.appendChild(bundle.cell)
-
-            if (bundle.handler) {
-                // this listener has to be added from outside the handlerFactory to be able to call run()
-                bundle.handler.actionButton.addEventListener('click', () => {this.run()})
-                bundle.cell.querySelector('div.tm-filter-option-icon').addEventListener('click', () => {
-                    bundle.handler.clicked()
-                })
-            }
-
-            handlers.push(bundle.handler || null)
-        }
-
-        this.model = new Model(this, settings)
-        this.model.setHandlers(handlers)
-
-        addClass(row, 'tm-filter-row')
-
-        tHead.appendChild(row)
-
-        if (settings.autoCollapse){
-            // keep filter row opened if an input is focused
-            tHead.addEventListener('focusin', (e) => {
-                if (isPatternInput(e.originalTarget || e.target)) {
-                    this.inputFocused = true
-                    this.openRow()
-                }
-            })
-
-            // release forced open row
-            tHead.addEventListener('focusout', (e) => {
-                if (isPatternInput(e.originalTarget || e.target)) {
-                    this.inputFocused = false
-                    this.closeRow()
-                }
-            })
-
-            // slide-up and slide-down on hover and blur
-            this.tHead.addEventListener('mouseenter', () => {
-                this.headerHovered = true
-                this.openRow()
-            })
-
-            this.tHead.addEventListener('mouseleave', () => {
-                this.headerHovered = false
-                this.closeRow()
-            })
-
-            // if header is fixed, also change the overflow-property of headWrap.
-            // perform this change after the slide-up transition
-            if (tm.domElements.headWrap) {
-                row.addEventListener('transitionend', () => {
-        			tm.domElements.headWrap.style.overflow = (row.clientHeight > 5) ? 'visible' : 'hidden'
-        		})
-            }
-
-        } else {
-            // keep filter row always open
-            row.style.height = FILTER_HEIGHT
-            if (tm.domElements.headWrap) tm.domElements.headWrap.style.overflow = 'visible'
-            this.openRow()
-        }
-
-        // bind listeners for typing to start the filter operation after timeout
-        if (settings.filterAfterTimeout && !isNaN(settings.filterAfterTimeout)) {
-            row.addEventListener('keyup', (e) => {
-                clearTimeout(timeout)
-                timeout = setTimeout(() => {
-                    _this.run()
-                }, settings.filterAfterTimeout)
-            })
-        }
-
-        // this will fire when:
-        // 1. radiobutton etc. in panel clicked / selectbox changed
-        // 2. filterAfterTimeout is false, detects enter-key presses
-        row.addEventListener('change', (e) => {
-            this.run()
-        })
-
-        // insert toolbar row into tHead
-        this.tHead.appendChild(row)
-
-        addClass(row, 'tm-filter-row')
-	}
-
-	openRow() {
-		addClass(tm.domElements.container, 'tm-filter-open')
-        this.row.style.height = FILTER_HEIGHT
-		return this
-	}
-
-	closeRow() {
-		if (semaphor.val === 0 && !this.headerHovered && !this.inputFocused) {
-			removeClass(tm.domElements.container, 'tm-filter-open')
-            this.row.style.removeProperty('height')
-    	}
-		return this
-	}
-
-    /**
-     * returns specific settings for one column
-     * @TODO improve!!
-     */
-    getColumnSettings(i) {
-    	let cols = this.settings.columns
-
-    	if (cols.hasOwnProperty(i)) {
-    		let ret = extend2(cols[i], cols.all)
-
-    		if (ret.options && ret.type == 'string') {
-        		delete ret.options.range
-        		delete ret.options.comparator
-        	} else if (ret.options && (ret.type == 'numeric' || ret.type == 'date')) {
-        		delete ret.options.cs
-        		delete ret.options.matching
-        	}
-
-    		return ret
-    	}
-
-    	return cols.all
-    }
-
-    getStats() {
-        return this.model.getStats()
-    }
-
     run() {
         this.model.filter()
+        // highlight all active handlers
+        let oneOpen = false
+        this.handlers.forEach((handler) => {
+            if (handler !== null && handler.checkIfActive()) {
+                oneOpen = true
+            }
+        })
+
+        if (!oneOpen && this.settings.autoCollapse) {
+            removeClass(tm.domElements.container, 'tm-filter-keep-open')
+        } else {
+            addClass(tm.domElements.container, 'tm-filter-keep-open')
+        }
+        return this
     }
 }
+
 
 module.exports = new Module({
     name: "filter",
     defaultSettings: {
         autoCollapse: true,
+        maxPanelsOpen: 3,
         filterAfterTimeout: 500,
         columns: {
             all: {
                 enabled: true,
-                type: 'string'
+                type: 'string',
+                options: {}
             }
         }
     },
     initializer: function(settings) {
         // this := Tablemodify-instance
         try {
-            tm = this;
+            tm = this
             addClass(tm.domElements.container, 'tm-filter')
             let instance = new Controller(settings)
             info('module filter loaded')

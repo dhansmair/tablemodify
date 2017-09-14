@@ -81,7 +81,7 @@ div.tm-container.tm-theme-prompt.tm-filter tr.tm-filter-row td {
   border-bottom: 1px solid #DCDCDC;
   border-right: 1px solid #DCDCDC;
 }
-div.tm-container.tm-theme-prompt.tm-filter tr.tm-filter-row div.tm-filter-optionpanel {
+div.tm-container.tm-theme-prompt.tm-filter tr.tm-filter-row div.tm-filter-panel {
   webkit-box-shadow: 0px 5px 10px 0px #d4d4d4;
   -moz-box-shadow: 0px 5px 10px 0px #d4d4d4;
   box-shadow: 0px 5px 10px 0px #d4d4d4;

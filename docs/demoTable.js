@@ -78,7 +78,7 @@ var factory = {
 document.addEventListener('DOMContentLoaded', function() {
     tm = new Tablemodify('#test', {
         theme: 'bootstrap',
-        language: 'en',
+        language: 'de',
         containerId: 'meinContainer',
         transition: 'fade',
         /*
@@ -105,8 +105,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             },
             filter: {
-                filterAfterTimeout: 500,
-                autoCollapse: true,
+                filterAfterTimeout: 888,
+                autoCollapse: false,
                 columns: {
                     all: {
                         type: 'string',
@@ -117,6 +117,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     3: {
                         type: 'numeric',
+                        beautify: function(val) {
+                            val = val.replace('.', '').replace(',', '.')
+                            return parseFloat(val)    
+                        },
                         options: {
                             comparator: true,
                             range: true

@@ -78,6 +78,11 @@ class Fixed {
             if (headTable) {
                 window.addEventListener('resize', () => {
                     _this.renderHead();
+                    if (tm.domElements.table.clientWidth > tm.domElements.tableWrap.clientWidth) {
+                        tm.domElements.tableWrap.style.overflowX = 'scroll'
+                    } else {
+                        tm.domElements.tableWrap.style.overflowX = 'auto'
+                    }
                 });
             }
 
