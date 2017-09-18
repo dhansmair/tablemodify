@@ -189,8 +189,7 @@
         d.isPm = true;
       }
     }],
-    ZZ: [/([\+\-]\d\d:?\d\d|Z)/, function (d, v) {
-      if (v === 'Z') v = '+00:00';
+    ZZ: [/[\+\-]\d\d:?\d\d/, function (d, v) {
       var parts = (v + '').match(/([\+\-]|\d\d)/gi), minutes;
 
       if (parts) {
@@ -211,7 +210,7 @@
 
   // Some common format strings
   fecha.masks = {
-    default: 'ddd MMM DD YYYY HH:mm:ss',
+    'default': 'ddd MMM DD YYYY HH:mm:ss',
     shortDate: 'M/D/YY',
     mediumDate: 'MMM D, YYYY',
     longDate: 'MMMM D, YYYY',
@@ -2058,38 +2057,6 @@ module.exports = new Module({
             renderHead: instance.renderHead,
             renderFoot: instance.renderFoot
 
-            /**
-             * revert all changes performed by this module
-             * implementation might not be 100% correct yet
-             */
-            /*
-            unset: () => {
-               const INITIAL = 'initial';
-               try {
-                   removeClass(container, 'tm-fixed');
-                   if (headWrap) {
-                       container.removeChild(headWrap);
-                       origHead.style.visibility = INITIAL;
-                       body.style.marginTop = 0;
-                   }
-                   if (footWrap) {
-                       container.removeChild(footWrap);
-                       origFoot.style.visibility = INITIAL;
-                       tableWrap.style.overflowX = INITIAL;
-                       tableWrap.style.marginBottom = INITIAL;
-                         // remove footer helper wrappers
-                       let wrappers = origFoot.querySelectorAll('div.tm-fixed-helper-wrapper');
-                         [].slice.call(wrappers).forEach((wrapper) => {
-                           wrapper.outerHTML = wrapper.innerHTML;
-                       });
-                   }
-                     window.removeEventListener('resize', renderHead);
-                   window.removeEventListener('resize', renderFoot);
-                   body.removeEventListener('tmFixedForceRendering', renderHead);
-               } catch(e) {
-                   error(e);
-               }
-            }*/
         };
     }
 });
@@ -2214,14 +2181,9 @@ var Controller = function () {
 		var _this = this;
 		this.pager = pager;
 
-		//extend2(this, sets);
-
 		Object.keys(sets).forEach(function (key) {
-			if (sets[key] == null) {
-				throw new Exception(key + ' setting must be set!');
-			} else {
-				_this[key] = document.querySelector(sets[key]);
-			}
+			if (sets[key] == null) throw new Exception(key + ' setting must be set!');
+			_this[key] = sets[key] instanceof Element ? sets[key] : document.querySelector(sets[key]);
 		});
 
 		this.left.addEventListener('click', function () {
@@ -2254,8 +2216,7 @@ var Controller = function () {
 			} else if (val > _this.getTotalPages()) {
 				val = _this.getTotalPages();
 			}
-			_this.setCurrentPageNumber(val);
-			_this.pager.update().run();
+			_this.setCurrentPageNumber(val).pager.update().run();
 		});
 
 		this.limit.addEventListener('change', function () {
@@ -2339,8 +2300,6 @@ var Controller = function () {
 			var totalPages = this.getTotalPages();
 			if (this.getCurrentPageNumber() > totalPages) {
 				this.setCurrentPageNumber(totalPages);
-
-				//this.pager.update().run();
 			}
 			return this;
 		}
