@@ -1,6 +1,8 @@
-const {elementIndex, isNonEmptyString, addClass, removeClass} = require('../utils.js');
-let tm, semaphor;
+const {isNumber, hasClass, addClass, removeClass} = require('../utils.js');
+const EvaluatorFactory = require('./filterEvaluators.js');
 
+let tm, filterController, handlerList
+let evaluatorFactory = new EvaluatorFactory()
 let unique = (function() {
 	let c = 0
 	return function() {
@@ -9,372 +11,387 @@ let unique = (function() {
 	}
 }())
 
-// this value gets incremented when a panel is clicked and the panels z-Index is set to it.
-// this guarantees that the latest interesting panel is always on top layer
-let latestZIndex = 5000
-
-/**
- * general Handler class
- */
 class Handler {
-    constructor() {
+    constructor(settings, index, cell) {
+		let _this = this
+		this.index = index
+        this.cell = cell
+		this.evaluator = null
+		this.isVisible = false
 
-        this.pattern = ''
-        this.index = null
+        this.cell.innerHTML = `
+            <div class='tm-filter-div'></div>
+            <div class='tm-filter-icon'></div>
+            <div class='tm-filter-panel'>
+				<div class='tm-filter-panel-triangle'></div>
+                <div class='tm-filter-panel-title'></div>
+                <div class='tm-filter-panel-content'></div>
+				<div class='tm-filter-panel-discard'></div>
+            </div>`
+		this.div = this.cell.querySelector('tm-filter-div')
+		this.icon = this.cell.querySelector('.tm-filter-icon')
+		this.discardIcon = this.cell.querySelector('.tm-filter-panel-discard')
+		this.discardIcon.title = tm.getTerm('FILTER_DISCARD')
+        this.panel = this.cell.querySelector('.tm-filter-panel')
+		this.content = this.cell.querySelector('.tm-filter-panel-content')
 
-        // create Panel
-        this.panel = document.createElement('div')
-
-		let _this = this,
-			titlePanel = document.createElement('div'),
-			contentPanel = document.createElement('div'),
-			actionButton = document.createElement('div')
-
-		this.titlePanel = titlePanel
-		this.contentPanel = contentPanel
-		this.actionButton = actionButton
-
-		this.panel.appendChild(titlePanel)
-		this.panel.appendChild(contentPanel)
-		this.panel.appendChild(actionButton)
-
-		addClass(titlePanel, 'tm-filter-optionpanel-title')
-		addClass(contentPanel, 'tm-filter-optionpanel-content')
-		addClass(this.panel, 'tm-filter-optionpanel')
-		addClass(actionButton, 'tm-filter-optionpanel-actionButton')
-
-		actionButton.setAttribute('title', 'anwenden')
-
-		// this event is just for the look and therefore the listener is added here
-		this.panel.addEventListener('click', () => {
-			this.movePanelToTheTop()
-		})
-    }
-
-	movePanelToTheTop() {
-		this.panel.style.zIndex = latestZIndex++
-		return this
-	}
-
-    setRelatingCell(cell) {
-        this.relatingCell = cell
-        cell.appendChild(this.panel)
-		return this
-    }
-
-    setTitle(string) {
-        this.panel.children[0].innerHTML = string
-		return this
-    }
-
-    appendContent(string) {
-        this.contentPanel.innerHTML += string
-		return this
-    }
-
-    clicked() {
-        if (this.isVisible) {
-            this.close()
-        } else {
-            this.open()
-        }
-    }
-
-    open() {
-        this.isVisible = true
-        semaphor.up()
-
-        let cellOffset = this.relatingCell.offsetLeft,
-	        rowWidth = this.relatingCell.parentElement.clientWidth,
-        	panelWidth = this.panel.clientWidth
-
-        if (cellOffset + panelWidth > rowWidth) {
-            this.panel.style.left = (rowWidth - cellOffset - panelWidth - 20) + 'px'
-        }
-
-		addClass(this.relatingCell, 'tm-filter-optionpanel-open')
-		this.movePanelToTheTop()
-    }
-
-    close() {
-        this.isVisible = false
-        semaphor.down()
-		removeClass(this.relatingCell, 'tm-filter-optionpanel-open')
-		this.panel.style.removeProperty('zIndex')
-    }
-
-
-    /**
-     * used to transform an operator-String into a function
-     */
-    static operatorString2Function(operatorString) {
-		switch(operatorString) {
-			case '<': return function(a, b) {return a < b}
-			case '>': return function(a, b) {return a > b}
-			case '<=': return function(a, b) {return a <= b}
-			case '>=': return function(a, b) {return a >= b}
-			default: return function(a, b) {return a == b}
-		}
-	}
-
-    // these are overwritten:
-    getOptions() {}
-    matches(value) {}
-    update() {}
-
-    isActive() {
-        return true
-    }
-}
-
-/**
-* Handler class for Strings
-*   OPTIONS:
-*   cs
-*   matching
-*/
-class StringHandler extends Handler {
-    constructor(settings) {
-        super();
-
-        // create View for stringHandler
-        let titleString = tm.getTerm('FILTER_TITLE_STRING'),
-        	csString = tm.getTerm('FILTER_CASESENSITIVE'),
-        	matchingString = tm.getTerm('FILTER_MATCHING')
-
-        this.setTitle(titleString)
-
-        if (settings.cs) {
-            this.appendContent(`<div><input type='checkbox' class='tm-cs'/><span>${csString}</span></div>`)
-        }
-
-        if (settings.matching) {
-            this.appendContent(`<div><input type='checkbox' class='tm-matching'/><span>${matchingString}</span></div>`)
-        }
-
-        // options for this handler
-        this.pattern = ''
-        this.cs = true
-        this.matching = true
-    }
-
-    // get current settings of this handler
-    getOptions() {
-        this.update()
-		return {
-			type: 'string',
-            index: this.index,
-            pattern: this.pattern,
-			matching: this.matching,
-			cs: this.cs
-		}
-	}
-
-    update() {
-		let pattern = this.relatingCell.querySelector('.tm-input-div > input').value.trim() || null
-
-        this.cs = this.contentPanel.querySelector('input.tm-cs').checked
-        this.matching = this.contentPanel.querySelector('input.tm-matching').checked
-        this.pattern = (pattern == null || this.cs) ? pattern : pattern.toLowerCase()
-    }
-
-    matches(tester) {
-		let pattern = this.pattern
-
-		if (!this.cs) {
-			tester = tester.toLowerCase()
-		}
-
-		if (this.matching) {
-			return tester === pattern
+		if (settings.beautify && typeof settings.beautify == 'function') {
+			this.beautify = (val) => {
+				try {
+					return settings.beautify(val)
+				} catch(e) {
+					return false
+				}
+			}
 		} else {
-			return tester.indexOf(pattern) !== -1
+			this.beautify = (val) => val
+		}
+
+
+        // add event Listeners
+		this.icon.addEventListener('click', (e) => {
+			if (this.isVisible) {
+				handlerList.setInActive(this)
+			} else {
+				handlerList.setActive(this)
+			}
+		})
+		this.discardIcon.addEventListener('click', (e) => {
+			[].slice.call(this.panel.querySelectorAll('input[type="text"]')).forEach((input) => {
+				input.value = ''
+			})
+			this.evaluator.update(this)
+			// force reload
+			this.notifyController('manuell')
+			handlerList.setInActive(this)
+			e.stopPropagation()
+		})
+
+		this.panel.addEventListener('click', (e) => {
+			handlerList.setActive(this)
+		})
+
+		this.panel.addEventListener('change', (e) => {
+			this.evaluator.update(this)
+			this.notifyController(e)
+		}, false)
+
+		this.panel.addEventListener('keyup', (e) => {
+			this.evaluator.update(this)
+			this.notifyController(e)
+		}, false)
+    }
+
+    hide() {
+		if (this.isVisible) {
+			removeClass(this.icon, 'tm-filter-icon-open')
+			this.panel.style.display = 'none'
+			this.isVisible = false
+		}
+    }
+
+    show() {
+		if (!this.isVisible) {
+			addClass(this.icon, 'tm-filter-icon-open')
+			this.panel.style.display = 'block'
+
+			let td = this.panel.parentElement,
+				tr = td.parentElement,
+				rowWidth = tr.clientWidth,
+				panelWidth = this.panel.clientWidth,
+				cellOffset = td.offsetLeft
+
+			if (cellOffset + panelWidth + 20 > rowWidth) {
+				addClass(this.panel, 'tm-filter-panel-rightaligned')
+			}
+
+			this.isVisible = true
+		}
+    }
+
+	checkIfActive() {
+		if (this.evaluator.isActive()) {
+			addClass(this.cell, 'tm-filter-active')
+			this.discardIcon.style.display = 'block'
+			return true
+		} else {
+			removeClass(this.cell, 'tm-filter-active')
+			this.discardIcon.style.display = 'none'
+			return false
 		}
 	}
 
-    isActive() {
-        return isNonEmptyString(this.pattern)
+    setTitle(str) {
+        this.panel.querySelector('.tm-filter-panel-title').innerHTML = str
     }
+
+	setZIndex(val) {
+		this.panel.style.zIndex = val
+		return this
+	}
+
+    setContent(str, replace = true) {
+		let content = this.panel.querySelector('.tm-filter-panel-content')
+
+		if (replace) {
+			while(content.firstChild) {
+				content.removeChild(content.firstChild)
+			}
+		}
+
+		if (typeof str == 'object') {
+			content.appendChild(str)
+		} else if (typeof str == 'string') {
+			content.innerHTML += str
+		}
+		return this
+    }
+
+    getEvaluator() {
+        return this.evaluator
+    }
+
+	notifyController(param) {
+		tm.trigger('handlerChange', param)
+	}
 }
 
-/**
- * Handler class for numerics
- */
+class StringHandler extends Handler {
+    constructor(settings, index, cell) {
+        super(settings, index, cell)
+		let _this = this,
+			options = settings.options
+
+        this.evaluator = evaluatorFactory.create('string', index)
+        this.setTitle(tm.getTerm('FILTER_TITLE_STRING'))
+		addClass(this.panel, 'tm-filter-stringpanel')
+		let fragment = document.createDocumentFragment()
+		let div = document.createElement('div')
+		let input = document.createElement('input')
+		input.type = 'text'
+		this.patternInput = input
+		div.appendChild(input)
+		fragment.appendChild(div)
+
+        if (options.cs) {
+			div = document.createElement('div')
+			input = document.createElement('input')
+			input.type = 'checkbox'
+			input.value = 'cs'
+			div.appendChild(input)
+			div.innerHTML += tm.getTerm('FILTER_CASESENSITIVE')
+			this.csCheckbox = input
+			fragment.appendChild(div)
+        }
+        if (options.matching) {
+			div = document.createElement('div')
+			input = document.createElement('input')
+			input.type = 'checkbox'
+			input.value = 'matching'
+			div.appendChild(input)
+			div.innerHTML += tm.getTerm('FILTER_MATCHING')
+			this.matchingCheckbox = input
+			fragment.appendChild(div)
+        }
+		this.setContent(fragment)
+
+		this.panel.addEventListener('change', (e) => {
+			let el = e.target
+			if (el.nodeName === 'INPUT' && el.type === 'checkbox' && this.patternInput.value == '') {
+				e.stopPropagation()
+			}
+		}, true)
+
+    }
+
+	getPattern() {
+		let pattern = this.patternInput.value
+		if (pattern === '') {
+			return null
+		} else {
+			return this.beautify(pattern)
+		}
+	}
+
+	getCS() {
+		if (this.hasOwnProperty('csCheckbox')) {
+			return this.csCheckbox.checked
+		} else {
+			return false
+		}
+	}
+
+	getMatching() {
+		if (this.hasOwnProperty('matchingCheckbox')) {
+			return this.matchingCheckbox.checked
+		} else {
+			return false
+		}
+	}
+}
+
 class NumericHandler extends Handler {
-    constructor(settings) {
-        super();
+    constructor(settings, index, cell) {
+        super(settings, index, cell)
+		let options = settings.options
 
-        let titleString = tm.getTerm('FILTER_TITLE_NUMERIC'),
-	        comparatorString = tm.getTerm('FILTER_COMPARATOR'),
-	        rangeString = tm.getTerm('FILTER_RANGE'),
-	        rangeLimitString = tm.getTerm('FILTER_RANGE_LIMIT')
+		if (!settings.beautify) {
+			this.beautify = (val) => parseFloat(val)
+		}
 
-        // DOM
-        this.setTitle(titleString)
+        this.evaluator = evaluatorFactory.create('numeric', index)
+        this.setTitle(tm.getTerm('FILTER_TITLE_NUMERIC'))
+		addClass(this.panel, 'tm-filter-numericpanel')
 
+		this.comparatorElement = document.createElement('div')
+		this.rangeElement = document.createElement('div')
+		this.controllerElement = document.createElement('div')
+		addClass(this.comparatorElement, 'tm-filter-comparator-input')
+		addClass(this.rangeElement, 'tm-filter-range-input')
+
+		// comparator element
+		let fragment = document.createDocumentFragment()
+		let select = document.createElement('select')
+		select.innerHTML = `
+			<option selected>=</option>
+			<option>&lt;</option>
+			<option>&gt;</option>
+			<option>&lt;=</option>
+			<option>&gt;=</option>`
+		addClass(select, 'tm-filter-option-comparator')
+		fragment.appendChild(select)
+		this.comparatorSelect = select
+		let input = document.createElement('input')
+		addClass(input, 'tm-filter-pattern')
+		input.type = 'text'
+		input.placeholder = tm.getTerm('FILTER_PLACEHOLDER')
+		fragment.appendChild(input)
+		this.patternInput = input
+		this.comparatorElement.appendChild(fragment)
+
+		// range element
+		input = document.createElement('input')
+		input.type = 'text'
+		input.placeholder = 'von'
+		addClass(input, 'tm-filter-minVal')
+		fragment.appendChild(input)
+		this.minValInput = input
+		let span = document.createElement('span')
+		span.innerHTML = '-'
+		fragment.appendChild(span)
+		input = document.createElement('input')
+		input.type = 'text'
+		input.placeholder = 'bis'
+		addClass(input, 'tm-filter-maxVal')
+		fragment.appendChild(input)
+		this.maxValInput = input
+		this.rangeElement.appendChild(fragment)
+
+		// controller element
 		let id = 'handler-' + unique()
 
-		if (settings.comparator) {
-			this.appendContent(`<div><span><input type='radio' name='${id}' value='comparator' checked/></span>
-			<span>${comparatorString}:</span><span>
-			<select class='tm-filter-option-comparator'>
-				<option selected>=</option>
-				<option>&lt;</option>
-				<option>&gt;</option>
-				<option>&lt;=</option>
-				<option>&gt;=</option>
-			</select></span>
-			</div>`)
-		}
+		this.controllerElement.innerHTML =
+		`<div><input type='radio' name='${id}' value='comparator' checked />Vergleichsoperator</div>
+		 <div><input type='radio' name='${id}' value='range' />Wertebereich</div>`
 
-		if (settings.range) {
-			this.appendContent(`<div><span><input type='radio' name='${id}' value='range'/></span>
-			<span>${rangeString}:</span>
-			<span><input type='text' placeholder='${rangeLimitString}' class='tm-filter-range-value' /></span>
-			</div>`)
-		}
+        if (!options.range) {
+            // only enable comparator -> at least one must be set
+            this.setContent(this.comparatorElement)
+			this._mode = 'comparator'
+        } else if (!options.comparator) {
+            // only enable range
+            this.setContent(this.rangeElement)
+			this._mode = 'range'
+        } else {
+			// enable both
+            this.setContent(this.comparatorElement)
+				.setContent(this.controllerElement, false)
+			this._mode = 'comparator'
+        }
 
-        // default options for this handler, will be overwritten
-        this.option = 'comparator'
-		this.value = '='
-		this.pattern = 0
-
-        // default internal comparator function, gets overwritten when update is called
-        this._internalComparatorFunction = () => {throw new Exception("this must never be called")}
+		this.panel.addEventListener('change', (e) => {
+			let el = e.target
+			if (el.tagName === 'SELECT' && this.patternInput.value === '') {
+				e.stopPropagation()
+			} else if (el.tagName === 'INPUT' && el.type === 'radio') {
+				this.setMode(el.value)
+				if (this.isAllEmpty()) e.stopPropagation()
+			}
+		}, true)
     }
 
-    getOptions() {
-        this.update()
-        return {
-            type: 'numeric',
-            index: this.index,
-            pattern: this.pattern, // numeric value
-            option: this.option, // range or comparator
-            value: this.value // =, <, >, <=, >= (comparator) or numeric value
-        };
-    }
+	getMode() {
+		return this._mode
+	}
 
-    update() {
-		let pattern = this.relatingCell.querySelector('.tm-input-div > input').value.trim(),
-			comparatorRegex = /^(\s)*(<|>|=|<=|>=)(\s)*[+-]?[0-9]+(\s)*$/,
-			rangeRegex = /^(\s)*[+-]?[0-9]+(\s)*((bis)|-)(\s)*[+-]?[0-9]+(\s)*$/
-
-		// check for pattern
-		if (comparatorRegex.test(pattern)) {
-			console.info('comparator pattern detected! (But this feature is not implemented yed...)');
-
-			// split pattern and fill values
-			let arr = pattern.match(/(<=|>=|<|>|=|[+-]?[0-9]+)/g);
-
-			if (arr.length == 2) {
-				this.option = "comparator"
-				this.value = arr[0]
-				this.pattern = arr[1]
-			} else {
-				throw new Exception("regex went wrong!");
-			}
-
-		} else if (rangeRegex.test(pattern)) {
-			console.info("range pattern detected!")
-
-			let arr = pattern.match(/[+-]?[0-9]+/g)
-
-			if (arr.length == 2) {
-				this.option = "range"
-				this.value = arr[0]
-				this.pattern = arr[1]
-			} else {
-				throw new Exception("regex went wrong!");
-			}
-
+	getComparator() {
+		if (this.comparatorSelect) {
+			return this.comparatorSelect.value
 		} else {
-			// update option, value, pattern
-	        let radio = this.contentPanel.querySelector('input[type=radio]:checked'),
-				val
-			if (radio.value == 'comparator') {
-				let select = this.contentPanel.querySelector('select')
-				val = select.options[select.selectedIndex].textContent
-			} else {
-				val = parseFloat(this.contentPanel.querySelector('input.tm-filter-range-value').value)
-			}
-
-	        this.option = radio.value
-	        this.value = val
-	        this.pattern = (pattern.length > 0) ? parseFloat(pattern) : null
+			return '='
 		}
+	}
 
-
-        // update comparator function
-        if (this.option === 'comparator') {
-
-			let c = Handler.operatorString2Function(this.value)
-			this._internalComparatorFunction = (num) => {
-				return c(num, this.pattern)
-			}
-
-		} else if (this.option === 'range') {
-			this._internalComparatorFunction = (num) => {
-				return (num <= this.pattern && num >= this.value) || (num >= this.pattern && num <= this.value)
-			}
+	_getAnyInputValue(type) {
+		let val = this[type].value
+		val = this.beautify(val)
+		if (!isNumber(val)) {
+			return null
+		} else {
+			return val
 		}
+	}
 
+	getPattern() {
+		return this._getAnyInputValue('patternInput')
+	}
+
+	getMinVal() {
+		return this._getAnyInputValue('minValInput')
+	}
+
+	getMaxVal() {
+		return this._getAnyInputValue('maxValInput')
+	}
+
+	isAllEmpty() {
+		return (this.getPattern() === null)
+			&& (this.getMinVal() === null)
+			&& (this.getMaxVal() === null)
+	}
+
+    setMode(mode) {
+		let panel = this.panel
+        if (mode == 'comparator') {
+			this.content.replaceChild(this.comparatorElement, panel.querySelector('div.tm-filter-range-input'))
+			this._mode = mode
+			//this.evaluator.setMode(mode)
+        } else if (mode == 'range') {
+			this.content.replaceChild(this.rangeElement, panel.querySelector('div.tm-filter-comparator-input'))
+			this._mode = mode
+			//this.evaluator.setMode(mode)
+        } else {
+			throw new Exception('invalid mode value passed')
+		}
     }
-
-    matches(value) {
-        return this._internalComparatorFunction(parseFloat(value))
-    }
-
-    isActive() {
-        return this.pattern !== null && !isNaN(this.pattern)
-    }
-}
-
-/**
- * Handler class for dates
- * NOT COMPLETELY IMPLEMENTED YET
- + @TODO IMPLEMENT
- */
-class DateHandler extends StringHandler {
-    constructor(settings) {
-        super(settings)
-
-        let titleString = tm.getTerm('FILTER_TITLE_DATE')
-
-        this.setTitle(titleString)
-		console.info("DateHandlers are not fully implemented yet! using StringHandler instead...");
-    }
-
-	//getOptions() {}
-	//update() {}
-
-    /**
-     * method matches
-     * only this method differs from NumericHandler
-     */
-    //matches(value) {}
-
-	//isActive() {
-	//	return this.pattern !== null
-	//}
 }
 
 /**
  *    export class Factory, handlers itself are not directly accessible
  */
 module.exports = class Factory {
-    constructor(tmInstance, s) {
+    constructor(tmInstance, fc, hl) {
         tm = tmInstance
-        semaphor = s
+		filterController = fc
+		handlerList = hl
     }
 
-    create(type, settings) {
-        switch(type) {
-            case 'date':
-                return new DateHandler(settings)
+    create(settings, index, cell) {
+        switch(settings.type) {
             case 'numeric':
-                return new NumericHandler(settings)
+                return new NumericHandler(settings, index, cell)
             default:
-                return new StringHandler(settings)
+                return new StringHandler(settings, index, cell)
         }
     }
 }

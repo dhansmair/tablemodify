@@ -560,6 +560,7 @@ Tablemodify.modules = {
 
 Tablemodify.languages = {
     en: new Language('en', {
+        FILTER_DISCARD: 'discard filter',
         FILTER_PLACEHOLDER: 'type filter here',
         FILTER_CASESENSITIVE: 'case-sensitive',
         FILTER_MATCHING: 'matching',
@@ -572,9 +573,10 @@ Tablemodify.languages = {
         PAGER_PAGENUMBER_SEPARATOR: ' / '
     }),
     de: new Language('de', {
+        FILTER_DISCARD: 'Eingabe verwerfen',
         FILTER_PLACEHOLDER: 'Filter eingeben',
-        FILTER_CASESENSITIVE: 'Gro&szlig;- und Kleinschreibung unterscheiden',
-        FILTER_MATCHING: 'Genaue &Uuml;bereinstimmung',
+        FILTER_CASESENSITIVE: 'Gro&szlig; - und Kleinschreibung unterscheiden',
+        FILTER_MATCHING: 'Exakte Suche',
         FILTER_COMPARATOR: 'Vergleichsoperator',
         FILTER_RANGE: 'Zahlenbereich',
         FILTER_RANGE_LIMIT: 'obere Grenze',
@@ -589,6 +591,6 @@ Tablemodify.Language = Language;
 //Store reference to the module class for user-defined modules
 Tablemodify.Module = Module;
 // set version of Tablemodify
-Tablemodify.version = 'v0.9.5';
+Tablemodify.version = 'v0.9.6';
 //make the Tablemodify object accessible globally
 window.Tablemodify = Tablemodify;

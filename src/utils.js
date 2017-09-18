@@ -143,8 +143,10 @@ exports.isNonEmptyString = function(str) {
 let isObj = exports.isObject = o => typeof o === 'object';
 
 exports.isFn = f => typeof f === 'function';
-
 exports.isBool = b => typeof b === 'boolean';
+exports.isNumber = (val) => {
+    return typeof val == 'number' && !isNaN(val)
+}
 
 let getProp = exports.getProperty = (obj, ...props) => {
     if (!isObj(obj) || props.length === 0) return;
@@ -193,7 +195,7 @@ exports.replaceIdsWithIndices = (columns) => {
     return columns;
 }
 
-// fastest way to clone an array 
+// fastest way to clone an array
 exports.cloneArray = function(arr) {
     var ret = [], i = arr.length;
     while (i--) ret[i] = arr[i];
