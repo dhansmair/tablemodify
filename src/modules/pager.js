@@ -5,137 +5,130 @@ let tm, timeout;
 
 class Controller {
 	constructor(sets, pager) {
-		let _this = this;
-		this.pager = pager;
-
-		//extend2(this, sets);
+		let _this = this
+		this.pager = pager
 
 		Object.keys(sets).forEach((key) => {
-			if (sets[key] == null) {
-				throw new Exception(key + ' setting must be set!');
-			} else {
-				_this[key] = document.querySelector(sets[key]);
-			}
+			if (sets[key] == null) throw new Exception(key + ' setting must be set!');
+			_this[key] = (sets[key] instanceof Element) ? sets[key] : document.querySelector(sets[key])
 		});
 
 		this.left.addEventListener('click', () => {
-			let val = _this.getCurrentPageNumber() - 1;
+			let val = _this.getCurrentPageNumber() - 1
 
 			if (val > 0) {
-				_this.setCurrentPageNumber(val);
+				_this.setCurrentPageNumber(val)
 				delay(() => {
-					_this.pager.update().run();
-				});
+					_this.pager.update().run()
+				})
 			}
-		});
+		})
 
 		this.right.addEventListener('click', () => {
-			let val = _this.getCurrentPageNumber() + 1;
+			let val = _this.getCurrentPageNumber() + 1
 
 			if (val <= _this.getTotalPages()) {
-				_this.setCurrentPageNumber(val);
+				_this.setCurrentPageNumber(val)
 				delay(() => {
-					_this.pager.update().run();
-				});
+					_this.pager.update().run()
+				})
 			}
-		});
+		})
 
 		this.number.addEventListener('change', () => {
-			let val = _this.getCurrentPageNumber();
+			let val = _this.getCurrentPageNumber()
 
 			if (isNaN(val) || val < 1) {
-				val = 1;
+				val = 1
 			} else if (val > _this.getTotalPages()) {
-				val = _this.getTotalPages();
+				val = _this.getTotalPages()
 			}
-			_this.setCurrentPageNumber(val);
-			_this.pager.update().run();
-		});
+			_this.setCurrentPageNumber(val)
+				.pager.update().run()
+		})
 
 		this.limit.addEventListener('change', () => {
-			let val = _this.limit.value;
+			let val = _this.limit.value
 			if (isNaN(val) || val < 1) {
-				_this.limit.value = 1;
+				_this.limit.value = 1
 			}
 			_this.setCurrentPageNumber(1)
 				.updateTotalPages()
-				.pager.update().run();
-		});
+				.pager.update().run()
+		})
 
-		this.updateTotalPages();
+		this.updateTotalPages()
 	}
 
 	getOffset() {
-		let val = parseInt(this.number.value);
-		let totalPages = this.getTotalPages();
+		let val = parseInt(this.number.value)
+		let totalPages = this.getTotalPages()
 		if (isNaN(val) || (val < 1 && totalPages != 0)) {
-			this.setCurrentPageNumber(1);
+			this.setCurrentPageNumber(1)
 		} else if (val > totalPages) {
-			this.setCurrentPageNumber(totalPages);
+			this.setCurrentPageNumber(totalPages)
 		}
 
-		if (this.getCurrentPageNumber() <= 1) return 0;
+		if (this.getCurrentPageNumber() <= 1) return 0
 
-		return parseInt(this.getCurrentPageNumber() - 1) * this.getLimit();
+		return parseInt(this.getCurrentPageNumber() - 1) * this.getLimit()
 	}
 
 	getLimit() {
-		let val = parseInt(this.limit.value);
+		let val = parseInt(this.limit.value)
 
 		if (isNaN(val) || val < 1) {
-			this.limit.value = this.pager.limit;
-			return this.pager.limit;
+			this.limit.value = this.pager.limit
+			return this.pager.limit
 		}
 		return val;
 	}
 
 	getTotalPages() {
-		let total = 0;
+		let total = 0
 
 		if (this.pager.totalManually && this.pager.totalManually >= 0) {
-			total = this.pager.totalManually;
+			total = this.pager.totalManually
 		} else {
-			total = tm.countAvailableRows();
+			total = tm.countAvailableRows()
 		}
 
-		return Math.ceil(total / this.getLimit());
+		return Math.ceil(total / this.getLimit())
 	}
 
 	setCurrentPageNumber(num) {
-		num = parseInt(num);
+		num = parseInt(num)
 
 		if (!isNaN(num)) {
-			let innerHeight = parseInt(window.getComputedStyle(this.number).height);
-			this.number.style.width = (num.toString().length * 12) + 'px';
-			this.number.value = num;
+			let innerHeight = parseInt(window.getComputedStyle(this.number).height)
+			this.number.style.width = (num.toString().length * 12) + 'px'
+			this.number.value = num
 		}
-		return this;
+		return this
 	}
 
 	getCurrentPageNumber() {
-		return parseInt(this.number.value);
+		return parseInt(this.number.value)
 	}
 
 	updateTotalPages() {
 		if (this.total != null) {
-			this.total.innerHTML = tm.getTerm('PAGER_PAGENUMBER_SEPARATOR') + this.getTotalPages() + ' ';
+			this.total.innerHTML = tm.getTerm('PAGER_PAGENUMBER_SEPARATOR') + this.getTotalPages() + ' '
 		}
-		return this;
+		return this
 	}
 
 	updatePageNumber() {
-		let totalPages = this.getTotalPages();
+		let totalPages = this.getTotalPages()
 		if (this.getCurrentPageNumber() > totalPages) {
-			this.setCurrentPageNumber(totalPages);
-
-			//this.pager.update().run();
+			this.setCurrentPageNumber(totalPages)
 		}
-		return this;
-	};
+		return this
+	}
 
 	update() {
-		this.updateTotalPages().updatePageNumber();
-		return this;
+		this.updateTotalPages().updatePageNumber()
+		return this
 	}
 }
 

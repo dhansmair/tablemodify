@@ -1,26 +1,4 @@
-var tm;
-/*
-var cols = 3;
-function makeDataRow() {
-    var row = [];
-
-    for (var i = 0; i < 3; i++) {
-        row.push({
-            c: Math.random().toString().substr(2, 5)
-        });
-    }
-    return row;
-}
-
-function createData(count) {
-    var data = [];
-    for (var i = 0; i < count; i++) {
-        data.push(makeDataRow());
-    }
-    return data;
-}
-*/
-
+var tm
 
 var factory = {
     cols: [
@@ -73,19 +51,17 @@ var factory = {
     }
 }
 
-
-
 document.addEventListener('DOMContentLoaded', function() {
     tm = new Tablemodify('#test', {
         theme: 'bootstrap',
         language: 'en',
         containerId: 'meinContainer',
         transition: 'fade',
-        /*
+
         beforeUpdate: function(infos, moduleName) {
                 console.log(infos, moduleName)
-                return false
-        },*/
+                return true
+        },
         modules: {
             sorter: {
                 columns: {
@@ -150,7 +126,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     'width':'80px',
                     'min-width':'80px'
                 }
-            }
+            },
+            resizer: {}
         }
     });
 

@@ -56,15 +56,12 @@ Search.prototype = {
             this.menue.showAll()
         } else {
             var matches = haystack.filter(function(el) {
-                var id = el.hash
-                var textContainer = main.querySelector(id)
+                var id = el.hash,
+                    textContainer = main.querySelector(id)
 
                 return textContainer && textContainer.textContent.toLowerCase().indexOf(needle) !== -1
             })
             this.menue.show(matches)
         }
-
-
-
     }
 }

@@ -3,13 +3,13 @@
 <head>
     <title>Tablemodify.js</title>
     <link href="https://fonts.googleapis.com/css?family=Muli" rel="stylesheet">
-    <link rel='stylesheet' href='https://dhansmair.github.io/tablemodify/docs/demo.css' />
+    <link rel='stylesheet' href='demo.css' />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
-    <link rel='stylesheet' href='https://dhansmair.github.io/tablemodify/dist/themes/bootstrap.css' />
-    <link rel='stylesheet' href='https://dhansmair.github.io/tablemodify/dist/tablemodify.css' />
-    
+    <link rel='stylesheet' href='../dist/themes/bootstrap.css' />
+    <link rel='stylesheet' href='../dist/tablemodify.css' />
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-    <script src='https://dhansmair.github.io/tablemodify/dist/tablemodify.min.js'></script>
+    <script src='../dist/tablemodify.min.js'></script>
     <script src="demo.js"></script>
     <script src='demoTable.js'></script>
     <script>
@@ -44,7 +44,7 @@
             <a class='s2' href='#module-filter'>Filter</a>
             <a class='s2' href='#module-fixed'>Fixed</a>
             <a class='s2' href='#module-columnStyles'>ColumnStyles</a>
-            <a class='s2' href='#module-resizer'>Resizer</a>
+            <a class='s2' href='#module-resizer'>Resizer (coming soon)</a>
             <a class='s1' href='#themes'>Themes</a>
             <a class='s2' href='#theme-blank'>Blank</a>
             <a class='s2' href='#theme-bootstrap'>Bootstrap</a>
@@ -104,32 +104,215 @@
         <section id='setup'>
             <h1>Setup</h1>
             <article>
-                david
-                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
-                <pre>
-                    <code class="js">
-                        console.log('hello');
-                    </code>
-                </pre>
+                First of all, get the sources from Github ("/dist/") and include them in your header. <br />
+                what you need:
+                <ul>
+                    <li>tablemodify.js or tablemodify.min.js</li>
+                    <li>tablemodify.css</li>
+                    <li>a .css-file from the theme folder</li>
+                </ul>
+                the table your want to modify is in plain HTML somewhere in your documents body.<br />
+                After the document has loaded, you can initialize the Tablemodify-instance.
+<pre>
+<code class="js">var tm,
+    options = {} // some options can be passed via this object, read more below
+
+function init() {
+    tm = new Tablemodify('#myTable', options) // assume the table's selector is #myTable.
+}
+window.addEventListener('DOMContentLoaded', init)
+</code>
+</pre>
+                <h3>options</h3>
+                an overview over all the options you can choose:
+<pre>
+<code class="js">{
+    // table will be wrapped in a container. you may give it an id
+    containerId: 'myContainer',
+
+    // default is 'en', choose between 'en', 'de', or add own Language pack (read below)
+    language: 'en',
+
+    // necessary! pass your theme's name here
+    theme: 'default',
+
+    // pass 'fade' or null. adds a nice transition when the table data changes
+    transition: 'fade',
+
+    /*
+    This is an overview of the default modules tablemodify offers.
+    All modules are optional.
+    To run a module, add it's name to the following object. the values are js-objects again.
+    To run a module with default values, you can just pass an empty object, for example: "sorter: {}",
+    The specific module settings will be explained in the accompaniyng chapter.
+    */
+    modules: {
+        columnStyles: columnStylesSettings,
+        filter: filterSettings,
+        sorter: sorterSettings,
+        pager: pagerSettings,
+        fixed: fixedSettings
+    }
+}
+</code>
+</pre>
+
             </article>
         </section>
         <section id='modules'>
             <h1>Modules</h1>
             <article>
+                here you find a detailed tutorial how to configure each module.<br />
+                All modules are optional and work independent.
+                Once initialized, it is possible to access them via <code>tm.getModule(name)</code>, each provides some utilities you can use.<br />
+
+            </article>
+
+            <article id='module-sorter'>
+                <h3>sorter</h3>
+                This module sorts the rows of your tbody, ascending or descending, sorted by a single column or even by multiple columns. <br />
+                For multisort, press shift and click another head cell. Still press shift and click a selected cell again to invert the order.
+                For big data amounts, it is recommended to combine sorter and pager or sort via php.
+<pre>
+<code class='js'>var sorterSettings = {
+    /*
+        these are the defaults:
+    */
+    initialColumn: 'firstEnabled',   // initial sorting column, either a column index or the special value 'firstEnabled'
+    initialOrder: 'asc',             // initial sorting order, either 'asc', or 'desc'
+    enableMultisort: true,           // enable/disable multisort functionality
+    columns: {
+        all: {
+            enabled: true,
+            parser: 'intelligent' // different types of parsers: 'intelligent' (for strings and numbers combined),
+                                  // 'string', 'numeric' (integer and float), 'date' (see below)
+        },
+
+        /*
+            custom settings for single columns:
+        */
+        0: {
+            enabled: false // disable sorting
+        },
+        1: {
+            parser: 'date', // use another parser for this column
+            parserOptions: { // provide parameters to the parser
+                preset: 'english'
+            }
+        }
+    },
+    /*
+        adding own parsers. Read below how it works.
+    */
+    customParsers: customParsers
+}
+</code>
+</pre>
+<h4>parsers</h4>
+there are some parsers available by default:
+<table>
+    <thead>
+        <tr>
+            <th>parsername</th>
+            <th>notice</th>
+            <th>description</th>
+            <th>parameters</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>"intelligent"</td>
+            <td>default</td>
+            <td>differentiates automatically between strings and numbers. recommended for mixed types.</td>
+            <td>none</td>
+        </tr>
+        <tr>
+            <td>"string"</td>
+            <td></td>
+            <td>sorts in alphabetic order. efficient, recommended for pure strings</td>
+            <td>none</td>
+        </tr>
+        <tr>
+            <td>"numeric"</td>
+            <td></td>
+            <td>sorts numbers (also floats). efficient, recommended for numbers</td>
+            <td>none</td>
+        </tr>
+        <tr>
+            <td>"date"</td>
+            <td></td>
+            <td>sorts by a given date format</td>
+            <td>format: A date/time format string which will be used to parse the dates preset: either 'english' or 'german', 'german' will match 'TT.MM.YYYY' and 'TT.MM.YY', 'english' will match 'YYYY-MM-DD' or 'MM/DD/YYYY'. It is recommended not to rely on the presets but rather provide your own date format string Here you can find an overview of the tokens which can be used</td>
+        </tr>
+    </tbody>
+</table><br />
+A parser is simply a compare function which is passed to the Array.sort() method. here you can read more about compare functions If you want to define your own parsers, add them like this:
+<pre>
+<code class="js">var customParsers = {
+       myParser: function(a, b) {
+           /*
+               parameters a, b: strings of two cell-contents to compare.
+
+               if a > b, return a positive number,
+               if a < b, return a negative number,
+               if a = b, return 0. (<- this is important for multisort!)
+           */
+           // for example, this is the implementation of parser "string"
+           if (a > b) return 1
+           if (a < b) return -1
+           return 0
+       }
+   }
+</code>
+</pre>
+<h4>change header appearance</h4>
+you can simply overwrite the default sorter styles of your table. Therefore, tm provides several css-classes.<br />
+Different order-icons:<br />
+<pre>
+<code class="css">
+    /* default sorter icon (for no active sorting) */
+    .tm-container td.sortable {
+        background-image:url(path/to/your/icon-default.jpg);
+    }
+
+    /* icon for active ascending order */
+    .tm-container td.sortable.sort-up {
+        background-image:url(path/to/your/icon-up.jpg);
+    }
+    /* icon for active descending order */
+    .tm-container td.sortable.sort-down {
+        background-image:url(path/to/your/icon-down.jpg);
+    }
+</code>
+</pre>
+different background-color of active sorting:
+<pre>
+<code class="css">
+    /* this will set the color to yellow */
+    .tm-container td.sortable.sort-up, .tm-container td.sortable.sort-down {
+        background-color: 'yellow'
+    }
+</code>
+</pre>
+            </article>
+            <article id='module-pager'>
+                <h3>pager</h3>
                 Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
             </article>
-            <article>
+            <article id='module-filter'>
+                <h3>filter</h3>
                 Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
             </article>
-            <article>
+            <article id='module-fixed'>
+                <h3>fixed</h3>
                 Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
             </article>
-            <article>
-                david
+            <article id='module-columnStyles'>
+                <h3>columnStyles</h3>
                 Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
             </article>
-            <article>
-                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+            <article id='module-resizer'>
+                <h3>resizer</h3>
             </article>
         </section>
         <section id='themes'>

@@ -71,7 +71,9 @@ class Resizer {
 
     move(e) {
         window.requestAnimationFrame(() => {
-            originalSubject.style.width = startVal + e.clientX + 'px';
+            originalSubject.style.width =
+            originalSubject.style.minWidth =
+            originalSubject.style.maxWidth = startVal + e.clientX + 'px';
             tm.actionPipeline.notify('resizer');
         });
     }
