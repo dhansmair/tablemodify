@@ -1,0 +1,94 @@
+/* BASIC COLORS */
+/* colors for sorters sortable head cells */
+/* colors for zebra stripes for the table */
+.cellBasics {
+  border-bottom: 1px solid #DCDCDC;
+  border-right: 1px solid #DCDCDC;
+}
+.tableBasics {
+  background-color: white;
+  border-spacing: 0px;
+}
+div.tm-container.tm-theme-prompt {
+  /*
+        styles for sorter plugin
+    */
+  /*
+        styles for filter plugin
+    */
+}
+div.tm-container.tm-theme-prompt div.tm-head-wrap table.tm-head {
+  background-color: white;
+  border-spacing: 0px;
+}
+div.tm-container.tm-theme-prompt div.tm-head-wrap table.tm-head tr:first-of-type {
+  background-color: #C9CEE4;
+}
+div.tm-container.tm-theme-prompt div.tm-head-wrap table.tm-head tr:first-of-type td,
+div.tm-container.tm-theme-prompt div.tm-head-wrap table.tm-head tr:first-of-type th {
+  border-right: 1px solid white;
+  border-bottom: none;
+}
+div.tm-container.tm-theme-prompt div.tm-head-wrap table.tm-head tr:last-of-type td {
+  border-bottom: 1px solid #ccc;
+}
+div.tm-container.tm-theme-prompt div.tm-body-wrap table {
+  background-color: white;
+  border-spacing: 0px;
+}
+div.tm-container.tm-theme-prompt div.tm-body-wrap table tr td {
+  border-bottom: 1px solid #DCDCDC;
+  border-right: 1px solid #DCDCDC;
+}
+div.tm-container.tm-theme-prompt div.tm-foot-wrap {
+  background-color: white;
+}
+div.tm-container.tm-theme-prompt div.tm-foot-wrap table.tm-foot {
+  background-color: white;
+  border-spacing: 0px;
+}
+div.tm-container.tm-theme-prompt div.tm-foot-wrap table.tm-foot tr td,
+div.tm-container.tm-theme-prompt div.tm-foot-wrap table.tm-foot tr th {
+  border-top: 1px solid #DCDCDC;
+  border-right: 1px solid #DCDCDC;
+}
+div.tm-container.tm-theme-prompt.tm-sorter thead tr:first-of-type td,
+div.tm-container.tm-theme-prompt.tm-sorter thead tr:first-of-type th {
+  border-bottom: 1px solid #DCDCDC;
+  border-right: 1px solid #DCDCDC;
+}
+div.tm-container.tm-theme-prompt.tm-sorter thead tr:first-of-type .sortable {
+  padding-right: 20px !important;
+  cursor: pointer;
+  background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%209%22%20height%3D%229%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M14.5%205l-4%204-4-4zM14.5%204l-4-4-4%204z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
+  background-repeat: no-repeat;
+  background-position: center right;
+  /* Color for hovered sortable cells */
+  /* Color for active sortable cells */
+}
+div.tm-container.tm-theme-prompt.tm-sorter thead tr:first-of-type .sortable.sort-up {
+  background-color: #7784bb;
+  background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%204%22%20height%3D%224%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M6.5%204l4-4%204%204z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
+}
+div.tm-container.tm-theme-prompt.tm-sorter thead tr:first-of-type .sortable.sort-down {
+  background-color: #7784bb;
+  background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%204%22%20height%3D%224%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M14.5%200l-4%204-4-4z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
+}
+div.tm-container.tm-theme-prompt.tm-filter tr.tm-filter-row {
+  transition: 0.2s;
+}
+div.tm-container.tm-theme-prompt.tm-filter tr.tm-filter-row td {
+  border-bottom: 1px solid #DCDCDC;
+  border-right: 1px solid #DCDCDC;
+}
+div.tm-container.tm-theme-prompt.tm-filter tr.tm-filter-row div.tm-filter-panel {
+  webkit-box-shadow: 0px 5px 10px 0px #d4d4d4;
+  -moz-box-shadow: 0px 5px 10px 0px #d4d4d4;
+  box-shadow: 0px 5px 10px 0px #d4d4d4;
+}
+div.tm-container.tm-theme-prompt.tm-filter tr.tm-filter-row span.tm-custom-checkbox {
+  /* styles of the dot hovering the original checkbox */
+}
+div.tm-container.tm-theme-prompt.tm-fixed div.tm-head-wrap + div.tm-body-wrap table thead {
+  -ms-visibility: collapse;
+}

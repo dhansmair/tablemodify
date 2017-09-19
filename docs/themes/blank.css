@@ -1,0 +1,133 @@
+/* BASIC COLORS */
+/* colors for sorters sortable head cells */
+/* colors for zebra stripes for the table */
+.cellBasics {
+  border: none;
+}
+.tableBasics {
+  border-collapse: collapse;
+  border-style: hidden;
+  background-color: white;
+}
+div.tm-container.tm-theme-blank {
+  background-color: #f0f0f0;
+  border: none;
+  /*
+        styles for sorter plugin
+    */
+  /*
+        styles for filter plugin
+    */
+}
+div.tm-container.tm-theme-blank div.tm-head-wrap {
+  background-color: white;
+  -webkit-box-shadow: 0px 6px 10px -10px #666666;
+  -moz-box-shadow: 0px 6px 10px -10px #666666;
+  box-shadow: 0px 6px 10px -10px #666666;
+}
+div.tm-container.tm-theme-blank div.tm-head-wrap table.tm-head {
+  border-collapse: collapse;
+  background-color: white;
+  border-style: hidden;
+  border-bottom: 1px solid #cccccc;
+}
+div.tm-container.tm-theme-blank div.tm-body-wrap {
+  background-color: white;
+}
+div.tm-container.tm-theme-blank div.tm-body-wrap table {
+  border-collapse: collapse;
+  border-style: hidden;
+  background-color: white;
+}
+div.tm-container.tm-theme-blank div.tm-body-wrap table tr td {
+  border: none;
+}
+div.tm-container.tm-theme-blank div.tm-body-wrap table tr:nth-of-type(even) {
+  background-color: white;
+}
+div.tm-container.tm-theme-blank div.tm-body-wrap table tr:nth-of-type(odd) {
+  background-color: white;
+}
+div.tm-container.tm-theme-blank div.tm-foot-wrap {
+  background-color: white;
+  -webkit-box-shadow: 0px -6px 10px -10px #666666;
+  -moz-box-shadow: 0px -6px 10px -10px #666666;
+  box-shadow: 0px -6px 10px -10px #666666;
+}
+div.tm-container.tm-theme-blank div.tm-foot-wrap table.tm-foot {
+  border-collapse: collapse;
+  background-color: white;
+  border-style: hidden;
+  border-top: 1px solid #cccccc;
+}
+div.tm-container.tm-theme-blank div.tm-foot-wrap table.tm-foot tr td,
+div.tm-container.tm-theme-blank div.tm-foot-wrap table.tm-foot tr th {
+  border: none;
+}
+div.tm-container.tm-theme-blank tr td,
+div.tm-container.tm-theme-blank tr th {
+  border: none;
+}
+div.tm-container.tm-theme-blank tr .sortable {
+  padding-right: 15px !important;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem0zLjgzOSAxNmwtMy44MzkgNC43OTgtMy44MzktNC43OThoNy42Nzh6bTQuMTYxLTJoLTE2bDggMTAgOC0xMHoiLz48L3N2Zz4=");
+  background-repeat: no-repeat;
+  background-position: center right;
+  background-size: 14px;
+  /* Color for hovered sortable cells */
+  /* Color for active sortable cells */
+}
+div.tm-container.tm-theme-blank tr .sortable:hover {
+  background-color: #a3c2db;
+}
+div.tm-container.tm-theme-blank tr .sortable.sort-up {
+  background-color: #6c9dc6;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMGwtOCAxMGgxNmwtOC0xMHptMy44MzkgMTZsLTMuODM5IDQuNzk4LTMuODM5LTQuNzk4aDcuNjc4em00LjE2MS0yaC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
+}
+div.tm-container.tm-theme-blank tr .sortable.sort-down {
+  background-color: #6c9dc6;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMy4yMDJsMy44MzkgNC43OThoLTcuNjc4bDMuODM5LTQuNzk4em0wLTMuMjAybC04IDEwaDE2bC04LTEwem04IDE0aC0xNmw4IDEwIDgtMTB6Ii8+PC9zdmc+");
+}
+div.tm-container.tm-theme-blank tr.tm-filter-row {
+  transition: 0.2s;
+}
+div.tm-container.tm-theme-blank tr.tm-filter-row input[type=text] {
+  overflow: hidden;
+  padding-left: 10px;
+  padding-right: 25px;
+  background-color: transparent;
+}
+div.tm-container.tm-theme-blank tr.tm-filter-row span.tm-custom-checkbox {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30px;
+  height: 100%;
+  background-color: transparent;
+  vertical-align: middle;
+  text-align: center;
+  /* styles of the dot hovering the original checkbox */
+}
+div.tm-container.tm-theme-blank tr.tm-filter-row span.tm-custom-checkbox input[type=checkbox] {
+  visibility: hidden;
+}
+div.tm-container.tm-theme-blank tr.tm-filter-row span.tm-custom-checkbox input[type=checkbox]:checked + label {
+  background: #666;
+}
+div.tm-container.tm-theme-blank tr.tm-filter-row span.tm-custom-checkbox label {
+  position: absolute;
+  border-radius: 50px;
+  width: 18px;
+  height: 18px;
+  top: 5px;
+  right: 5px;
+  background-color: #f0f0f0;
+  border: 3px solid #cccccc;
+  transition: 0.2s;
+  cursor: pointer;
+}
+div.tm-container.tm-theme-blank tr:hover + tr.tm-filter-row,
+div.tm-container.tm-theme-blank tr.tm-filter-row:hover {
+  height: 30px;
+}
