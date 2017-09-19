@@ -1561,6 +1561,7 @@ var StringHandler = function (_Handler) {
 		var fragment = document.createDocumentFragment();
 		var div = document.createElement('div');
 		var input = document.createElement('input');
+		var span = null;
 		input.type = 'text';
 		_this3.patternInput = input;
 		div.appendChild(input);
@@ -1569,10 +1570,12 @@ var StringHandler = function (_Handler) {
 		if (options.cs) {
 			div = document.createElement('div');
 			input = document.createElement('input');
+			span = document.createElement('span');
+			span.innerHTML = tm.getTerm('FILTER_CASESENSITIVE');
 			input.type = 'checkbox';
 			input.value = 'cs';
 			div.appendChild(input);
-			div.innerHTML += tm.getTerm('FILTER_CASESENSITIVE');
+			div.appendChild(span);
 			_this3.csCheckbox = input;
 			fragment.appendChild(div);
 		}
@@ -1581,8 +1584,10 @@ var StringHandler = function (_Handler) {
 			input = document.createElement('input');
 			input.type = 'checkbox';
 			input.value = 'matching';
+			span = document.createElement('span');
+			span.innerHTML = tm.getTerm('FILTER_MATCHING');
 			div.appendChild(input);
-			div.innerHTML += tm.getTerm('FILTER_MATCHING');
+			div.appendChild(span);
 			_this3.matchingCheckbox = input;
 			fragment.appendChild(div);
 		}
