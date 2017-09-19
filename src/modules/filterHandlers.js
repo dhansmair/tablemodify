@@ -168,6 +168,7 @@ class StringHandler extends Handler {
 		let fragment = document.createDocumentFragment()
 		let div = document.createElement('div')
 		let input = document.createElement('input')
+        let span = null
 		input.type = 'text'
 		this.patternInput = input
 		div.appendChild(input)
@@ -176,20 +177,24 @@ class StringHandler extends Handler {
         if (options.cs) {
 			div = document.createElement('div')
 			input = document.createElement('input')
+            span = document.createElement('span')
+            span.innerHTML = tm.getTerm('FILTER_CASESENSITIVE')
 			input.type = 'checkbox'
 			input.value = 'cs'
 			div.appendChild(input)
-			div.innerHTML += tm.getTerm('FILTER_CASESENSITIVE')
+            div.appendChild(span)
 			this.csCheckbox = input
 			fragment.appendChild(div)
         }
         if (options.matching) {
 			div = document.createElement('div')
 			input = document.createElement('input')
-			input.type = 'checkbox'
+            input.type = 'checkbox'
 			input.value = 'matching'
+            span = document.createElement('span')
+            span.innerHTML = tm.getTerm('FILTER_MATCHING')
 			div.appendChild(input)
-			div.innerHTML += tm.getTerm('FILTER_MATCHING')
+			div.appendChild(span)
 			this.matchingCheckbox = input
 			fragment.appendChild(div)
         }
