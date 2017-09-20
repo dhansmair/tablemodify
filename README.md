@@ -14,8 +14,9 @@ tm includes basic modules:
   - string search (optional matching, case-sensitive), 
   - numeric search (comparators =, <, >, <=, >=, or a value range)
 - sorting
-  - sort by strings, numerics, dates,
-  - or add custom sorting rules
+  - sort by strings, numerics, dates
+  - add custom sorting rules
+  - sort by multiple columns
 - paging 
   - js can handle a lot of data, but rendering too many rows can cause problems for the Browser.
     the pager module works perfectly with filtering and sorting, 
