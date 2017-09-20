@@ -54,7 +54,7 @@ var factory = {
 document.addEventListener('DOMContentLoaded', function () {
   tm = new Tablemodify('#test', {
     theme: 'bootstrap',
-    language: 'de',
+    language: 'en',
     containerId: 'meinContainer',
     transition: 'fade',
     modules: {
@@ -76,8 +76,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
       },
       filter: {
-        filterAfterTimeout: 888,
-        autoCollapse: false,
+        filterAfterTimeout: 500,
+        autoCollapse: true,
         columns: {
           all: {
             type: 'string',
@@ -88,10 +88,6 @@ document.addEventListener('DOMContentLoaded', function () {
           },
           3: {
             type: 'numeric',
-            beautify: function (val) {
-              val = val.replace('.', '').replace(',', '.')
-              return parseFloat(val)
-            },
             options: {
               comparator: true,
               range: true
@@ -129,6 +125,8 @@ document.addEventListener('DOMContentLoaded', function () {
       resizer: {}
     }
   })
+
+  tm.appendRaw(factory.createTable(320))
 
   document.getElementById('number-add').onclick = function () {
     var count = parseInt(document.getElementById('number-inserts').value)

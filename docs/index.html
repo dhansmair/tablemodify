@@ -58,19 +58,21 @@
     </aside>
     <main>
         <div id='quicknav'>
-            <a href=# target='blank'>view on Github</a>
+            <a href='https://github.com/dhansmair/tablemodify' target='blank'>view on Github</a>
         </div>
         <section id='intro'>
             <h1>Intro</h1>
             <article>
-                tablemodify is a javascript-plugin which boosts your html tables with awesome style and functionalities!
-                <br />It is written in plain js, so no jQuery is required.
-                Tm is based on a core Tablemodify-object which can be extended by several modules.
-                There are some modules defined by default or you could even write your own if you wish to.
-                <br /><br />
-                Browser support: supported by all major browsers (IE11, Firefox, Opera, Chrome, Safari).
-                <br />
-                the current version is 0.9.4
+                <p>
+                    tablemodify is a javascript-plugin which boosts your html tables with awesome style and functionalities!
+                    <br />It is written in plain js, so no jQuery is required.
+                    Tm is based on a core Tablemodify-object which can be extended by several modules.
+                    There are some modules defined by default or you could even write your own if you wish to.
+                    <br /><br />
+                    Browser support: supported by all major browsers (IE11, Firefox, Opera, Chrome, Safari).
+                    <br />
+                    the current version is 0.9.6
+                </p>
             </article>
         </section>
         <section id='demo'>
@@ -106,15 +108,18 @@
         <section id='setup'>
             <h1>Setup</h1>
             <article>
-                First of all, get the sources from Github ("/dist/") and include them in your header. <br />
-                what you need:
-                <ul>
-                    <li>tablemodify.js or tablemodify.min.js</li>
-                    <li>tablemodify.css</li>
-                    <li>a .css-file from the theme folder</li>
-                </ul>
-                the table your want to modify is in plain HTML somewhere in your documents body.<br />
-                After the document has loaded, you can initialize the Tablemodify-instance.
+                <p>
+                    First of all, get the sources from Github ("/dist/") and include them in your header. <br />
+                    what you need:
+                    <ul>
+                        <li>tablemodify.js or tablemodify.min.js</li>
+                        <li>tablemodify.css</li>
+                        <li>a .css-file from the theme folder</li>
+                    </ul>
+                    the table your want to modify is in plain HTML somewhere in your documents body.<br />
+                    After the document has loaded, you can initialize the Tablemodify-instance.
+                </p>
+
 <pre>
 <code class="js">var tm,
     options = {} // some options can be passed via this object, read more below
@@ -126,7 +131,9 @@ window.addEventListener('DOMContentLoaded', init)
 </code>
 </pre>
                 <h3>options</h3>
-                an overview over all the options you can choose:
+                <p>
+                    an overview over all the options you can choose:
+                </p>
 <pre>
 <code class="js">{
     // table will be wrapped in a container. you may give it an id
@@ -164,17 +171,21 @@ window.addEventListener('DOMContentLoaded', init)
         <section id='modules'>
             <h1>Modules</h1>
             <article>
-                here you find a detailed tutorial how to configure each module.<br />
-                All modules are optional and work independent.
-                Once initialized, it is possible to access them via <code>tm.getModule(name)</code>, each provides some utilities you can use.<br />
+                <p>
+                    All modules are optional and work independent.
+                    Once initialized, it is possible to access them via <code>tm.getModule(name)</code>, each provides some utilities you can use.<br />
+                </p>
 
             </article>
 
             <article id='module-sorter'>
                 <h3>sorter</h3>
-                This module sorts the rows of your tbody, ascending or descending, sorted by a single column or even by multiple columns. <br />
-                For multisort, press shift and click another head cell. Still press shift and click a selected cell again to invert the order.
-                For big data amounts, it is recommended to combine sorter and pager or sort via php.
+                <p>
+                    This module sorts the rows of your tbody, ascending or descending, sorted by a single column or even by multiple columns. <br />
+                    For multisort, press shift and click another head cell. Still press shift and click a selected cell again to invert the order.
+                    For big data amounts, it is recommended to combine sorter and pager or sort via php.
+                </p>
+
 <pre>
 <code class='js'>var sorterSettings = {
     /*
@@ -211,44 +222,51 @@ window.addEventListener('DOMContentLoaded', init)
 </code>
 </pre>
 <h4>parsers</h4>
-there are some parsers available by default:
-<table>
-    <thead>
-        <tr>
-            <th>parsername</th>
-            <th>notice</th>
-            <th>description</th>
-            <th>parameters</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>"intelligent"</td>
-            <td>default</td>
-            <td>differentiates automatically between strings and numbers. recommended for mixed types.</td>
-            <td>none</td>
-        </tr>
-        <tr>
-            <td>"string"</td>
-            <td></td>
-            <td>sorts in alphabetic order. efficient, recommended for pure strings</td>
-            <td>none</td>
-        </tr>
-        <tr>
-            <td>"numeric"</td>
-            <td></td>
-            <td>sorts numbers (also floats). efficient, recommended for numbers</td>
-            <td>none</td>
-        </tr>
-        <tr>
-            <td>"date"</td>
-            <td></td>
-            <td>sorts by a given date format</td>
-            <td>format: A date/time format string which will be used to parse the dates preset: either 'english' or 'german', 'german' will match 'TT.MM.YYYY' and 'TT.MM.YY', 'english' will match 'YYYY-MM-DD' or 'MM/DD/YYYY'. It is recommended not to rely on the presets but rather provide your own date format string Here you can find an overview of the tokens which can be used</td>
-        </tr>
-    </tbody>
-</table><br />
-A parser is simply a compare function which is passed to the Array.sort() method. here you can read more about compare functions If you want to define your own parsers, add them like this:
+<p>
+    there are some parsers available by default:
+    <table id="sorter-parsers">
+        <thead>
+            <tr>
+                <th>parsername</th>
+                <th>notice</th>
+                <th>description</th>
+                <th>parameters</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>"intelligent"</td>
+                <td>default</td>
+                <td>differentiates automatically between strings and numbers. recommended for mixed types.</td>
+                <td>none</td>
+            </tr>
+            <tr>
+                <td>"string"</td>
+                <td></td>
+                <td>sorts in alphabetic order. efficient, recommended for pure strings</td>
+                <td>none</td>
+            </tr>
+            <tr>
+                <td>"numeric"</td>
+                <td></td>
+                <td>sorts numbers (also floats). efficient, recommended for numbers</td>
+                <td>none</td>
+            </tr>
+            <tr>
+                <td>"date"</td>
+                <td></td>
+                <td>sorts by a given date format</td>
+                <td>format: A date/time format string which will be used to parse the dates preset: either 'english' or 'german', 'german'
+                    will match 'TT.MM.YYYY' and 'TT.MM.YY', 'english' will match 'YYYY-MM-DD' or 'MM/DD/YYYY'.
+                    It is recommended not to rely on the presets but rather provide your own date format string
+                    Here you can find an overview of the tokens which can be used</td>
+            </tr>
+        </tbody>
+    </table><br />
+    A parser is simply a compare function which is passed to the Array.sort() method. here you can read more about compare functions
+    If you want to define your own parsers, add them like this:
+</p>
+
 <pre>
 <code class="js">var customParsers = {
        myParser: function(a, b) {
@@ -268,8 +286,11 @@ A parser is simply a compare function which is passed to the Array.sort() method
 </code>
 </pre>
 <h4>change header appearance</h4>
-you can simply overwrite the default sorter styles of your table. Therefore, tm provides several css-classes.<br />
-Different order-icons:<br />
+<p>
+    you can simply overwrite the default sorter styles of your table. Therefore, tm provides several css-classes.<br />
+    Different order-icons:
+</p>
+
 <pre>
 <code class="css">
     /* default sorter icon (for no active sorting) */
@@ -287,7 +308,10 @@ Different order-icons:<br />
     }
 </code>
 </pre>
-different background-color of active sorting:
+<p>
+    different background-color of active sorting:
+</p>
+
 <pre>
 <code class="css">
     /* this will set the color to yellow */
@@ -299,28 +323,41 @@ different background-color of active sorting:
             </article>
             <article id='module-pager'>
                 <h3>pager</h3>
-                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                <p>
+
+                </p>
             </article>
             <article id='module-filter'>
                 <h3>filter</h3>
-                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                <p>
+
+                </p>
             </article>
             <article id='module-fixed'>
                 <h3>fixed</h3>
-                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                <p>
+
+                </p>
             </article>
             <article id='module-columnStyles'>
                 <h3>columnStyles</h3>
-                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                <p>
+
+                </p>
             </article>
             <article id='module-resizer'>
                 <h3>resizer</h3>
+                <p>
+
+                </p>
             </article>
         </section>
         <section id='themes'>
             <h1>Themes</h1>
             <article>
-                Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                <p>
+
+                </p>
             </article>
 
         </section>

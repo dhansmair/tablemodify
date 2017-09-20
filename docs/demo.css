@@ -106,20 +106,37 @@ html body main section h1 {
 html body main section article {
   margin-top: 20px;
 }
+html body main section article p {
+  padding: 10px;
+}
+html body main section article ul {
+  margin-left: 30px;
+  margin-bottom: 10px;
+}
+html body main section article table#sorter-parsers {
+  border-collapse: collapse;
+}
+html body main section article table#sorter-parsers td {
+  vertical-align: top;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
 html body main section#demo div.controller {
   margin: 0 auto 10px auto;
-  font-family: courier;
   text-align: center;
 }
 html body main section#demo div.controller #pager-left,
 html body main section#demo div.controller #pager-right {
   cursor: pointer;
 }
+html body main section#demo div.controller input {
+  text-align: center;
+  border: 1px solid #cccccc;
+}
 html body main section#demo #meinContainer {
   margin: 0 20px 20px;
   height: 500px;
   border: 1px solid #cccccc;
-  font-family: courier;
 }
 html body main section#demo #meinContainer .sortable.sort-up,
 html body main section#demo #meinContainer .sortable.sort-down {

@@ -143,26 +143,45 @@ html {
                 article {
                     margin-top:@padding;
 
+                    p {
+                        padding:10px
+                    }
+                    ul {
+                        margin-left:30px;
+                        margin-bottom:10px;
+                    }
 
+                    table#sorter-parsers {
+                        border-collapse:collapse;
+                        td {
+                            vertical-align: top;
+                            border:1px solid #ccc;
+                            padding:10px;
+
+                        }
+                    }
 
                 }
                 &#demo {
 
                     div.controller {
                         margin:0 auto 10px auto;
-                        font-family: courier;
+
                         text-align: center;
 
                         #pager-left, #pager-right {
                             cursor:pointer;
+                        }
+
+                        input {
+                            text-align: center;
+                            border:1px solid #cccccc;
                         }
                     }
                     #meinContainer {
                         margin:0 20px 20px;
                         height:500px;
                         border:1px solid #cccccc;
-
-                        font-family:courier;
 
                         .sortable.sort-up, .sortable.sort-down {
                             background-color:@color2;
