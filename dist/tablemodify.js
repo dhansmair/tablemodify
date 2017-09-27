@@ -189,7 +189,8 @@
         d.isPm = true;
       }
     }],
-    ZZ: [/[\+\-]\d\d:?\d\d/, function (d, v) {
+    ZZ: [/([\+\-]\d\d:?\d\d|Z)/, function (d, v) {
+      if (v === 'Z') v = '+00:00';
       var parts = (v + '').match(/([\+\-]|\d\d)/gi), minutes;
 
       if (parts) {
@@ -210,7 +211,7 @@
 
   // Some common format strings
   fecha.masks = {
-    'default': 'ddd MMM DD YYYY HH:mm:ss',
+    default: 'ddd MMM DD YYYY HH:mm:ss',
     shortDate: 'M/D/YY',
     mediumDate: 'MMM D, YYYY',
     longDate: 'MMMM D, YYYY',
@@ -2052,37 +2053,36 @@ var defaultParams = { // default-name
   initializer: function initializer() {
     return null;
   } // default: empty module
-};
 
-/**
- *  these is the default return object of every Module
- */
-var defaultReturns = {
+
+  /**
+   *  these is the default return object of every Module
+   */
+};var defaultReturns = {
   instance: {},
   unset: function unset() {},
   getStats: function getStats() {},
   info: function info() {},
   notify: function notify() {}
-};
 
-/**
- * This class represents a single Tablemodify module.
- * It provides a standard interface for defining modules, takes care of settings
- * validation, settings-completion with default settings and can be extended with
- * further functionality (e.g. module dependencies)
- *
- * Usage:
- * module.exports = new Module({
- *     name: <the module's name>,
- *     defaultSettings: <the module's default settings>,
- *     settingsValidator: <function, called with the settings object and throws
- *                         if invalid parameters are detected>,
- *     initializer: <function where the module code itself resides, will be called
- *                   with the Tablemodify instance as this-value and the return
- *                   value will be stored in tm-instance.modules.<modulename>
- * });
- */
-module.exports = function () {
+  /**
+   * This class represents a single Tablemodify module.
+   * It provides a standard interface for defining modules, takes care of settings
+   * validation, settings-completion with default settings and can be extended with
+   * further functionality (e.g. module dependencies)
+   *
+   * Usage:
+   * module.exports = new Module({
+   *     name: <the module's name>,
+   *     defaultSettings: <the module's default settings>,
+   *     settingsValidator: <function, called with the settings object and throws
+   *                         if invalid parameters are detected>,
+   *     initializer: <function where the module code itself resides, will be called
+   *                   with the Tablemodify instance as this-value and the return
+   *                   value will be stored in tm-instance.modules.<modulename>
+   * });
+   */
+};module.exports = function () {
   function Module(params) {
     _classCallCheck(this, Module);
 
@@ -2551,6 +2551,13 @@ var Sorter = function () {
     if (settings.initialColumn !== false) {
       var initIndex = settings.initialColumn,
           initOrder = settings.initialOrder;
+
+      if (isNaN(initIndex)) {
+        var index = tm.id2index(initIndex);
+        if (index !== null) {
+          initIndex = index;
+        }
+      }
 
       initOrder = initOrder === SORT_ORDER_ASC;
 
@@ -3318,7 +3325,7 @@ var Tablemodify = function () {
       if (Array.isArray(data)) {
         var all = this.getAllRows().concat(data);
 
-        this.setAllRows(all);
+        this.setAllRows(all).setAvailableRows(all);
 
         if (this.coreSettings.usesExternalData) {
           this.actionPipeline.notify('__renderer');
@@ -3330,8 +3337,16 @@ var Tablemodify = function () {
     }
   }, {
     key: 'removeRows',
-    value: function removeRows() {
-      this.clearDOM().setAllRows([]).reload();
+    value: function removeRows(arr) {
+      var allRows = [];
+      if (arr !== null) {
+        allRows = this.getAllRows().filter(function (tr) {
+          return arr.indexOf(tr) === -1;
+        });
+      }
+
+      this.clearDOM().setAllRows(allRows).setAvailableRows(allRows).reload();
+      return this;
     }
 
     /**

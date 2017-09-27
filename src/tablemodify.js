@@ -316,7 +316,7 @@ class Tablemodify {
     if (Array.isArray(data)) {
       let all = this.getAllRows().concat(data)
 
-      this.setAllRows(all)
+      this.setAllRows(all).setAvailableRows(all)
 
       if (this.coreSettings.usesExternalData) {
         this.actionPipeline.notify('__renderer')
@@ -327,10 +327,19 @@ class Tablemodify {
     return this
   }
 
-  removeRows () {
+  removeRows (arr) {
+    let allRows = []
+    if (arr !== null) {
+      allRows = this.getAllRows().filter((tr) => {
+        return (arr.indexOf(tr) === -1)
+      })
+    }
+
     this.clearDOM()
-            .setAllRows([])
-            .reload()
+      .setAllRows(allRows)
+      .setAvailableRows(allRows)
+      .reload()
+    return this
   }
 
     /**

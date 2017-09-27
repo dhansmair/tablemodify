@@ -107,6 +107,13 @@ class Sorter {
       let initIndex = settings.initialColumn,
         initOrder = settings.initialOrder
 
+      if (isNaN(initIndex)) {
+        var index = tm.id2index(initIndex)
+        if (index !== null) {
+          initIndex = index
+        }
+      }
+
       initOrder = initOrder === SORT_ORDER_ASC
 
             // if special value first_enabled is provided, search for first searchable column

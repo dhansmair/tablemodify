@@ -32,6 +32,9 @@ div.tm-container.tm-theme-prompt div.tm-head-wrap table.tm-head tr:first-of-type
 div.tm-container.tm-theme-prompt div.tm-head-wrap table.tm-head tr:last-of-type td {
   border-bottom: 1px solid #ccc;
 }
+div.tm-container.tm-theme-prompt div.tm-body-wrap {
+  background-color: white;
+}
 div.tm-container.tm-theme-prompt div.tm-body-wrap table {
   background-color: white;
   border-spacing: 0px;
@@ -67,10 +70,12 @@ div.tm-container.tm-theme-prompt.tm-sorter thead tr:first-of-type .sortable {
   /* Color for active sortable cells */
 }
 div.tm-container.tm-theme-prompt.tm-sorter thead tr:first-of-type .sortable.sort-up {
+  color: white;
   background-color: #7784bb;
   background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%204%22%20height%3D%224%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M6.5%204l4-4%204%204z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
 }
 div.tm-container.tm-theme-prompt.tm-sorter thead tr:first-of-type .sortable.sort-down {
+  color: white;
   background-color: #7784bb;
   background-image: url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2021%204%22%20height%3D%224%22%20width%3D%2221%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M14.5%200l-4%204-4-4z%22%2F%3E%0A%3C%2Fsvg%3E%0A);
 }
